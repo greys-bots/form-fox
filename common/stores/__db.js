@@ -61,7 +61,7 @@ module.exports = (bot) => {
 			server_id 	TEXT,
 			channel_id 	TEXT,
 			message_id 	TEXT,
-			response 	TEXT
+			response 	TEXT REFERENCES responses(hid) ON DELETE CASCADE
 		);
 	`);
 

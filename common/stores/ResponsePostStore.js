@@ -148,6 +148,24 @@ class ResponsePostStore extends Collection {
         })
     }
 
+    async deleteByResponse(server, hid) {
+        return new Promise(async (res, rej) => {
+            try {
+                await this.db.query(`
+                    DELETE FROM response_posts
+                    WHERE server_id = $1
+                    AND response = $2
+                `, [server, hid]);
+                super.delete(`${server}-${channel}-${message}`)
+            } catch(e) {
+                console.log(e);
+                return rej(e.message);
+            }
+            
+            res();
+        })
+    }
+
     async handleReactions(reaction, user) {
         if(this.bot.user.id == user.id) return;
         if(user.bot) return;

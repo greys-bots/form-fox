@@ -76,6 +76,14 @@ class FormPostStore extends Collection {
 			}
 			
 			if(data.rows && data.rows[0]) {
+				var guild = this.bot.guilds.resolve(server);
+				if(!guild) return rej("Couldn't get guild!");
+				var channel = guild.channels.resolve(channel);
+				var msg = channel?.messages.fetch(message);
+				if(!channel || !msg) {
+					await this.delete(server, channel, message);
+					return res(undefined);
+				}
 				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 				if(form) data.rows[0].form = form;
 				this.set(`${server}-${channel}-${message}`, data.rows[0])
@@ -92,13 +100,23 @@ class FormPostStore extends Collection {
 				console.log(e);
 				return rej(e.message);
 			}
+
+			var guild = this.bot.guilds.resolve(server);
+			if(!guild) return rej("Couldn't get guild!");
 			
 			if(data.rows && data.rows[0]) {
 				for(var i = 0; i < data.rows.length; i++) {
+					var channel = guild.channels.resolve(channel);
+					var msg = channel?.messages.fetch(message);
+					if(!channel || !msg) {
+						await this.delete(server, data.rows[i].channel, data.rows[i].message);
+						data.rows[i] = "deleted";
+						continue;
+					}
 					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
 					if(form) data.rows[i].form = form;
 				}
-				res(data.rows)
+				res(data.rows.filter(x => x != 'deleted'))
 			} else res(undefined);
 		})
 	}
@@ -137,6 +155,27 @@ class FormPostStore extends Collection {
 			}
 			
 			super.delete(`${server}-${channel}-${message}`);
+			res();
+		})
+	}
+
+	async deleteByForm(server, hid) {
+		return new Promise(async (res, rej) => {
+			try {
+				var posts = await this.getByForm(server, hid);
+				await this.db.query(`
+					DELETE FROM form_posts
+					WHERE server_id = $1
+					AND form = $2
+				`, [server, hid]);
+				if(posts)
+					for(var post of posts)
+						super.delete(`${server}-${post.channel_id}-${post.message_id}`);
+			} catch(e) {
+				console.log(e);
+				return rej(e.message);
+			}
+			
 			res();
 		})
 	}

@@ -207,6 +207,9 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				await this.db.query(`DELETE FROM forms WHERE server_id = $1 AND hid = $2`, [server, hid]);
+				await this.bot.stores.formPosts.deleteByForm(server, hid);
+				await this.bot.stores.openResponses.deleteByForm(server, hid);
+				await this.bot.stores.responses.deleteByForm(server, hid);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -221,8 +224,7 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var forms = await this.getAll(server);
-				await this.db.query(`DELETE FROM forms WHERE server_id = $1 AND hid = $2`, [server, hid]);
-				for(var form of forms) super.delete(`${server}-${form.hid}`);
+				for(var form of forms) await this.delete(server, form.hid);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);

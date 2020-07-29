@@ -171,6 +171,27 @@ class OpenResponseStore extends Collection {
         })
     }
 
+    async deleteByForm(server, hid) {
+        return new Promise(async (res, rej) => {
+            try {
+                var responses = await this.getByForm(server, hid);
+                await this.db.query(`
+                    DELETE FROM open_responses
+                    WHERE server_id = $1
+                    AND form = $2
+                `, [server, hid]);
+                if(responses)
+                    for(var response of responses)
+                        super.delete(response.channel_id);
+            } catch(e) {
+                console.log(e);
+                return rej(e.message);
+            }
+            
+            res();
+        })
+    }
+
     async sendResponse(response, message, user, config) {
         if(response.form.required?.find(n => n > response.answers.length))
             return 'You still have required questions to answer!';
