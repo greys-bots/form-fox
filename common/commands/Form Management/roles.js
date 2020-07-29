@@ -42,7 +42,7 @@ module.exports = {
 					['✅','❌'].forEach(r => message.react(r));
 					
 					var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
-					if(confirm) return confirm;
+					if(confirm.msg) return confirm.msg;
 
 					try {
 						await bot.stores.forms.update(msg.guild.id, form.hid, {roles: []});

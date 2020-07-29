@@ -65,7 +65,11 @@ class ResponsePostStore extends Collection {
         return new Promise(async (res, rej) => {
             if(!forceUpdate) {
                 var post = super.get(`${server}-${channel}-${message}`);
-                if(post) return res(post);
+                if(post) {
+                    var form = await this.bot.stores.forms.get(post.server_id, post.form);
+                    if(form) post.form = form;
+                    return res(post);
+                }
             }
             
             try {

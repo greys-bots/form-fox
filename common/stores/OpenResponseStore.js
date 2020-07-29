@@ -190,7 +190,7 @@ class OpenResponseStore extends Collection {
         ['✅','❌'].forEach(r => msg.react(r));
 
         var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
-        if(confirm) return Promise.resolve(confirm);
+        if(confirm.msg) return Promise.resolve(confirm.msg);
 
         await prompt.edit({embed: {
             title: response.form.name,
@@ -269,7 +269,7 @@ class OpenResponseStore extends Collection {
         ['✅','❌'].forEach(r => msg.react(r));
 
         var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
-        if(confirm) return Promise.resolve(confirm);
+        if(confirm.msg) return Promise.resolve(confirm.msg);
 
         try {
             await this.delete(response.channel_id);
@@ -302,7 +302,7 @@ class OpenResponseStore extends Collection {
         ['✅','❌'].forEach(r => msg.react(r));
 
         var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
-        if(confirm) return Promise.resolve(confirm);
+        if(confirm.msg) return Promise.resolve(confirm.msg);
 
         if(response.form.questions.length > response.answers.length + 1) {
             response.answers.push('*(answer skipped)*');
@@ -310,7 +310,7 @@ class OpenResponseStore extends Collection {
                 title: response.form.name,
                 description: response.form.description,
                 fields: [
-                    {name: `Question ${response.answers.length}${response.form.required?.includes(1) ? ' (required)' : ''}`,
+                    {name: `Question ${response.answers.length + 1}${response.form.required?.includes(response.answers.length + 1) ? ' (required)' : ''}`,
                     value: response.form.questions[response.answers.length]
                 }],
                 color: parseInt(response.form.color || 'ee8833', 16),
@@ -484,7 +484,7 @@ class OpenResponseStore extends Collection {
                 title: response.form.name,
                 description: response.form.description,
                 fields: [
-                    {name: `Question ${response.answers.length}${response.form.required?.includes(1) ? ' (required)' : ''}`,
+                    {name: `Question ${response.answers.length + 1}${response.form.required?.includes(response.answers.length + 1) ? ' (required)' : ''}`,
                     value: response.form.questions[response.answers.length]
                 }],
                 color: parseInt(response.form.color || 'ee8833', 16),
@@ -501,9 +501,9 @@ class OpenResponseStore extends Collection {
             await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
         } else if(response.form.questions.length == response.answers.length + 1) {
             response.answers.push(message.content);
-            var embed = {embed: {
-                title: "How's this look?",
-                description: `Form name: ${response.form.name}\nForm ID: ${response.form.hid}`,
+            var content = {content: "How's this look?", embed: {
+                title: response.form.name,
+                description: response.form.description,
                 fields: response.form.questions.map((q, i) => {
                     return {
                         name: q,
@@ -518,7 +518,7 @@ class OpenResponseStore extends Collection {
                 ].join(' ')}
             }};
 
-            var msg = await message.channel.send(embed);
+            var msg = await message.channel.send(content);
             ['✅','❌'].forEach(r => msg.react(r));
             
             await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});

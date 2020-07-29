@@ -18,7 +18,7 @@ module.exports = {
 			['✅','❌'].forEach(r => message.react(r));
 
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
-			if(confirm) return confirm;
+			if(confirm.msg) return confirm.msg;
 
 			try {
 				await bot.stores.responses.deleteByForm(msg.guild.id, form.hid);
@@ -37,7 +37,7 @@ module.exports = {
 		['✅','❌'].forEach(r => message.react(r));
 
 		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
-		if(confirm) return confirm;
+		if(confirm.msg) return confirm.msg;
 
 		var forms = await bot.stores.forms.getAll(msg.guild.id);
 		for(var form of forms) {

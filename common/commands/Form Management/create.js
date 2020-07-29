@@ -45,18 +45,23 @@ module.exports = {
 			data.questions.push(resp.content);
 			await resp.delete();
 
-			await message.edit(`Would you like this question to be required? (y/n)`);
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
-			if(!resp) return 'Timed out! Aborting!';
-			if(['y', 'yes'].includes(resp.content.toLowerCase())) data.required.push(i+1);;
-			await resp.delete();
+			await message.edit(`Would you like this question to be required?`);
+			['✅','❌'].forEach(r => message.react(r));
+
+			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+			if(confirm.confirmed) data.required.push(i+1);
+			
+			if(confirm.message) await confirm.message.delete();
+			await message.reactions.removeAll();
 
 			await form.edit({embed: {
 				title: data.name,
-				description: resp.content,
+				description: data.description,
 				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${data.required.includes(n+1) ? ' (required)' : ''}`, value: q} }),
 				color: parseInt('ee8833', 16)
 			}});
+
+			i++;
 		}
 
 		if(data.questions.length == 0) return 'No questions added! Aborting!';

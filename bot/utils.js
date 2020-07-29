@@ -102,10 +102,10 @@ module.exports = {
 					case 'y':
 					case 'yes':
 					case '✅':
-						return res();
+						return res({confirmed: true, message});
 						break;
 					default:
-						return res('Action cancelled!');
+						return res({confirmed: false, message, msg: 'Action cancelled!'});
 						break;
 				}
 			}
@@ -119,10 +119,10 @@ module.exports = {
 				bot.removeListener('messageReactionAdd', reactListener);
 				switch(react.emoji.name) {
 					case '✅':
-						return res();
+						return res({confirmed: true, react});
 						break;
 					default:
-						return res('Action cancelled!');
+						return res({confirmed: false, react, msg: 'Action cancelled!'});
 						break;
 				}
 			}
@@ -130,7 +130,7 @@ module.exports = {
 			const timeout = setTimeout(async () => {
 				bot.removeListener('message', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
-				res('ERR! Timed out!')
+				res({confirmed: false, msg: 'ERR! Timed out!'})
 			}, 30000);
 
 			bot.on('message', msgListener);
