@@ -44,7 +44,7 @@ class FormPostStore extends Collection {
 					server_id,
 					channel_id,
 					message_id,
-					response
+					form
 				) VALUES ($1,$2,$3,$4)`,
 				[server, channel, message, data.form]);
 			} catch(e) {
@@ -74,16 +74,18 @@ class FormPostStore extends Collection {
 				console.log(e);
 				return rej(e.message);
 			}
-			
+
 			if(data.rows && data.rows[0]) {
 				var guild = this.bot.guilds.resolve(server);
 				if(!guild) return rej("Couldn't get guild!");
-				var channel = guild.channels.resolve(channel);
-				var msg = channel?.messages.fetch(message);
-				if(!channel || !msg) {
+				guild = await guild.fetch();
+				var chan = guild.channels.resolve(channel);
+				var msg = chan?.messages.fetch(message);
+				if(!chan || !msg) {
 					await this.delete(server, channel, message);
 					return res(undefined);
 				}
+
 				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 				if(form) data.rows[0].form = form;
 				this.set(`${server}-${channel}-${message}`, data.rows[0])
@@ -103,16 +105,18 @@ class FormPostStore extends Collection {
 
 			var guild = this.bot.guilds.resolve(server);
 			if(!guild) return rej("Couldn't get guild!");
+			guild = await guild.fetch();
 			
 			if(data.rows && data.rows[0]) {
 				for(var i = 0; i < data.rows.length; i++) {
-					var channel = guild.channels.resolve(channel);
-					var msg = channel?.messages.fetch(message);
-					if(!channel || !msg) {
-						await this.delete(server, data.rows[i].channel, data.rows[i].message);
-						data.rows[i] = "deleted";
+					var chan = guild.channels.resolve(data.rows[i].channel_id);
+					var msg = chan?.messages.fetch(data.rows[i].message_id);
+					if(!chan || !msg) {
+						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
+						data.rows[i] = 'deleted';
 						continue;
 					}
+
 					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
 					if(form) data.rows[i].form = form;
 				}
@@ -197,7 +201,6 @@ class FormPostStore extends Collection {
 		if(!post.form.open) return;
 
 		var cfg = await this.bot.stores.configs.get(msg.guild.id);
-
 		if(!post.form.channel_id && !cfg?.response_channel)
 			return await user.send('No response channel set for that form! Ask the mods to set one first!');
 
