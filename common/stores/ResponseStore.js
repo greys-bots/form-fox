@@ -16,12 +16,13 @@ class ResponseStore extends Collection {
 					hid,
 					user_id,
 					form,
+					questions,
 					answers,
 					status,
 					received
-				) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-				[server, hid, data.user_id, data.form, data.answers || [],
-				 data.status || 'pending', data.received || new Date()]);
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+				[server, hid, data.user_id, data.form, data.questions || [],
+				data.answers || [], data.status || 'pending', data.received || new Date()]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -39,12 +40,13 @@ class ResponseStore extends Collection {
 					hid,
 					user_id,
 					form,
+					questions,
 					answers,
 					status,
 					received
-				) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-				[server, hid, data.user_id, data.form, data.answers || [],
-				 data.status || 'pending', data.received || new Date()]);
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+				[server, hid, data.user_id, data.form, data.questions || [],
+				data.answers || [], data.status || 'pending', data.received || new Date()]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -170,6 +172,7 @@ class ResponseStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var responses = await this.getAll(server);
+				if(!responses?.[0]) return res();
 				await this.db.query(`DELETE FROM responses WHERE server_id = $1`, [server]);
 				for(var response of responses) super.delete(`${server}-${response.hid}`);
 			} catch(e) {
@@ -185,6 +188,7 @@ class ResponseStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var responses = await this.getByUser(server, user);
+				if(!responses?.[0]) return res();
 				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND user_id = $2`, [server, user]);
 				for(var response of responses) super.delete(`${server}-${response.hid}`);
 			} catch(e) {
@@ -200,6 +204,7 @@ class ResponseStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var responses = await this.getByForm(server, form);
+				if(!responses?.[0]) return res();
 				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
 				for(var response of responses) {
 					await this.bot.stores.responsePosts.deleteByResponse(server, response.hid);

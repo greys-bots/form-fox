@@ -10,10 +10,47 @@ module.exports = {
 		var forms = await bot.stores.forms.getAll(msg.guild.id);
 		if(!forms?.[0]) return "No forms created yet!";
 
+		var query = args[0]?.toLowerCase();
 		if(args[0]) {
-			if(args[0].toLowerCase() == 'open') forms = forms.filter(f => f.open);
+			if(query == 'open') forms = forms.filter(f => f.open);
 			else if(args[0].toLowerCase() == 'closed') forms = forms.filter(f => !f.open);
-			else forms = forms.filter(f => f.hid == args[0].toLowerCase());
+			else {
+				var form = forms.find(f => f.hid == args[0].toLowerCase());
+				if(!form) return "Form not found!";
+
+				var channel = msg.guild.channels.resolve(form.channel_id);
+				var roles = msg.guild.roles.cache.filter(r => form.roles?.includes(r.id));
+				var responses = await bot.stores.responses.getByForm(msg.guild.id, form.hid);
+
+				var embeds = [{embed: {
+					title: `${form.name} (${form.hid})`,
+					description: form.description,
+					fields: [
+						{name: "Message", value: form.message || "*(not set)*"},
+						{name: "Channel", value: `${channel}` || '*(not set)*'},
+						{name: "Response count", value: (responses?.length || '0')},
+						{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'}
+					],
+					color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
+					footer: {text: 'See next page for questions' + (form.open ? '' : '| This form is closed!')}
+				}}];
+
+				var qembeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
+					return {name: `Question ${i+1}${data.required ? " (required)" : ""}`, value: data.value}
+				}, {
+					title: `${form.name} (${form.hid})`,
+					description: form.description,
+					color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
+					footer: {text: (form.open ? '' : '| This form is closed!')}
+				}, 20)
+
+				embeds = embeds.concat(qembeds);
+				if(embeds.length > 1)
+				for(var i = 0; i < embeds.length; i++)
+					embeds[i].embed.title += ` (${i+1}/${embeds.length})`;
+				
+				return embeds;
+			}
 		}
 
 		var embeds = [];
@@ -25,20 +62,17 @@ module.exports = {
 
 			var embed = {embed: {
 				title: `${form.name} (${form.hid})`,
-				description: [
-					form.description + '\n',
-					'**Message:** '+(form.message || '*(not set)*'),
-					'**Channel:** '+(`${channel}` || '*(not set)*'),
-					'**Response Count:** '+(responses?.length || '0'),
-					'**Roles:**\n'+(roles.map(r => `${r}`).join('\n') || '*(none)*')
-				].join('\n'),
+				description: form.description,
+				fields: [
+					{name: "Message", value: form.message || "*(not set)*"},
+					{name: "Channel", value: `${channel}` || '*(not set)*'},
+					{name: "Response count", value: (responses?.length || '0')},
+					{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'},
+					{name: "Questions", value: `Use \`${bot.prefix}form ${form.hid}\` to see questions`}
+				],
 				color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 				footer: {text: form.open ? '' : 'This form is closed!'}
 			}}
-
-			embed.embed.fields = form.questions.map((q, i) => {
-				return {name: `Question ${i+1}${form.required?.includes(i+1) ? " (required)" : ""}`, value: q}
-			})
 
 			embeds.push(embed)
 		}

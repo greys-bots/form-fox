@@ -11,15 +11,15 @@ module.exports = {
 		if(!form) return 'Form not found!';
 
 		if(!args[1]) {
-			if(!form.required?.[0]) return 'That form has no required questions!';
-			var required = form.questions.filter((q, i) => form.required.includes(i+1));
+			var required = form.questions.filter(q => q.required);
+			if(!required?.[0]) return 'That form has no required questions!';
 
 			var message = await msg.channel.send({embed: {
 				title: 'Required Questions',
-				fields: form.required.map((q, i) => {
+				fields: required.map((q, i) => {
 					return {
-						name: `Question ${q}`,
-						value: required[i]
+						name: `Question ${i+1}`,
+						value: q.value
 					}
 				}),
 				footer: {text: [
@@ -48,6 +48,10 @@ module.exports = {
 			return !isNaN(x) && x > 0 && x <= form.questions.length;
 		});
 		if(!required) return `Make sure you give valid question numbers! Valid numbers for this form should be between 1 and ${form.questions.length}`;
+
+		for(var r of required) {
+			form.questions[r-1].required = true;
+		}
 
 		try {
 			await bot.stores.forms.update(msg.guild.id, form.hid, {required});

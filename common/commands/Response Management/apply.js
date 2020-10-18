@@ -22,7 +22,7 @@ module.exports = {
 				fields: form.questions.map((q,i) => {
 					return {
 						name: `Question ${i+1}`,
-						value: q
+						value: q.value
 					}
 				}),
 				color: parseInt(form.color || 'ee8833', 16)
@@ -30,7 +30,7 @@ module.exports = {
 			var message = await msg.author.send({embed: {
 				title: `Question 1/${form.questions.length}`,
 				description: `Form name: ${form.name}\nForm ID: ${form.hid}`,
-				fields: [{name: form.questions[0], value: '*Awaiting response... Type `skip` to skip!*'}],
+				fields: [{name: form.questions[0].value, value: '*Awaiting response... Type `skip` to skip!*'}],
 				color: parseInt('ee8833', 16),
 				footer: {text: 'react with ✅ to finish early; react with ❌ to cancel'}
 			}});
@@ -38,7 +38,8 @@ module.exports = {
 			['✅','❌'].forEach(r => message.react(r));
 			await bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
 				user_id: msg.author.id,
-				form: form.hid
+				form: form.hid,
+				questions: JSON.stringify(form.questions)
 			})
 		} catch(e) {
 			console.log(e);

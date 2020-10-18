@@ -47,9 +47,10 @@ class OpenResponseStore extends Collection {
                     message_id,
                     user_id,
                     form,
+                    questions,
                     answers
-                ) VALUES ($1,$2,$3,$4,$5,$6)`,
-                [server, channel, message, data.user_id, data.form, data.answers || []]);
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                [server, channel, message, data.user_id, data.form, data.questions || [], data.answers || []]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -68,9 +69,10 @@ class OpenResponseStore extends Collection {
                     message_id,
                     user_id,
                     form,
+                    questions,
                     answers
-                ) VALUES ($1,$2,$3,$4,$5,$6)`,
-                [server, channel, message, data.user_id, data.form, data.answers || []]);
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                [server, channel, message, data.user_id, data.form, data.questions || [], data.answers || []]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -175,6 +177,7 @@ class OpenResponseStore extends Collection {
         return new Promise(async (res, rej) => {
             try {
                 var responses = await this.getByForm(server, hid);
+                if(!responses?.[0]) return res();
                 await this.db.query(`
                     DELETE FROM open_responses
                     WHERE server_id = $1
@@ -193,11 +196,13 @@ class OpenResponseStore extends Collection {
     }
 
     async sendResponse(response, message, user, config) {
-        if(response.form.required?.find(n => n > response.answers.length))
+    	var questions = response.questions?.[0] ? response.questions : form.questions;
+
+        if(questions.find((q, i) => q.required && i+1 > response.answers.length))
             return 'You still have required questions to answer!';
         var prompt = await message.channel.messages.fetch(response.message_id);
 
-        if(response.answers.length < response.form.questions.length) {
+        if(response.answers.length < questions.length) {
             var msg = await message.channel.send([
                 "You're not done with this form yet!",
                 "Would you like to skip the rest of the questions?"
@@ -216,9 +221,9 @@ class OpenResponseStore extends Collection {
         await prompt.edit({embed: {
             title: response.form.name,
             description: response.form.description,
-            fields: response.form.questions.map((q, i) => {
+            fields: questions.map((q, i) => {
                 return {
-                    name: q,
+                    name: q.value,
                     value: response.answers[i] || '*(answer skipped!)*'
                 }
             }),
@@ -239,9 +244,9 @@ class OpenResponseStore extends Collection {
             footer: {text: 'Awaiting acceptance/denial...'}
         }};
 
-        for(var i = 0; i < response.form.questions.length; i++) {
+        for(var i = 0; i < questions.length; i++) {
             respembed.embed.fields.push({
-                name: response.form.questions[i],
+                name: questions[i].value,
                 value: response.answers[i] || "*(answer skipped!)*"
             })
         }
@@ -251,8 +256,9 @@ class OpenResponseStore extends Collection {
             await this.bot.stores.responses.create(response.server_id, code, {
                 user_id: user.id,
                 form: response.form.hid,
+                questions: JSON.stringify(response.form.questions),
                 answers: response.answers[0] ? response.answers :
-                         new Array(response.form.questions.length).fill("*(answer skipped!)*"),
+                         new Array(questions.length).fill("*(answer skipped!)*"),
                 status: 'pending'
             });
             respembed.embed.description += `\nResponse ID: ${code}`;
@@ -310,9 +316,11 @@ class OpenResponseStore extends Collection {
     }
 
     async skipQuestion(response, message, user, config) {
-        if(response.form.required?.includes(response.answers.length + 1))
+    	var questions = response.questions?.[0] ? response.questions : response.form.questions;
+
+        if(questions[response.answers.length].required)
             return Promise.resolve('This question can\'t be skipped!');
-        if(response.form.questions.length === response.answers.length)
+        if(questions.length === response.answers.length)
             return Promise.resolve('Nothing to skip!');
         var prompt = await message.channel.messages.fetch(response.message_id);
 
@@ -325,14 +333,14 @@ class OpenResponseStore extends Collection {
         var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
         if(confirm.msg) return Promise.resolve(confirm.msg);
 
-        if(response.form.questions.length > response.answers.length + 1) {
+        if(questions.length > response.answers.length + 1) {
             response.answers.push('*(answer skipped)*');
             var msg = await message.channel.send({embed: {
                 title: response.form.name,
                 description: response.form.description,
                 fields: [
-                    {name: `Question ${response.answers.length + 1}${response.form.required?.includes(response.answers.length + 1) ? ' (required)' : ''}`,
-                    value: response.form.questions[response.answers.length]
+                    {name: `Question ${response.answers.length + 1}${questions[response.answers.length].required ? ' (required)' : ''}`,
+                    value: questions[response.answers.length].value
                 }],
                 color: parseInt(response.form.color || 'ee8833', 16),
                 footer: {text: [
@@ -346,14 +354,14 @@ class OpenResponseStore extends Collection {
             ['✅','❌','➡️'].forEach(r => msg.react(r));
             
             await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
-        } else if(response.form.questions.length == response.answers.length + 1) {
+        } else if(questions.length == response.answers.length + 1) {
             response.answers.push('*(answer skipped)*');
             var content = {content: "How's this look?", embed: {
                 title: response.form.name,
                 description: response.form.description,
-                fields: response.form.questions.map((q, i) => {
+                fields: questions.map((q, i) => {
                     return {
-                        name: q,
+                        name: q.value,
                         value: response.answers[i] || '*(answer skipped!)*'
                     }
                 }),
@@ -382,21 +390,13 @@ class OpenResponseStore extends Collection {
 
         if(menus[msg.channel.id]) {
             return;
-            // try {
-            //     var result = await menus[msg.channel.id].execute(reaction.emoji.name);
-            // } catch(e) {
-            //     console.log(e);
-            //     return await msg.channel.send(e.message || e);
-            // }
-
-            // if(result) return await msg.channel.send(result);
-            // return;
         }
 
         var response = await this.getByMessage(msg.channel.id, msg.id);
         if(!response) return;
 
-        if(!response.form.questions) {
+        var questions = response.questions?.[0] ? response.questions : response.form.questions;
+        if(!questions?.[0]) {
             await this.delete(msg.channel.id);
             return msg.channel.send("That form is invalid! This response is now closed");
         }
@@ -451,7 +451,8 @@ class OpenResponseStore extends Collection {
         var response = await this.get(message.channel.id);
         if(!response) return;
 
-        if(!response.form.questions) {
+        var questions = response.questions?.[0] ? response.questions : response.form.questions;
+        if(!questions?.[0]) {
             await this.delete(message.channel.id);
             return message.channel.send("That form is invalid! This response is now closed");
         }
@@ -499,14 +500,16 @@ class OpenResponseStore extends Collection {
                 break;
         }
 
-        if(response.form.questions.length > response.answers.length + 1) {
+        if(questions.length > response.answers.length + 1) {
             response.answers.push(message.content);
+            if(message.attachments.size > 0)
+            	response.answers[response.answers.length - 1] += "**Attachments:**\n" + message.attachments.map(a => a.url).join("\n");
             var msg = await message.channel.send({embed: {
                 title: response.form.name,
                 description: response.form.description,
                 fields: [
-                    {name: `Question ${response.answers.length + 1}${response.form.required?.includes(response.answers.length + 1) ? ' (required)' : ''}`,
-                    value: response.form.questions[response.answers.length]
+                    {name: `Question ${response.answers.length + 1}${questions[response.answers.length].required ? ' (required)' : ''}`,
+                    value: questions[response.answers.length].value
                 }],
                 color: parseInt(response.form.color || 'ee8833', 16),
                 footer: {text: [
@@ -520,14 +523,16 @@ class OpenResponseStore extends Collection {
             ['✅','❌','➡️'].forEach(r => msg.react(r));
             
             await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
-        } else if(response.form.questions.length == response.answers.length + 1) {
+        } else if(questions.length == response.answers.length + 1) {
             response.answers.push(message.content);
+            if(message.attachments.size > 0)
+            	response.answers[response.answers.length - 1] += "\n\n**Attachments:**\n" + message.attachments.map(a => a.url).join("\n");
             var content = {content: "How's this look?", embed: {
                 title: response.form.name,
                 description: response.form.description,
-                fields: response.form.questions.map((q, i) => {
+                fields: questions.map((q, i) => {
                     return {
-                        name: q,
+                        name: q.value,
                         value: response.answers[i] || '*(answer skipped!)*'
                     }
                 }),

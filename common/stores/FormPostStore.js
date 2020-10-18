@@ -167,6 +167,7 @@ class FormPostStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var posts = await this.getByForm(server, hid);
+				if(!posts?.[0]) return res();
 				await this.db.query(`
 					DELETE FROM form_posts
 					WHERE server_id = $1
@@ -224,7 +225,7 @@ class FormPostStore extends Collection {
 					var message = await user.send({embed: {
 						title: post.form.name,
 						description: post.form.description,
-						fields: [{name: `Question 1${post.form.required?.includes(1) ? ' (required)' : ''}`, value: post.form.questions[0]}],
+						fields: [{name: `Question 1${post.form.questions[0].required ? ' (required)' : ''}`, value: post.form.questions[0].value}],
 						color: parseInt(post.form.color || 'ee8833', 16),
 						footer: {text: [
 		                    'react with ✅ to finish early; ',
@@ -237,7 +238,8 @@ class FormPostStore extends Collection {
 					['✅','❌','➡️'].forEach(r => message.react(r));
 					await this.bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
 						user_id: user.id,
-						form: post.form.hid
+						form: post.form.hid,
+						questions: JSON.stringify(post.form.questions)
 					})
 				} catch(e) {
 					console.log(e);

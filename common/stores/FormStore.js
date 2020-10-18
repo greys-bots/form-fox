@@ -17,13 +17,12 @@ class FormStore extends Collection {
 					name,
 					description,
 					questions,
-					required,
 					channel_id,
 					roles,
 					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
 				[server, hid, data.name, data.description,
-				 data.questions || [], data.required || [],
+				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [], data.open || true]);
 			} catch(e) {
 				console.log(e);
@@ -43,13 +42,12 @@ class FormStore extends Collection {
 					name,
 					description,
 					questions,
-					required,
 					channel_id,
 					roles,
 					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
 				[server, hid, data.name, data.description,
-				 data.questions || [], data.required || [],
+				 data.questions || [],
 				 data.channel_id, data.roles || [], data.open || true]);
 			} catch(e) {
 				console.log(e);
@@ -98,6 +96,7 @@ class FormStore extends Collection {
 
 	async update(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
+			if(data.questions) data.questions = JSON.stringify(data.questions);
 			try {
 				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
 			} catch(e) {
@@ -137,22 +136,6 @@ class FormStore extends Collection {
 						} catch(e) {
 							errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
 						}
-					}
-				}
-			} else if(Object.keys(data).includes('questions')) {
-				var openResponses = await this.bot.stores.openResponses.getByForm(server, hid);
-				for(var response of openResponses) {
-					var user = this.bot.users.resolve(response.user_id);
-					try {
-						await user.send({embed: {
-							title: 'Response cancellation',
-							description: "Your response has been cancelled due to a form change! Please open another response",
-							color: parseInt('aa5555', 16)
-						}});
-						await this.bot.stores.openResponses.delete(response.channel_id);
-					} catch(e) {
-						console.log(e.message || e);
-						errs.push(e.message || e);
 					}
 				}
 			}
@@ -224,6 +207,7 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var forms = await this.getAll(server);
+				if(!forms?.[0]) return res();
 				for(var form of forms) await this.delete(server, form.hid);
 			} catch(e) {
 				console.log(e);

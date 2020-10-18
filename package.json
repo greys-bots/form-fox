@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/greys-bots/form-fox.git"
+    "type": "git",
+    "url": "https://github.com/greys-bots/form-fox.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,11 +15,11 @@
   "license": "ISC",
   "dependencies": {
     "cookie-parser": "^1.4.5",
-    "discord.js": "^12.2.0",
+    "discord.js": "^12.3.1",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
-    "pg": "^8.3.0",
-    "tinycolor2": "^1.4.1"
+    "pg": "^8.4.1",
+    "tinycolor2": "^1.4.2"
   }
 }

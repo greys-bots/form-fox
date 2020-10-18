@@ -9,26 +9,27 @@ module.exports = {
 		" reorder [form id] <question number> <new place> - Reorder a form's questions"
 	],
 	desc: ()=> [
-		"Remember! Doing any of these will cancel and invalidate all open responses!\n",
-		"You'll still be able to accept or deny already sent in responses, ",
-		"but they might look different when viewing them later"
-	],
+		"Using this command will not invalidate any responses; however, ",
+		"the questions will NOT be updated for existing ones. The changes will only affect ",
+		"responses opened and finished after the fact!"
+	].join(""),
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
-		return {embed: {
+		var embeds = await bot.genEmbeds(bot, form.questions, (q, i) => {
+			return {
+				name: `Question ${i+1}${q.required ? ' (required)' : ''}`,
+				value: q.value
+			}
+		}, {
 			title: form.name,
-			description: form.description,
-			fields: form.questions.map((q, i) => {
-				return {
-					name: `Question ${i+1}${form.required?.includes(i+1) ? ' (required)' : ''}`,
-					value: q
-				}
-			})
-		}}
+			description: form.description
+		})
+
+		return embeds;
 	},
 	alias: ['q'],
 	permissions: ['MANAGE_MESSAGES'],
@@ -51,6 +52,7 @@ module.exports.subcommands.add = {
 		var resp;
 		var question = args.slice(1).join(" ");
 		var position = form.questions.length + 1;
+		var required = false;
 		if(!question) {
 			await msg.channel.send('What question would you like to add to the form?\nType `cancel` to cancel!');
 			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
@@ -70,7 +72,13 @@ module.exports.subcommands.add = {
 		if(resp.content.toLowerCase() != 'last') position = parseInt(resp.content.toLowerCase());
 		if(isNaN(position)) return 'ERR! Please provide a real number!';
 
-		form.questions.splice(position - 1, 0, question);
+		var message = await msg.channel.send(`Would you like this question to be required?`);
+		['✅','❌'].forEach(r => message.react(r));
+
+		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+		if(confirm.confirmed) required = true;
+
+		form.questions.splice(position - 1, 0, {value: question, type: 'text', required});
 		try {
 			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
@@ -134,7 +142,6 @@ module.exports.subcommands.set = {
 
 		var data = {};
 		data.questions = [];
-		data.required = [];
 
 		var fmessage = await msg.channel.send({embed: {
 			title: form.name,
@@ -149,14 +156,14 @@ module.exports.subcommands.set = {
 			if(!resp) return 'Timed out! Aborting!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			if(resp.content.toLowerCase() == 'done') break;
-			data.questions.push(resp.content);
+			data.questions.push({value: resp.content, type: 'text', required: false});
 			await resp.delete();
 
 			await message.edit(`Would you like this question to be required?`);
 			['✅','❌'].forEach(r => message.react(r));
 
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
-			if(confirm.confirmed) data.required.push(i+1);
+			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();
 			await message.reactions.removeAll();
@@ -164,7 +171,7 @@ module.exports.subcommands.set = {
 			await fmessage.edit({embed: {
 				title: data.name,
 				description: data.description,
-				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${data.required.includes(n+1) ? ' (required)' : ''}`, value: q} }),
+				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${q.required ? ' (required)' : ''}`, value: q.value} }),
 				color: parseInt('ee8833', 16)
 			}});
 
@@ -211,7 +218,7 @@ module.exports.subcommands.rephrase = {
 			await msg.channel.send("Enter the new question!");
 			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
-			question = resp.content;
+			question.value = resp.content;
 		}
 
 		form.questions[position - 1] = question;

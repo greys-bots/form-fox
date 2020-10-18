@@ -15,7 +15,7 @@ module.exports = {
 			
 			for(let i=0; i<arr.length; i++) {
 				if(current.embed.fields.length < (fieldnum || 10)) {
-					current.embed.fields.push(await genFunc(arr[i], bot));
+					current.embed.fields.push(await genFunc(arr[i], i, arr));
 				} else {
 					embeds.push(current);
 					current = { embed: {
@@ -26,7 +26,7 @@ module.exports = {
 						color: typeof info.color == "function" ?
 								info.color(arr[i], i) : info.color,
 						footer: info.footer,
-						fields: [await genFunc(arr[i], bot)]
+						fields: [await genFunc(arr[i], i, arr)]
 					}};
 				}
 			}

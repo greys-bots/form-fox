@@ -33,6 +33,7 @@ module.exports = {
 		for(var response of responses) {
 			var user = await bot.users.fetch(response.user_id);
 			var color;
+			var questions = response.questions?.[0] ? response.questions : response.form.questions;
 			if(response.status == 'accepted') color = parseInt('55aa55', 16);
 			else if(response.status == 'denied') color = parseInt('aa5555', 16);
 			else color = parseInt('ccaa55', 16);
@@ -43,8 +44,8 @@ module.exports = {
 					`Form ID: ${response.form.hid}`,
 					`User: ${user}`
 				].join('\n'),
-				fields: response.form.questions.map((q, i) => {
-					return {name: q, value: response.answers[i] || '*(answer skipped!)*'}
+				fields: questions.map((q, i) => {
+					return {name: q.value, value: response.answers[i] || '*(answer skipped!)*'}
 				}),
 				color,
 				footer: {text: `Response status: ${response.status}`},

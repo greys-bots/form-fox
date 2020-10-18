@@ -34,7 +34,6 @@ module.exports = {
 		}})
 
 		data.questions = [];
-		data.required = [];
 		var i = 0;
 		while(i < 20) {
 			await message.edit(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
@@ -42,14 +41,14 @@ module.exports = {
 			if(!resp) return 'Timed out! Aborting!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			if(resp.content.toLowerCase() == 'done') break;
-			data.questions.push(resp.content);
+			data.questions.push({value: resp.content, type: 'text', required: false});
 			await resp.delete();
 
 			await message.edit(`Would you like this question to be required?`);
 			['✅','❌'].forEach(r => message.react(r));
 
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
-			if(confirm.confirmed) data.required.push(i+1);
+			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();
 			await message.reactions.removeAll();
@@ -57,7 +56,7 @@ module.exports = {
 			await form.edit({embed: {
 				title: data.name,
 				description: data.description,
-				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${data.required.includes(n+1) ? ' (required)' : ''}`, value: q} }),
+				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${q.required ? ' (required)' : ''}`, value: q.value} }),
 				color: parseInt('ee8833', 16)
 			}});
 

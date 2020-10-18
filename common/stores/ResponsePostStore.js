@@ -261,13 +261,13 @@ class ResponsePostStore extends Collection {
 
                     await user.send({embed: {
                         title: 'Response accepted!',
-                        description: [
-                            welc || '',
-                            `Server: ${msg.guild.name} (${msg.guild.id})`,
-                            `Form name: ${post.response.form.name}`,
-                            `Form ID: ${post.response.form.hid}`,
-                            `Response ID: ${post.response.hid}`
-                        ].join("\n"),
+                        description: welc,
+                        fields: [
+                        	{name: 'Server', value: `${msg.guild.name} (${msg.guild.id})`},
+                        	{name: 'Form name', value: `${post.response.form.name}`},
+                        	{name: 'Form ID', value: `${post.response.form.hid}`},
+                        	{name: 'Response ID', value: `${post.response.hid}`}
+                        ],
                         color: parseInt('55aa55', 16),
                         timestamp: new Date().toISOString()
                     }});
