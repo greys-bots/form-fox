@@ -94,6 +94,21 @@ class FormStore extends Collection {
 		})
 	}
 
+	async getByHids(server, ids) {
+		return new Promise(async (res, rej) => {
+			try {
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = ANY($2)`,[server, ids]);
+			} catch(e) {
+				console.log(e);
+				return rej(e.message);
+			}
+			
+			if(data.rows && data.rows[0]) {
+				res(data.rows)
+			} else res(undefined);
+		})
+	}
+
 	async update(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			if(data.questions) data.questions = JSON.stringify(data.questions);
@@ -207,6 +222,21 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var forms = await this.getAll(server);
+				if(!forms?.[0]) return res();
+				for(var form of forms) await this.delete(server, form.hid);
+			} catch(e) {
+				console.log(e);
+				return rej(e.message);
+			}
+			
+			res();
+		})
+	}
+
+	async deleteByHids(server, ids) {
+		return new Promise(async (res, rej) => {
+			try {
+				var forms = await this.getByHids(server, ids);
 				if(!forms?.[0]) return res();
 				for(var form of forms) await this.delete(server, form.hid);
 			} catch(e) {

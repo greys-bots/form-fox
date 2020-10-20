@@ -1,7 +1,6 @@
 module.exports = {
 	help: () => 'Create a new form',
 	usage: () => [' - Opens a menu to make a new form'],
-	desc: ()=> ['Remember: forms can only have up to 20 questions!'],
 	execute: async (bot, msg, args) => {
 		var data = {};
 

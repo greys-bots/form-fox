@@ -54,7 +54,7 @@ module.exports = {
 					this.index -= 1;
 				}
 				await m.edit(this.data[this.index]);
-				await reaction.users.remove(this.user)
+				if(m.channel.type != "dm") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
 			case "➡️":
@@ -64,7 +64,7 @@ module.exports = {
 					this.index += 1;
 				}
 				await m.edit(this.data[this.index]);
-				await reaction.users.remove(this.user)
+				if(m.channel.type != "dm") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
 			case "⏹️":
