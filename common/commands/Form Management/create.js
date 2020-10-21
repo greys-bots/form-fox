@@ -1,15 +1,24 @@
+const TYPES = require(__dirname + '/../../extras').qTypes;
+
 module.exports = {
 	help: () => 'Create a new form',
 	usage: () => [' - Opens a menu to make a new form'],
+	desc: () => [
+		"Question types:",
+		"```",
+		TYPES.map(t => `${t.alias.join(" | ")} - ${t.description}`).join("\n"),
+		"```"
+	].join("\n"),
 	execute: async (bot, msg, args) => {
 		var data = {};
+		var message, confirm;
 
 		var form = await msg.channel.send({embed: {
 			title: 'New Form',
 			color: parseInt('ee8833', 16)
 		}});
 
-		var message = await msg.channel.send("What do you want to name the form?\n(Type `cancel` to cancel!)");
+		message = await msg.channel.send("What do you want to name the form?\n(Type `cancel` to cancel!)");
 		var resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 60 * 1000})).first();
 		if(!resp) return 'Timed out! Aborting!';
 		if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
@@ -43,10 +52,45 @@ module.exports = {
 			data.questions.push({value: resp.content, type: 'text', required: false});
 			await resp.delete();
 
+			await message.edit(
+				"What type of question would you like this to be?\n" +
+				"Question types:\n" +
+				"```\n" +
+				TYPES.map(t => `${t.alias.join(" | ")} - ${t.description}\n`).join("") +
+				"```"
+			)
+			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
+			if(!resp) return 'Timed out! Aborting!';
+			var type = TYPES.find(t => t.alias.includes(resp.content.toLowerCase()));
+			if(!type) return "ERR! Invalid type!";
+			data.questions.[i].type = type.type;
+			await resp.delete();
+
+			switch(type.type) {
+				case "mc":
+				case "cb":
+					await message.edit(`Please enter up to 10 options to choose from, separated by new lines.`);
+					resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 5 * 60 * 1000})).first();
+					if(!resp) return 'Timed out! Aborting!';
+					data.questions[i].choices = resp.content.split("\n");
+
+					await message.edit("Would you like to include an 'other' option?")
+					['✅','❌'].forEach(r => message.react(r));
+
+					confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+					if(confirm.confirmed) data.questions[i].other = true;
+
+					if(confirm.message) await confirm.message.delete();
+					await message.reactions.removeAll();
+					break;
+				default:
+					break;
+			}
+
 			await message.edit(`Would you like this question to be required?`);
 			['✅','❌'].forEach(r => message.react(r));
 
-			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+			confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();

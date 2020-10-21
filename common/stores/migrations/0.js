@@ -1,6 +1,7 @@
 // converts questions from array to json
 
 module.exports = async (bot, db) => {
+	console.log('aaaaa')
 	var forms = await db.query(`SELECT * FROM forms`);
 	var version = (await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val;
 	if(!forms.rows?.[0]) {

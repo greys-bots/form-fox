@@ -20,15 +20,6 @@ bot.statuses = [
 	// `ff!h | https://ff.greysdawn.com`
 ];
 
-bot.qTypes = [
-	{type: 'mc', description: 'allows the user to choose one option from multiple choices', alias: ['multiple choice', 'mc', 'multi']},
-	{type: 'cb', description: 'allows the user to choose several options from multiple choices', alias: ['checkbox', 'check', 'checkboxes']},
-	{type: 'text', description: 'allows the user to freely type an answer', alias: ['text', 'free']},
-	{type: 'num', description: 'requires the user to enter only numbers', alias: ['number', 'numbers', 'num']},
-	{type: 'dt', description: 'requires the user to enter only a date', alias: ['date', 'dt']},
-	// {type: 'fm', description: 'requires the user to enter text following a specific format', alias: ['format', 'formatted', 'fm', 'custom']}
-]
-
 bot.updateStatus = async function(){
 	var target = bot.statuses[bot.status % bot.statuses.length];
 	if(typeof target == "function") bot.user.setActivity(await target());

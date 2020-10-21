@@ -1,11 +1,4 @@
-const OPTIONS = [
-	{val: 'name', desc: 'copy name for this form', alias: ['n', 'name']},
-	{val: 'description', desc: 'copy description for this form', alias: ['d', 'desc', 'description']},
-	{val: 'roles', desc: 'copy roles for this form', alias: ['r', 'rls', 'rs', 'roles']},
-	{val: 'channel_id', desc: 'copy response channel for this form', alias: ['ch', 'chan', 'channel']},
-	{val: 'message', desc: 'copy acceptance message for this form', alias: ['m', 'msg', 'message']},
-	{val: 'color', desc: 'copy color for this form', alias: ['c', 'col', 'color', 'colour']}
-]
+const OPTIONS = require(__dirname + '/../../extras').options;
 
 module.exports = {
 	help: () => 'Duplicates an existing form',
