@@ -6,6 +6,16 @@ Form Fox, or just Fox, is our take on a Disord application bot. They handle ever
 The bot's default prefix is `ff!`, and you can get help with anything you need with `ff!h`.
 
 ## Features
+### Several question types
+Form Fox currently offers several different types of questions, specifically:
+- Multiple choice
+- Checkbox-style
+- Freeform
+- Numbers-only
+- Date-only
+
+You can also make questions required, which will prevent users from skipping them (or completing a form early, if there are more required questions ahead)
+
 ### Reaction-based interaction
 Most of Form Fox's functions are reaction based, or have reaction-based options- mainly applying to forms and accepting/denying responses. This saves on typing and helps keep your channels safer and cleaner, as it erases the need for new members to have a writable channel in order to apply to enter your server.  
 *Note: For accessibility reasons, reaction-based interactions also come with command or keyword equivalents. No need to worry about missing out on a feature just because its primary intent is for reactions!*
