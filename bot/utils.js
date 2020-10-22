@@ -1,4 +1,8 @@
-const {confirmVals:STRINGS, confirmReacts:REACTS} = require('../common/extras');
+const {
+	confirmVals:STRINGS,
+	confirmReacts:REACTS,
+	numbers:NUMBERS
+} = require('../common/extras');
 
 module.exports = {
 	genEmbeds: async (bot, arr, genFunc, info = {}, fieldnum, extras = {}) => {
@@ -136,7 +140,7 @@ module.exports = {
 			}
 
 			bot.on('message', msgListener);
-\		})
+		})
 	},
 
 	handleQuestion: async (data, number) => {
@@ -155,14 +159,14 @@ module.exports = {
     					value: current.value
     				},
     				...current.choices.map((c, i) => {
-    					return {name: `Option ${NUMBERS[i]}`, value: c}
+    					return {name: `Option ${NUMBERS[i + 1]}`, value: c}
     				})
     			]
 
-    			if(current.other) question.message.push({name: 'Other', value: 'Enter a custom response (react with 🅾️)'})
+    			if(current.other) question.message.push({name: 'Other', value: 'Enter a custom response (react with 🅾️ or type "other")'})
 
     			question.reacts = [
-    				...NUMBERS.slice(0, current.choices.length),
+    				...NUMBERS.slice(1, current.choices.length + 1),
     				(current.other ? '🅾️' : null),
     				(current.type == 'cb' ? '✏️' : null),
     				'✅', '❌', '➡️'
@@ -170,7 +174,7 @@ module.exports = {
 
     			question.footer = {text:
     				'react or type the respective emoji/character to choose an option! ' +
-    				(current.type == 'cb' ? 'react with ✏️ to confirm selected choices! ' : '') +
+    				(current.type == 'cb' ? 'react with ✏️ or type "select" to confirm selected choices! ' : '') +
                     'react with ✅ to finish early; ' +
                     'react with ❌ to cancel; ' +
                     'react with ➡️ to skip this question! ' +
@@ -235,6 +239,6 @@ module.exports = {
     			break;
     	}
 
-    	Promise.resolve(question)
+    	return question
     }
 }

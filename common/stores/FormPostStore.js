@@ -241,8 +241,7 @@ class FormPostStore extends Collection {
 				} catch(e) {
 					console.log(e);
 					if(e.message) {
-						var cfg = await this.bot.stores.configs.get(msg.guild.id);
-						var channel = msg.guild.channels.find(c => form.channel_id ? c.id == form.channel_id : c.id == cfg.response_channel);
+						var channel = msg.guild.channels.resolve(post.form.channel_id || cfg.response_channel);
 						return await channel.send('Err while starting response process: '+e.message);
 					} else return await user.send('ERR! Couldn\'t start response process: '+e);
 				}

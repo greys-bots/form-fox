@@ -87,9 +87,10 @@ module.exports = async (bot) => {
 	}
 
 	files = fs.readdirSync(__dirname + '/migrations');
-	var version = (await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val || -1;
+	var version = parseInt((await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val || -1);
 	if(files.length > version + 1) {
-		for(var i = version; i < files.length; i++) {
+		console.log(version + 1)
+		for(var i = version + 1; i < files.length; i++) {
 			if(!files[i]) continue;
 			var migration = require(`${__dirname}/migrations/${files[i]}`);
 			await migration(bot, db);

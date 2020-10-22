@@ -13,7 +13,7 @@ module.exports = async (bot, db) => {
 	`);
 
 	if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
-	else await db.query(`UPDATE extras SET val = 0 WHERE key = 'version'`);
+	else await db.query(`UPDATE extras SET val = 1 WHERE key = 'version'`);
 
 	return Promise.resolve();
 }

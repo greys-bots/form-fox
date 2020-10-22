@@ -1,7 +1,7 @@
 module.exports = {
 	qTypes: [
-		{type: 'mc', description: 'allows the user to choose one option from multiple choices', alias: ['multiple choice', 'mc', 'multi']},
-		{type: 'cb', description: 'allows the user to choose several options from multiple choices', alias: ['checkbox', 'check', 'checkboxes']},
+		{type: 'mc', description: 'allows the user to choose one option from multiple choices', alias: ['multiple choice', 'multi', 'mc']},
+		{type: 'cb', description: 'allows the user to choose several options from multiple choices', alias: ['checkbox', 'check', 'cb']},
 		{type: 'text', description: 'allows the user to freely type an answer', alias: ['text', 'free']},
 		{type: 'num', description: 'requires the user to enter only numbers', alias: ['number', 'numbers', 'num']},
 		{type: 'dt', description: 'requires the user to enter only a date', alias: ['date', 'dt']},

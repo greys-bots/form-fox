@@ -29,15 +29,17 @@ module.exports = {
 				}),
 				color: parseInt(form.color || 'ee8833', 16)
 			}})
+			
+			var question = await bot.utils.handleQuestion(form, 0);
 			var message = await msg.author.send({embed: {
-				title: `Question 1/${form.questions.length}`,
-				description: `Form name: ${form.name}\nForm ID: ${form.hid}`,
-				fields: [{name: form.questions[0].value, value: '*Awaiting response... Type `skip` to skip!*'}],
-				color: parseInt('ee8833', 16),
-				footer: {text: 'react with ✅ to finish early; react with ❌ to cancel'}
+				title: form.name,
+				description: form.description,
+				fields: question.message,
+				color: parseInt(form.color || 'ee8833', 16),
+				footer: question.footer
 			}});
-
-			REACTS.forEach(r => message.react(r));
+			
+			question.reacts.forEach(r => message.react(r));
 			await bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
 				user_id: msg.author.id,
 				form: form.hid,
