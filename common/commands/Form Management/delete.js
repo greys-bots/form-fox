@@ -33,7 +33,7 @@ module.exports = {
 
 				return 'Forms deleted!';
 			} else {
-				var form = forms.filter(f => f.hid == args[0]);
+				var form = forms.find(f => f.hid == args[0]);
 				if(!form) return 'Form not found!';
 				
 				message = await msg.channel.send([
