@@ -1,3 +1,5 @@
+const {confirmVals:STRINGS, confirmReacts:REACTS} = require('../common/extras');
+
 module.exports = {
 	genEmbeds: async (bot, arr, genFunc, info = {}, fieldnum, extras = {}) => {
 		return new Promise(async res => {
@@ -98,16 +100,8 @@ module.exports = {
 				clearTimeout(timeout);
 				bot.removeListener('message', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
-				switch(message.content.toLowerCase()) {
-					case 'y':
-					case 'yes':
-					case '✅':
-						return res({confirmed: true, message});
-						break;
-					default:
-						return res({confirmed: false, message, msg: 'Action cancelled!'});
-						break;
-				}
+				if(STRINGS[0].includes(message.content.toLowerCase())) return res({confirmed: true, message});
+				else return res({confirmed: false, message, msg: 'Action cancelled!'});
 			}
 
 			function reactListener(react, ruser) {
@@ -117,14 +111,8 @@ module.exports = {
 				clearTimeout(timeout);
 				bot.removeListener('message', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
-				switch(react.emoji.name) {
-					case '✅':
-						return res({confirmed: true, react});
-						break;
-					default:
-						return res({confirmed: false, react, msg: 'Action cancelled!'});
-						break;
-				}
+				if(react.emoji.name == REACTS[0]) return res({confirmed: true, react});
+				else return res({confirmed: false, react, msg: 'Action cancelled!'});
 			}
 
 			const timeout = setTimeout(async () => {
@@ -136,5 +124,117 @@ module.exports = {
 			bot.on('message', msgListener);
 			bot.on('messageReactionAdd', reactListener);
 		})
-	}
+	},
+	awaitMessage: async (bot, msg, user) => {
+		return new Promise(res => {
+			function msgListener(message) {
+				if(message.channel.id != msg.channel.id ||
+				   message.author.id != user.id) return;
+
+				bot.removeListener('message', msgListener);
+				return res(message)
+			}
+
+			bot.on('message', msgListener);
+\		})
+	},
+
+	handleQuestion: async (data, number) => {
+    	var questions = data.questions?.[0] ? data.questions : data.form.questions;
+    	var current = questions[number];
+    	if(!current) return Promise.resolve(undefined);
+
+    	var question = {};
+
+    	switch(current.type) {
+    		case 'mc':
+    		case 'cb':
+    			question.message = [
+    				{
+    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
+    					value: current.value
+    				},
+    				...current.choices.map((c, i) => {
+    					return {name: `Option ${NUMBERS[i]}`, value: c}
+    				})
+    			]
+
+    			if(current.other) question.message.push({name: 'Other', value: 'Enter a custom response (react with 🅾️)'})
+
+    			question.reacts = [
+    				...NUMBERS.slice(0, current.choices.length),
+    				(current.other ? '🅾️' : null),
+    				(current.type == 'cb' ? '✏️' : null),
+    				'✅', '❌', '➡️'
+    			].filter(x => x!=null);
+
+    			question.footer = {text:
+    				'react or type the respective emoji/character to choose an option! ' +
+    				(current.type == 'cb' ? 'react with ✏️ to confirm selected choices! ' : '') +
+                    'react with ✅ to finish early; ' +
+                    'react with ❌ to cancel; ' +
+                    'react with ➡️ to skip this question! ' +
+                    'respective text keywords: submit, cancel, skip'
+                }
+    			break;
+    		case 'num':
+    			question.message = [
+    				{
+    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
+    					value: current.value
+    				}
+    			]
+
+
+    			question.reacts = ['✅', '❌', '➡️']
+
+    			question.footer = {text:
+    				'you can only respond with numbers for this question! ' +
+                    'react with ✅ to finish early; ' +
+                    'react with ❌ to cancel; ' +
+                    'react with ➡️ to skip this question! ' +
+                    'respective text keywords: submit, cancel, skip'
+                }
+    			break;
+    		case 'dt':
+    			question.message = [
+    				{
+    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
+    					value: current.value
+    				}
+    			]
+
+
+    			question.reacts = ['✅', '❌', '➡️']
+
+    			question.footer = {text:
+    				'you can only respond with a date for this question! ' +
+                    'react with ✅ to finish early; ' +
+                    'react with ❌ to cancel; ' +
+                    'react with ➡️ to skip this question! ' +
+                    'respective text keywords: submit, cancel, skip'
+                }
+    			break;
+    		default:
+    			question.message = [
+    				{
+    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
+    					value: current.value
+    				}
+    			]
+
+
+    			question.reacts = ['✅', '❌', '➡️']
+
+    			question.footer = {text:
+                    'react with ✅ to finish early; ' +
+                    'react with ❌ to cancel; ' +
+                    'react with ➡️ to skip this question! ' +
+                    'respective text keywords: submit, cancel, skip'
+                }
+    			break;
+    	}
+
+    	Promise.resolve(question)
+    }
 }

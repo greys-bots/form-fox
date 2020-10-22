@@ -217,25 +217,22 @@ class FormPostStore extends Collection {
 						fields: post.form.questions.map((q,i) => {
 							return {
 								name: `Question ${i+1}${post.form.required?.includes(i+1) ? " (required)" : ""}`,
-								value: q
+								value: q.value
 							}
 						}),
 						color: parseInt(post.form.color || 'ee8833', 16)
 					}})
+
+					var question = await this.bot.utils.handleQuestion(post.form, 0);
 					var message = await user.send({embed: {
 						title: post.form.name,
 						description: post.form.description,
-						fields: [{name: `Question 1${post.form.questions[0].required ? ' (required)' : ''}`, value: post.form.questions[0].value}],
+						fields: question.message,
 						color: parseInt(post.form.color || 'ee8833', 16),
-						footer: {text: [
-		                    'react with ✅ to finish early; ',
-		                    'react with ❌ to cancel; ',
-		                    'react with ➡️ to skip this question! ',
-		                    'respective text keywords: submit, cancel, skip'
-		                ].join("")}
+						footer: question.footer
 					}});
 
-					['✅','❌','➡️'].forEach(r => message.react(r));
+					question.reacts.forEach(r => message.react(r));
 					await this.bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
 						user_id: user.id,
 						form: post.form.hid,

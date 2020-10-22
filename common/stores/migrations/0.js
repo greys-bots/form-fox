@@ -1,14 +1,8 @@
 // converts questions from array to json
 
 module.exports = async (bot, db) => {
-	console.log('aaaaa')
 	var forms = await db.query(`SELECT * FROM forms`);
 	var version = (await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val;
-	if(!forms.rows?.[0]) {
-		if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
-		else await db.query(`UPDATE extras SET val = 0 WHERE key = 'version'`);
-		return Promise.resolve();
-	}
 
 	var responses = (await db.query(`SELECT * FROM responses`)).rows;
 	var open = (await db.query(`SELECT * FROM open_responses`)).rows;
@@ -59,6 +53,12 @@ module.exports = async (bot, db) => {
 		SELECT pg_catalog.setval(pg_get_serial_sequence('responses', 'id'), MAX(id)) FROM responses;
 		SELECT pg_catalog.setval(pg_get_serial_sequence('open_responses', 'id'), MAX(id)) FROM open_responses;
 	`);
+
+	if(!forms.rows?.[0]) {
+		if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
+		else await db.query(`UPDATE extras SET val = 0 WHERE key = 'version'`);
+		return Promise.resolve();
+	}
 
 	for(var form of forms.rows) {
 		var required = form.required;

@@ -1,3 +1,5 @@
+const REACTS = require(__dirname + '/../../extras').confirmReacts;
+
 module.exports = {
 	help: () => 'View and manage questions for a form',
 	usage: () => [
@@ -73,7 +75,7 @@ module.exports.subcommands.add = {
 		if(isNaN(position)) return 'ERR! Please provide a real number!';
 
 		var message = await msg.channel.send(`Would you like this question to be required?`);
-		['✅','❌'].forEach(r => message.react(r));
+		REACTS.forEach(r => message.react(r));
 
 		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 		if(confirm.confirmed) required = true;
@@ -160,7 +162,7 @@ module.exports.subcommands.set = {
 			await resp.delete();
 
 			await message.edit(`Would you like this question to be required?`);
-			['✅','❌'].forEach(r => message.react(r));
+			REACTS.forEach(r => message.react(r));
 
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;

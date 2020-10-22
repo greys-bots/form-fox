@@ -1,3 +1,5 @@
+const REACTS = require(__dirname + '/../../extras').confirmReacts;
+
 module.exports = {
 	help: ()=> "Set what roles are added to users after completing specific forms",
 	usage: ()=> [
@@ -39,7 +41,7 @@ module.exports = {
 
 				if(roles[0]) {
 					var message = await msg.channel.send('Would you like to clear these roles?');
-					['✅','❌'].forEach(r => message.react(r));
+					REACTS.forEach(r => message.react(r));
 					
 					var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 					if(confirm.msg) return confirm.msg;

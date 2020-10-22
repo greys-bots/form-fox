@@ -1,3 +1,5 @@
+const REACTS = require(__dirname + '/../../extras').confirmReacts;
+
 module.exports = {
 	help: ()=> "Set required questions for a form",
 	usage: ()=> [
@@ -29,7 +31,7 @@ module.exports = {
                 ].join("")}
 			}});
 
-			['✅','❌'].forEach(r => message.react(r));
+			REACTS.forEach(r => message.react(r));
 			
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm) return confirm;

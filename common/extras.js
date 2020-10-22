@@ -14,5 +14,8 @@ module.exports = {
 		{val: 'channel_id', desc: 'copy response channel for this form', alias: ['ch', 'chan', 'channel']},
 		{val: 'message', desc: 'copy acceptance message for this form', alias: ['m', 'msg', 'message']},
 		{val: 'color', desc: 'copy color for this form', alias: ['c', 'col', 'color', 'colour']}
-	]
+	],
+	confirmReacts: ['✅','❌'],
+	confirmVals: [['y', 'yes', '✅'], ['n', 'no', '❌']],
+	numbers: ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
 }

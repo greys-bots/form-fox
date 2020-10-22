@@ -1,4 +1,4 @@
-const TYPES = require(__dirname + '/../../extras').qTypes;
+const {qTypes:TYPES, confirmReacts:REACTS} = require(__dirname + '/../../extras');
 
 module.exports = {
 	help: () => 'Create a new form',
@@ -63,7 +63,7 @@ module.exports = {
 			if(!resp) return 'Timed out! Aborting!';
 			var type = TYPES.find(t => t.alias.includes(resp.content.toLowerCase()));
 			if(!type) return "ERR! Invalid type!";
-			data.questions.[i].type = type.type;
+			data.questions[i].type = type.type;
 			await resp.delete();
 
 			switch(type.type) {
@@ -73,9 +73,10 @@ module.exports = {
 					resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 5 * 60 * 1000})).first();
 					if(!resp) return 'Timed out! Aborting!';
 					data.questions[i].choices = resp.content.split("\n");
+					await resp.delete()
 
-					await message.edit("Would you like to include an 'other' option?")
-					['✅','❌'].forEach(r => message.react(r));
+					await message.edit("Would you like to include an 'other' option?");
+					REACTS.forEach(r => message.react(r));
 
 					confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 					if(confirm.confirmed) data.questions[i].other = true;
@@ -88,7 +89,7 @@ module.exports = {
 			}
 
 			await message.edit(`Would you like this question to be required?`);
-			['✅','❌'].forEach(r => message.react(r));
+			REACTS.forEach(r => message.react(r));
 
 			confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
@@ -100,8 +101,8 @@ module.exports = {
 				title: data.name,
 				description: data.description,
 				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${q.required ? ' (required)' : ''}`, value: q.value} }),
-				color: parseInt('ee8833', 16)
-			}});
+			}});				color: parseInt('ee8833', 16)
+
 
 			i++;
 		}

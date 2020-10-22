@@ -1,3 +1,5 @@
+const REACTS = require(__dirname + '/../../extras').confirmReacts;
+
 module.exports = {
 	help: ()=> "Delete a form, and all its responses",
 	usage: ()=> [
@@ -16,7 +18,7 @@ module.exports = {
 					'Are you sure you want to delete ALL your forms?\n',
 					'WARNING: All response data will be lost! This cannot be undone!'
 				].join(''));
-				['✅','❌'].forEach(r => message.react(r));
+				REACTS.forEach(r => message.react(r));
 
 				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
@@ -33,7 +35,7 @@ module.exports = {
 					'Are you sure you want to delete this form?\n',
 					'WARNING: All response data for this form will be lost! This cannot be undone!'
 				].join(''));
-				['✅','❌'].forEach(r => message.react(r));
+				REACTS.forEach(r => message.react(r));
 
 				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
@@ -58,7 +60,7 @@ module.exports = {
 					'Are you sure you want to delete these forms?\n',
 					'WARNING: All response data for these forms will be lost! This cannot be undone!'
 				].join(''));
-				['✅','❌'].forEach(r => message.react(r));
+				REACTS.forEach(r => message.react(r));
 
 				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
@@ -78,7 +80,7 @@ module.exports = {
 					'Are you sure you want to delete these forms?\n',
 					'WARNING: All response data for these forms will be lost! This cannot be undone!'
 				].join(''));
-				['✅','❌'].forEach(r => message.react(r));
+				REACTS.forEach(r => message.react(r));
 
 				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;

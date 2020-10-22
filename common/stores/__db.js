@@ -48,7 +48,8 @@ module.exports = async (bot) => {
 			user_id 	TEXT,
 			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
 			questions   JSONB,
-			answers 	TEXT[]
+			answers 	TEXT[],
+			selection   TEXT[]
 		);
 
 		CREATE TABLE IF NOT EXISTS responses (

@@ -1,3 +1,5 @@
+const REACTS = require(__dirname + '/../../extras').confirmReacts;
+
 module.exports = {
 	help: ()=> "Clears responses",
 	usage: ()=> [
@@ -15,7 +17,7 @@ module.exports = {
 				"You can't get them back!"
 			].join(""));
 
-			['✅','❌'].forEach(r => message.react(r));
+			REACTS.forEach(r => message.react(r));
 
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm.msg) return confirm.msg;
@@ -34,7 +36,7 @@ module.exports = {
 			"You can't get them back!"
 		].join(""));
 
-		['✅','❌'].forEach(r => message.react(r));
+		REACTS.forEach(r => message.react(r));
 
 		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 		if(confirm.msg) return confirm.msg;

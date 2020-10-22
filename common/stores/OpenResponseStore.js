@@ -1,3 +1,4 @@
+const NUMBERS = require('../extras').numbers;
 const { Collection } = require("discord.js");
 
 var menus = [];
@@ -195,8 +196,49 @@ class OpenResponseStore extends Collection {
         })
     }
 
+    async sendQuestion(response, message) {
+    	var questions = response.questions?.[0] ? response.questions : response.form.questions;
+
+    	var question = await this.bot.utils.handleQuestion(response, response.answers.length);
+        if(question) {
+            var msg = await message.channel.send({embed: {
+                title: response.form.name,
+                description: response.form.description,
+                fields: question.message,
+                color: parseInt(response.form.color || 'ee8833', 16),
+                footer: question.footer
+            }});
+
+            question.reacts.forEach(r => msg.react(r));
+            
+            return Promise.resolve(msg);
+        } else {
+        	var content = {content: "How's this look?", embed: {
+                title: response.form.name,
+                description: response.form.description,
+                fields: questions.map((q, i) => {
+                    return {
+                        name: q.value,
+                        value: response.answers[i] || '*(answer skipped!)*'
+                    }
+                }),
+                color: parseInt(response.form.color || 'ee8833', 16),
+                footer: {text: [
+                    'react with ✅ to finish; ',
+                    'react with ❌ to cancel. ',
+                    'respective keywords: submit, cancel'
+                ].join(' ')}
+            }};
+
+            var msg = await message.channel.send(content);
+            ['✅','❌'].forEach(r => msg.react(r));
+
+            return Promise.resolve(msg);
+        }
+    }
+
     async sendResponse(response, message, user, config) {
-    	var questions = response.questions?.[0] ? response.questions : form.questions;
+    	var questions = response.questions?.[0] ? response.questions : response.form.questions;
 
         if(questions.find((q, i) => q.required && i+1 > response.answers.length))
             return 'You still have required questions to answer!';
@@ -317,12 +359,10 @@ class OpenResponseStore extends Collection {
 
     async skipQuestion(response, message, user, config) {
     	var questions = response.questions?.[0] ? response.questions : response.form.questions;
+    	if(questions.length < response.answers.length + 1) return Promise.resolve();
 
         if(questions[response.answers.length].required)
             return Promise.resolve('This question can\'t be skipped!');
-        if(questions.length === response.answers.length)
-            return Promise.resolve('Nothing to skip!');
-        var prompt = await message.channel.messages.fetch(response.message_id);
 
         var msg = await message.channel.send([
             'Are you sure you want to skip this question? ',
@@ -333,51 +373,9 @@ class OpenResponseStore extends Collection {
         var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
         if(confirm.msg) return Promise.resolve(confirm.msg);
 
-        if(questions.length > response.answers.length + 1) {
-            response.answers.push('*(answer skipped)*');
-            var msg = await message.channel.send({embed: {
-                title: response.form.name,
-                description: response.form.description,
-                fields: [
-                    {name: `Question ${response.answers.length + 1}${questions[response.answers.length].required ? ' (required)' : ''}`,
-                    value: questions[response.answers.length].value
-                }],
-                color: parseInt(response.form.color || 'ee8833', 16),
-                footer: {text: [
-                    'react with ✅ to finish early; ',
-                    'react with ❌ to cancel; ',
-                    'react with ➡️ to skip this question! ',
-                    'respective text keywords: submit, cancel, skip'
-                ].join("")}
-            }});
-
-            ['✅','❌','➡️'].forEach(r => msg.react(r));
-            
-            await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
-        } else if(questions.length == response.answers.length + 1) {
-            response.answers.push('*(answer skipped)*');
-            var content = {content: "How's this look?", embed: {
-                title: response.form.name,
-                description: response.form.description,
-                fields: questions.map((q, i) => {
-                    return {
-                        name: q.value,
-                        value: response.answers[i] || '*(answer skipped!)*'
-                    }
-                }),
-                color: parseInt(response.form.color || 'ee8833', 16),
-                footer: {text: [
-                    'react with ✅ to finish; ',
-                    'react with ❌ to cancel. ',
-                    'respective keywords: submit, cancel'
-                ].join(' ')}
-            }};
-
-            var msg = await message.channel.send(content);
-            ['✅','❌'].forEach(r => msg.react(r));
-            
-            await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
-        }
+        response.answers.push('*(answer skipped)*');
+    	var msg = await this.sendQuestion(response, message);
+    	await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
     }
 
     async handleReactions(reaction, user) {
@@ -400,6 +398,8 @@ class OpenResponseStore extends Collection {
             await this.delete(msg.channel.id);
             return msg.channel.send("That form is invalid! This response is now closed");
         }
+
+        var question = questions[response.answers.length]; // current question
 
         var config = await this.bot.stores.configs.get(response.server_id);
 
@@ -441,6 +441,79 @@ class OpenResponseStore extends Collection {
                 return;
                 break;
         }
+
+        switch(question.type) {
+        	case 'mc':
+        		var index = NUMBERS.indexOf(reaction.emoji.name);
+        		if(!question.choices[index]) return msg.channel.send('Invalid choice! Please select something else');
+
+        		response.answers.push(question.choices[index]);
+        		var message = await this.sendQuestion(response, msg);
+        		await this.update(message.channel.id, {message_id: message.id, answers: response.answers});
+        		break;
+        	case 'cb':
+        		var index = NUMBERS.indexOf(reaction.emoji.name);
+        		var embed = msg.embeds[0];
+        		if(question.choices[index]) {
+        			embed.fields[index + 1].value = question.choices(index) + " ✅";
+	        		await msg.edit({embed});
+	        		response.selection.push(question.choices[index]);
+        		} else if(reaction.emoji.name == "🅾️") {
+        			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
+	        		await msg.edit({embed});
+
+	        		menus.push(msg.channel.id);
+	        		await msg.channel.send('Please enter a value below!')
+	                response.selection.push('OTHER')
+        		} else if(reacion.emoji.name == '✏️') {
+        			response.answers.push(response.selection.join("\n"));
+        			var message = await this.sendQuestion(response, msg);
+        		} else return msg.channel.send('Invalid choice! Please select something else');
+
+        		await this.update(message.channel.id, {message_id: message?.id || msg.id, answers: response.answers, selection: response.selection});
+        		break;
+        }
+    }
+
+    // for deselecting options
+    async handleReactionRemove(reaction, user) {
+    	if(this.bot.user.id == user.id) return;
+        if(user.bot) return;
+
+        var msg;
+        if(reaction.message.partial) msg = await reaction.message.fetch();
+        else msg = reaction.message;
+
+        if(menus[msg.channel.id]) {
+            return;
+        }
+
+        var response = await this.getByMessage(msg.channel.id, msg.id);
+        if(!response) return;
+
+        var questions = response.questions?.[0] ? response.questions : response.form.questions;
+        if(!questions?.[0]) {
+            await this.delete(msg.channel.id);
+            return msg.channel.send("That form is invalid! This response is now closed");
+        }
+
+        var question = questions[response.answers.length]; // current question
+
+        switch(question.type) {
+        	case 'cb':
+        		var index = NUMBERS.indexOf(reaction.emoji.name);
+        		if(!question.choices[index]) return Promise.resolve();
+
+        		var embed = msg.embeds[0];
+        		embed.fields[index + 1].value = question.choices(index);
+        		await msg.edit({embed});
+
+        		await this.update(message.channel.id, {message_id: message.id, answers: response.answers, selection: response.selection});
+        		break;
+        	default:
+        		return Promise.resolve();
+        		break;
+        }
     }
 
     async handleMessage(message) {
@@ -459,7 +532,17 @@ class OpenResponseStore extends Collection {
 
         var config = await this.bot.stores.configs.get(response.server_id);
 
-        if(menus.includes(message.channel.id)) return;
+        if(menus.includes(message.channel.id)) {
+        	if(!response.selection.includes('OTHER')) return;
+
+        	response.selection[response.selection.indexOf('OTHER')] = message.content;
+        	var prompt = await message.channel.messages.fetch(response.message_id);
+        	var embed = prompt.embeds[0];
+        	embed.fields[embed.fields.length - 1] = message.content;
+        	await prompt.edit({embed});
+        	await this.update(message.channel.id, {selection: response.selection});
+        	menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
+        }
 
         switch(message.content.toLowerCase()) {
             case 'submit':

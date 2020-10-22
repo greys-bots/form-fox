@@ -1,3 +1,5 @@
+const REACTS = require(__dirname + '/../../extras').confirmReacts;
+
 module.exports = {
 	help: ()=> 'Apply to a form',
 	usage: ()=> [' [form id] - Apply to the given form'],
@@ -35,7 +37,7 @@ module.exports = {
 				footer: {text: 'react with ✅ to finish early; react with ❌ to cancel'}
 			}});
 
-			['✅','❌'].forEach(r => message.react(r));
+			REACTS.forEach(r => message.react(r));
 			await bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
 				user_id: msg.author.id,
 				form: form.hid,
