@@ -20,6 +20,16 @@ module.exports = {
 						value: 'Many of my functions are based on reacts! This keeps typing to a minimum'
 					},
 					{
+						name: 'Several question types',
+						value:
+							'Fox currently supports several question types, including:' +
+							'\n- Multiple choice' +
+							'\n- Checkbox' +
+							'\n- Freeform' +
+							'\n- Specific formats' +
+							'\n\nAll of these are also created to be accessible and can be handled using reactions and typing!'
+					},
+					{
 						name: 'Multiple forms per server',
 						value: 'Every server can make as many forms as they want!'
 					},
