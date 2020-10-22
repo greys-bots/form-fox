@@ -22,7 +22,7 @@ module.exports = {
 				embeds = embeds.concat(forms.map(f => {
 					chan = msg.guild.channels.cache.find(c => c.id == f.channel_id);
 					return {embed: {
-						title: `Channel for form ${f.name} (${f.id})`,
+						title: `Channel for form ${f.name} (${f.hid})`,
 						description: `${chan || "*(not set)*"}`,
 						color: parseInt('ee8833', 16)
 					}}
