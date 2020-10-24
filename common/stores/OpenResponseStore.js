@@ -384,6 +384,8 @@ class OpenResponseStore extends Collection {
         response.answers.push('*(answer skipped)*');
     	var msg = await this.sendQuestion(response, message);
     	await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
+
+    	return;
     }
 
     async handleReactions(reaction, user) {
@@ -445,7 +447,7 @@ class OpenResponseStore extends Collection {
                     await msg.channel.send(e.message || e);
                 }
                 menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
-                await msg.channel.send(res);
+                if(res) await msg.channel.send(res);
                 return;
                 break;
         }

@@ -23,8 +23,10 @@ module.exports = {
 
 		var embeds = await bot.genEmbeds(bot, form.questions, (q, i) => {
 			return {
-				name: `Question ${i+1}${q.required ? ' (required)' : ''}`,
-				value: q.value
+				name: `**${data.value}${data.required ? " (required)" : ""}**`,
+				value: `**Type:** ${TYPES.find(t => t.type == data.type).alias[0]}\n\n` +
+					   (data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
+					   (data.other ? 'This question has an "other" option!' : '')
 			}
 		}, {
 			title: form.name,

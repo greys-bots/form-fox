@@ -169,16 +169,13 @@ module.exports = {
     				...NUMBERS.slice(1, current.choices.length + 1),
     				(current.other ? '🅾️' : null),
     				(current.type == 'cb' ? '✏️' : null),
-    				'✅', '❌', '➡️'
+    				'❌'
     			].filter(x => x!=null);
 
     			question.footer = {text:
     				'react or type the respective emoji/character to choose an option! ' +
     				(current.type == 'cb' ? 'react with ✏️ or type "select" to confirm selected choices! ' : '') +
-                    'react with ✅ to finish early; ' +
-                    'react with ❌ to cancel; ' +
-                    'react with ➡️ to skip this question! ' +
-                    'respective text keywords: submit, cancel, skip'
+    				'react with ❌ or type "cancel" to cancel.'
                 }
     			break;
     		case 'num':
@@ -190,14 +187,11 @@ module.exports = {
     			]
 
 
-    			question.reacts = ['✅', '❌', '➡️']
+    			question.reacts = ['❌']
 
     			question.footer = {text:
     				'you can only respond with numbers for this question! ' +
-                    'react with ✅ to finish early; ' +
-                    'react with ❌ to cancel; ' +
-                    'react with ➡️ to skip this question! ' +
-                    'respective text keywords: submit, cancel, skip'
+                    'react with ❌ or type "cancel" to cancel.'
                 }
     			break;
     		case 'dt':
@@ -209,14 +203,11 @@ module.exports = {
     			]
 
 
-    			question.reacts = ['✅', '❌', '➡️']
+    			question.reacts = ['❌']
 
     			question.footer = {text:
     				'you can only respond with a date for this question! ' +
-                    'react with ✅ to finish early; ' +
-                    'react with ❌ to cancel; ' +
-                    'react with ➡️ to skip this question! ' +
-                    'respective text keywords: submit, cancel, skip'
+                    'react with ❌ or type "cancel" to cancel.'
                 }
     			break;
     		default:
@@ -228,15 +219,22 @@ module.exports = {
     			]
 
 
-    			question.reacts = ['✅', '❌', '➡️']
+    			question.reacts = ['❌']
 
     			question.footer = {text:
-                    'react with ✅ to finish early; ' +
-                    'react with ❌ to cancel; ' +
-                    'react with ➡️ to skip this question! ' +
-                    'respective text keywords: submit, cancel, skip'
+                    'react with ❌ or type "cancel" to cancel.'
                 }
     			break;
+    	}
+
+    	if(!current.required) {
+    		if(!questions.find((x, i) => x.required && i > number)) {
+    			question.footer.text += ' react with ✅ or type "submit" to finish early.';
+    			question.reacts.push('✅');
+    		}
+
+    		question.footer.text += ' react with ➡️ or type "skip" to skip this question!';
+    		question.reacts.push('➡️');
     	}
 
     	return question

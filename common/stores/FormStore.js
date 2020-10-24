@@ -19,11 +19,14 @@ class FormStore extends Collection {
 					questions,
 					channel_id,
 					roles,
+					message,
+					color,
 					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
-				 data.channel_id, data.roles || [], data.open || true]);
+				 data.channel_id, data.roles || [],
+				 data.message, data.color, data.open || true]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -44,11 +47,14 @@ class FormStore extends Collection {
 					questions,
 					channel_id,
 					roles,
+					message,
+					color,
 					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
 				[server, hid, data.name, data.description,
-				 data.questions || [],
-				 data.channel_id, data.roles || [], data.open || true]);
+				 JSON.stringify(data.questions || []),
+				 data.channel_id, data.roles || [],
+				 data.message, data.color, data.open || true]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -134,7 +140,8 @@ class FormStore extends Collection {
 							var msg = await chan.messages.fetch(post.message_id);
 							if(!msg) {
 								await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
-								return rej('Message missing!');
+								errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: Message missing!`);
+								continue;
 							}
 
 							await msg.edit({embed: {
@@ -143,19 +150,20 @@ class FormStore extends Collection {
 								color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 								fields: [{name: 'Response Count', value: responses?.length || 0}],
 								footer: {
-									text: !form.open ?
-									'this form is not accepting responses right now!' :
-									'react below to apply to this form!'
+									text: `Form ID: ${form.hid} | ` +
+										  (!form.open ?
+										  'this form is not accepting responses right now!' :
+										  'react below to apply to this form!')
 								}
 							}})
 						} catch(e) {
-							errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
+							errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 						}
 					}
 				}
 			}
 
-			if(errs.length > 0) rej(errs);
+			if(errs[0]) rej(errs.join('\n\n'));
 			else res(form);
 		})
 	}
@@ -185,9 +193,10 @@ class FormStore extends Collection {
 							color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 							fields: [{name: 'Response Count', value: responses?.length || 0}],
 							footer: {
-								text: !form.open ?
-								'this form is not accepting responses right now!' :
-								'react below to apply to this form!'
+								text: `Form ID: ${form.hid} | ` +
+									  (!form.open ?
+									  'this form is not accepting responses right now!' :
+									  'react below to apply to this form!')
 							}
 						}})
 					} catch(e) {
@@ -245,6 +254,49 @@ class FormStore extends Collection {
 			}
 			
 			res();
+		})
+	}
+
+	async export(server, ids) {
+		return new Promise(async (res, rej) => {
+			try {
+				var forms = await this.getAll(server);
+			} catch(e) {
+				console.log(e);
+				return rej(e.message);
+			}
+
+			if(!forms?.[0]) return res();
+			if(ids?.[0]) forms = forms.filter(f => ids.includes(f.hid));
+			
+			res(forms.map(f => {
+				delete f.id;
+				delete f.server_id;
+				delete f.channel_id;
+				return f;
+			}));
+		})
+	}
+
+	async import(server, data = []) {
+		return new Promise(async (res, rej) => {
+			try {
+				var forms = await this.getAll(server);
+				var updated = 0, created = 0;
+				for(var form of data) {
+					if(forms && forms.find(f => f.hid == form.hid)) {
+						await this.update(server, form.hid, form);
+						updated++;
+					} else {
+						await this.create(server, this.bot.utils.genCode(this.bot.chars), form);
+						created++;
+					}
+				}
+			} catch(e) {
+				return rej(e);
+			}
+
+			return res({updated, created, forms: await this.getAll(server)});
 		})
 	}
 }

@@ -62,5 +62,7 @@ module.exports = {
 		}
 
 		return 'Required questions set!';
-	}
+	},
+	permissions: ['MANAGE_MESSAGES'],
+	guildOnly: true
 }

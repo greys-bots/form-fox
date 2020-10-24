@@ -1,3 +1,5 @@
+const {qTypes:TYPES} = require(__dirname + '/../../extras');
+
 module.exports = {
 	help: ()=> `List existing forms`,
 	usage: ()=> [
@@ -27,7 +29,7 @@ module.exports = {
 					description: form.description,
 					fields: [
 						{name: "Message", value: form.message || "*(not set)*"},
-						{name: "Channel", value: `${channel}` || '*(not set)*'},
+						{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
 						{name: "Response count", value: (responses?.length || '0')},
 						{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'}
 					],
@@ -36,7 +38,12 @@ module.exports = {
 				}}];
 
 				var qembeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
-					return {name: `Question ${i+1}${data.required ? " (required)" : ""}`, value: data.value}
+					return {
+						name: `**${data.value}${data.required ? " (required)" : ""}**`,
+						value: `**Type:** ${TYPES.find(t => t.type == data.type).alias[0]}\n\n` +
+							   (data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
+							   (data.other ? 'This question has an "other" option!' : '')
+					}
 				}, {
 					title: `${form.name} (${form.hid})`,
 					description: form.description,
@@ -65,7 +72,7 @@ module.exports = {
 				description: form.description,
 				fields: [
 					{name: "Message", value: form.message || "*(not set)*"},
-					{name: "Channel", value: `${channel}` || '*(not set)*'},
+					{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
 					{name: "Response count", value: (responses?.length || '0')},
 					{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'},
 					{name: "Questions", value: `Use \`${bot.prefix}form ${form.hid}\` to see questions`}

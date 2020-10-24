@@ -29,18 +29,25 @@ module.exports = {
 		}
 
 		try {
-			await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'accepted'});
-			await user.send({embed: {
-				title: 'Response accepted!',
-				description: [
-					`Server: ${msg.guild.name} (${msg.guild.id})`,
-					`Form name: ${response.form.name}`,
-					`Form ID: ${response.form.hid}`,
-					`Response ID: ${response.hid}`
-				].join("\n"),
-				color: parseInt('55aa55', 16),
-				timestamp: new Date().toISOString()
-			}})
+			var welc = response.form.message;
+            if(welc) {
+                for(var key of Object.keys(VARIABLES)) {
+                    welc = welc.replace(key, eval(VARIABLES[key]));
+                }
+            }
+
+            await user.send({embed: {
+                title: 'Response accepted!',
+                description: welc,
+                fields: [
+                	{name: 'Server', value: `${msg.guild.name} (${msg.guild.id})`},
+                	{name: 'Form name', value: `${response.form.name}`},
+                	{name: 'Form ID', value: `${response.form.hid}`},
+                	{name: 'Response ID', value: `${response.hid}`}
+                ],
+                color: parseInt('55aa55', 16),
+                timestamp: new Date().toISOString()
+            }});
 
 			if(response.form.roles) {
 				var member = msg.guild.members.resolve(user.id);
@@ -58,5 +65,6 @@ module.exports = {
 		return 'Response accepted!';
 	},
 	alias: ['acc', 'pass'],
-	permissions: ['MANAGE_MESSAGES']
+	permissions: ['MANAGE_MESSAGES'],
+	guildOnly: true
 }

@@ -17,9 +17,10 @@ module.exports = {
 				color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 				fields: [{name: 'Response Count', value: responses?.length || 0}],
 				footer: {
-					text: !form.open ?
-					'this form is not accepting responses right now!' :
-					'react below to apply to this form!'
+					text: `Form ID: ${form.hid} | ` +
+						  (!form.open ?
+						  'this form is not accepting responses right now!' :
+						  'react below to apply to this form!')
 				}
 			}});
 			message.react('📝');
@@ -32,5 +33,6 @@ module.exports = {
 
 		return 'Posted!';
 	},
-	permissions: ['MANAGE_MESSAGES']
+	permissions: ['MANAGE_MESSAGES'],
+	guildOnly: true
 }

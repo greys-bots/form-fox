@@ -16,6 +16,14 @@ class FormPostStore extends Collection {
 				console.log(e.message || e);
 			}
 		})
+
+		this.bot.on('messageDelete', async ({guild, channel, id}) => {
+			try {
+				await this.delete(guild.id, channel.id, id);
+			} catch(e) {
+				console.log(e.message || e);
+			}
+		})
 	}
 
 	async create(server, channel, message, data = {}) {

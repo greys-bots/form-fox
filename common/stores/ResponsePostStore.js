@@ -253,7 +253,6 @@ class ResponsePostStore extends Collection {
 
                     var welc = post.response.form.message;
                     if(welc) {
-                        console.log(welc);
                         for(var key of Object.keys(VARIABLES)) {
                             welc = welc.replace(key, eval(VARIABLES[key]));
                         }

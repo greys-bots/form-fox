@@ -15,5 +15,7 @@ module.exports = {
 		}
 
 		return 'Form opened!';
-	}
+	},
+	permissions: ['MANAGE_MESSAGES'],
+	guildOnly: true
 }

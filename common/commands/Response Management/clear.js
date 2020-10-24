@@ -52,5 +52,7 @@ module.exports = {
 		}
 
 		return 'Responses deleted!';
-	}
+	},
+	permissions: ['MANAGE_MESSAGES'],
+	guildOnly: true
 }

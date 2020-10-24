@@ -48,7 +48,6 @@ module.exports = {
 		data.description = data.description || "*no description*";
 		data.questions = form.questions;
 
-		console.log(data);
 		try {
 			await bot.stores.forms.create(msg.guild.id, code, data);
 		} catch(e) {
