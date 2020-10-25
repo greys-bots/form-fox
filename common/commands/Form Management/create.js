@@ -119,7 +119,7 @@ module.exports = {
 		return [
 			`Form created! ID: ${code}`,
 			`Use \`${bot.prefix}channel ${code}\` to change what channel this form's responses go to!`,
-			`Use \`${bot.prefix}roles ${code}\` to change what roles are added when this form is accepted!`,	
+			`See \`${bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	},
 	alias: ['new', 'add', 'n', '+'],

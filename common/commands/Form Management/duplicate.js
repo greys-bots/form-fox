@@ -29,7 +29,8 @@ module.exports = {
 				'```\n' +
 				OPTIONS.map(o => `${o.alias.join(" | ")} - ${o.desc}\n`).join("") +
 				'```\n' +
-				`Type a list of what you want to copy below! Note that questions are copied by default`
+				`Type a list of what you want to copy below! Note that questions are copied by default\n` +
+				`Type anything not on the list to continue with the process and only copy questions`
 			)
 
 			var resp = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 60000});
@@ -55,9 +56,9 @@ module.exports = {
 		}
 
 		return [
-			`Form created! ID: ${code}`,
+			`Form copied! ID: ${code}`,
 			`Use \`${bot.prefix}channel ${code}\` to change what channel this form's responses go to!`,
-			`Use \`${bot.prefix}roles ${code}\` to change what roles are added when this form is accepted!`,	
+			`See \`${bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	},
 	alias: ['copy', 'dup', 'cp'],

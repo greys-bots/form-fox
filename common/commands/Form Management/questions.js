@@ -21,7 +21,7 @@ module.exports = {
 		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
-		var embeds = await bot.genEmbeds(bot, form.questions, (q, i) => {
+		var embeds = await bot.utils.genEmbeds(bot, form.questions, (q, i) => {
 			return {
 				name: `**${data.value}${data.required ? " (required)" : ""}**`,
 				value: `**Type:** ${TYPES.find(t => t.type == data.type).alias[0]}\n\n` +
