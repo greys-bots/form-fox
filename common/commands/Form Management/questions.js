@@ -154,7 +154,7 @@ module.exports.subcommands.set = {
 		var i = 0;
 		var message;
 		while(i < 20) {
-			if(i == 0) message = await message.edit(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
+			if(i == 0) message = await msg.channel.send(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
 			else await message.edit(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
 			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
