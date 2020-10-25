@@ -217,15 +217,16 @@ module.exports.subcommands.rephrase = {
 
 			position = parseInt(position);
 			if(isNaN(position)) return 'ERR! Please provide a real number!';
-			if(!form.questions[position - 1]) return "ERR! That question doesn't exist!"
+			if(!form.questions[position - 1]) return "ERR! That question doesn't exist!";
+			question = 
 
 			await msg.channel.send("Enter the new question!");
 			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
-			question.value = resp.content;
+			question = resp.content;
 		}
 
-		form.questions[position - 1] = question;
+		form.questions[position - 1].value = question;
 		try {
 			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
