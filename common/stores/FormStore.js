@@ -79,7 +79,12 @@ class FormStore extends Collection {
 			}
 			
 			if(data.rows && data.rows[0]) {
-				this.set(`${server}-${hid}`, data.rows[0])
+				var form = data.rows[0];
+				if(form.questions.find(q => q == "") {
+					form.questions = form.questions.filter(x => x != "");
+					form = await this.update(server, hid, {questions: form.questions});
+				}
+				this.set(`${server}-${hid}`, form)
 				res(data.rows[0])
 			} else res(undefined);
 		})
