@@ -34,7 +34,7 @@ class FormPostStore extends Collection {
 					channel_id,
 					message_id,
 					form
-				) VALUES ($1,$2,$3,$4)`,
+				) VALUES (?, ?, ?, ?)`,
 				[server, channel, message, data.form]);
 			} catch(e) {
 				console.log(e);
@@ -53,7 +53,7 @@ class FormPostStore extends Collection {
 					channel_id,
 					message_id,
 					form
-				) VALUES ($1,$2,$3,$4)`,
+				) VALUES (?, ?, ?, ?)`,
 				[server, channel, message, data.form]);
 			} catch(e) {
 				console.log(e);
@@ -105,7 +105,7 @@ class FormPostStore extends Collection {
 	async getByForm(server, hid) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM form_posts WHERE server_id = $1 AND form = $2`,[server, hid]);
+				var data = await this.db.query(`SELECT * FROM form_posts WHERE server_id = ? AND form = ?`,[server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -138,11 +138,11 @@ class FormPostStore extends Collection {
 			try {
 				await this.db.query(`
 					UPDATE form_posts SET
-					${Object.keys(data).map((k, i) => k+"=$"+(i+4)).join(",")}
-					WHERE server_id = $1
-					AND channel_id = $2
-					AND message_id = $3
-				`, [server, channel, message, ...Object.values(data)]);
+					${Object.keys(data).map((k, i) => k+"=?").join(",")}
+					WHERE server_id = ?
+					AND channel_id = ?
+					AND message_id = ?
+				`, [...Object.values(data), server, channel, message]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -157,9 +157,9 @@ class FormPostStore extends Collection {
 			try {
 				await this.db.query(`
 					DELETE FROM form_posts
-					WHERE server_id = $1
-					AND channel_id = $2
-					AND message_id = $3
+					WHERE server_id = ?
+					AND channel_id = ?
+					AND message_id = ?
 				`, [server, channel, message]);
 			} catch(e) {
 				console.log(e);
@@ -178,8 +178,8 @@ class FormPostStore extends Collection {
 				if(!posts?.[0]) return res();
 				await this.db.query(`
 					DELETE FROM form_posts
-					WHERE server_id = $1
-					AND form = $2
+					WHERE server_id = ?
+					AND form = ?
 				`, [server, hid]);
 				if(posts)
 					for(var post of posts)
@@ -258,7 +258,7 @@ class FormPostStore extends Collection {
 				return;
 				break;
 		}
-	}
+	}	
 }
 
 module.exports = (bot, db) => new FormPostStore(bot, db);

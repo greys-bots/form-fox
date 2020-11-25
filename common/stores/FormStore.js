@@ -22,7 +22,7 @@ class FormStore extends Collection {
 					message,
 					color,
 					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [],
@@ -50,7 +50,7 @@ class FormStore extends Collection {
 					message,
 					color,
 					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [],
@@ -72,7 +72,19 @@ class FormStore extends Collection {
 			}
 			
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = ? AND hid = ?`, {
+					id: Number,
+					server_id: String,
+					hid: String,
+					name: String,
+					description: String,
+					questions: JSON.parse,
+					channel_id: String,
+					roles: JSON.parse,
+					message: String,
+					color: String,
+					open: Boolean
+				}, [server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -93,7 +105,19 @@ class FormStore extends Collection {
 	async getAll(server) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = ?`, {
+					id: Number,
+					server_id: String,
+					hid: String,
+					name: String,
+					description: String,
+					questions: JSON.parse,
+					channel_id: String,
+					roles: JSON.parse,
+					message: String,
+					color: String,
+					open: Boolean
+				}, [server]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -108,7 +132,19 @@ class FormStore extends Collection {
 	async getByHids(server, ids) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = ANY($2)`,[server, ids]);
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = ? AND hid IN (?)`, {
+					id: Number,
+					server_id: String,
+					hid: String,
+					name: String,
+					description: String,
+					questions: JSON.parse,
+					channel_id: String,
+					roles: JSON.parse,
+					message: String,
+					color: String,
+					open: Boolean
+				}, [server, ids]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -124,7 +160,7 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			if(data.questions) data.questions = JSON.stringify(data.questions);
 			try {
-				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
+				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE server_id = ? AND hid = ?`,[...Object.values(data), server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -218,7 +254,7 @@ class FormStore extends Collection {
 	async delete(server, hid) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`DELETE FROM forms WHERE server_id = $1 AND hid = $2`, [server, hid]);
+				await this.db.query(`DELETE FROM forms WHERE server_id = ? AND hid = ?`, [server, hid]);
 				await this.bot.stores.formPosts.deleteByForm(server, hid);
 				await this.bot.stores.openResponses.deleteByForm(server, hid);
 				await this.bot.stores.responses.deleteByForm(server, hid);

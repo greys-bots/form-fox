@@ -1,24 +1,41 @@
 var fs = require('fs');
-var {Pool} = require('pg');
+var dblite = require('dblite');
+
+//uncomment the line below if your setup involves
+//getting the sqlite tools and putting them in (root)/sqlite
+// dblite.bin = `${__dirname}/../../sqlite/sqlite3.exe`;
 
 module.exports = async (bot) => {
-	const db = new Pool();
+	const db = dblite(`${__dirname}/../../data.sqlite`, '-header');
+
+	// promisify
+	var tmp = db.query;
+	db.query = function (...args) {
+		return new Promise((res, rej) => {
+			tmp(...args, (err, data) => {
+				if(err) return rej(err)
+				else return res(data)
+			})
+		})
+	}
 
 	await db.query(`
+		PRAGMA foreign_keys = ON;
+		
 		CREATE TABLE IF NOT EXISTS configs (
-			id 					SERIAL PRIMARY KEY,
+			id 					INTEGER PRIMARY KEY AUTOINCREMENT,
 			server_id 			TEXT,
 			response_channel 	TEXT,
 			message 			TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (
-			id 			SERIAL PRIMARY KEY,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			server_id	TEXT,
 			hid 		TEXT UNIQUE,
 			name 		TEXT,
 			description TEXT,
-			questions 	JSONB,
+			questions 	TEXT,
 			channel_id 	TEXT,
 			roles 		TEXT[],
 			message 	TEXT,
@@ -27,13 +44,13 @@ module.exports = async (bot) => {
 		);
 
 		CREATE TABLE IF NOT EXISTS extras (
-			id 			SERIAL PRIMARY KEY,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			key 		TEXT,
 			val 		TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS form_posts (
-			id 			SERIAL PRIMARY KEY,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			server_id 	TEXT,
 			channel_id 	TEXT,
 			message_id 	TEXT,
@@ -41,7 +58,7 @@ module.exports = async (bot) => {
 		);
 
 		CREATE TABLE IF NOT EXISTS open_responses (
-			id 			SERIAL PRIMARY KEY,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			server_id 	TEXT,
 			channel_id 	TEXT,
 			message_id 	TEXT,
@@ -53,7 +70,7 @@ module.exports = async (bot) => {
 		);
 
 		CREATE TABLE IF NOT EXISTS responses (
-			id 			SERIAL PRIMARY KEY,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			server_id 	TEXT,
 			hid 		TEXT UNIQUE,
 			user_id 	TEXT,
@@ -65,7 +82,7 @@ module.exports = async (bot) => {
 		);
 
 		CREATE TABLE IF NOT EXISTS response_posts (
-			id 			SERIAL PRIMARY KEY,
+			id 			INTEGER PRIMARY KEY AUTOINCREMENT,
 			server_id 	TEXT,
 			channel_id 	TEXT,
 			message_id 	TEXT,
