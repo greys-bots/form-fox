@@ -11,7 +11,7 @@ class ConfigStore extends Collection {
 	async create(server, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO configs (
+				await this.db.get(`INSERT INTO configs (
 					server_id,
 					response_channel
 				) VALUES (?, ?)`,
@@ -28,7 +28,7 @@ class ConfigStore extends Collection {
 	async index(server, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO configs (
+				await this.db.get(`INSERT INTO configs (
 					server_id,
 					response_channel
 				) VALUES (?, ?)`,
@@ -50,15 +50,15 @@ class ConfigStore extends Collection {
 			}
 			
 			try {
-				var data = await this.db.query(`SELECT * FROM configs WHERE server_id = ?`,[server]);
+				var data = await this.db.get(`SELECT * FROM configs WHERE server_id = ?`,[server]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				this.set(server, data.rows[0])
-				res(data.rows[0])
+			if(data && data[0]) {
+				this.set(server, data[0])
+				res(data[0])
 			} else res(undefined);
 		})
 	}
@@ -66,7 +66,7 @@ class ConfigStore extends Collection {
 	async update(server, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`UPDATE configs SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE server_id = $1`,[...Object.values(data), server]);
+				await this.db.get(`UPDATE configs SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE server_id = $1`,[...Object.values(data), server]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -79,7 +79,7 @@ class ConfigStore extends Collection {
 	async delete(server) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`DELETE FROM configs WHERE server_id = ?`, [server]);
+				await this.db.get(`DELETE FROM configs WHERE server_id = ?`, [server]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);

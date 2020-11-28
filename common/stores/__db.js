@@ -9,17 +9,22 @@ module.exports = async (bot) => {
 	const db = dblite(`${__dirname}/../../data.sqlite`, '-header');
 
 	// promisify
-	var tmp = db.query;
-	db.query = function (...args) {
-		return new Promise((res, rej) => {
-			tmp(...args, (err, data) => {
-				if(err) return rej(err)
-				else return res(data)
+	db.get = function (...args) {
+		return new Promise((resolve, reject) => {
+			//dblite doesn't recognize select statements that start with whitespace
+			//so i guess we'll fix that ourselves for now
+			if(args[0].match(/^\s*SELECT/i)) args[0] = args[0].replace(/^\s*/, '');
+			this.query(...args, (err, data) => {
+				if(err) {
+					return reject(err);
+				} else {
+					return resolve(data)
+				}
 			})
 		})
 	}
 
-	await db.query(`
+	await db.get(`
 		PRAGMA foreign_keys = ON;
 		
 		CREATE TABLE IF NOT EXISTS configs (
@@ -90,6 +95,8 @@ module.exports = async (bot) => {
 		);
 	`);
 
+	console.log('done')
+
 	bot.stores = {};
 	var files = fs.readdirSync(__dirname);
 	for(var file of files) {
@@ -104,7 +111,7 @@ module.exports = async (bot) => {
 	}
 
 	files = fs.readdirSync(__dirname + '/migrations');
-	var version = parseInt((await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val || -1);
+	var version = parseInt((await db.get(`SELECT * FROM extras WHERE key = 'version'`))[0]?.val || -1);
 	if(files.length > version + 1) {
 		for(var i = version + 1; i < files.length; i++) {
 			if(!files[i]) continue;

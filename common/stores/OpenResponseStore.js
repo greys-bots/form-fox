@@ -50,7 +50,7 @@ class OpenResponseStore extends Collection {
     async create(server, channel, message, data = {}) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`INSERT INTO open_responses (
+                await this.db.get(`INSERT INTO open_responses (
                     server_id,
                     channel_id,
                     message_id,
@@ -58,7 +58,7 @@ class OpenResponseStore extends Collection {
                     form,
                     questions,
                     answers
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                ) VALUES (?,?,?,?,?,?,?)`,
                 [server, channel, message, data.user_id, data.form, data.questions || [], data.answers || []]);
             } catch(e) {
                 console.log(e);
@@ -72,7 +72,7 @@ class OpenResponseStore extends Collection {
     async index(server, channel, message, data = {}) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`INSERT INTO open_responses (
+                await this.db.get(`INSERT INTO open_responses (
                     server_id,
                     channel_id,
                     message_id,
@@ -80,7 +80,7 @@ class OpenResponseStore extends Collection {
                     form,
                     questions,
                     answers
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+                ) VALUES (?,?,?,?,?,?,?)`,
                 [server, channel, message, data.user_id, data.form, data.questions || [], data.answers || []]);
             } catch(e) {
                 console.log(e);
@@ -103,17 +103,26 @@ class OpenResponseStore extends Collection {
             }
             
             try {
-                var data = await this.db.query(`SELECT * FROM open_responses WHERE channel_id = $1`,[channel]);
+                var data = await this.db.get(`SELECT * FROM open_responses WHERE channel_id = ?`, [channel], {
+                    id: Number,
+                    server_id: String,
+                    channel_id: String,
+                    message_id: String,
+                    user_id: String,
+                    form: String,
+                    questions: JSON.parse,
+                    answers: JSON.parse
+                });
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
             }
             
-            if(data.rows && data.rows[0]) {
-                var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-                if(form) data.rows[0].form = form;
-                this.set(`${channel}`, data.rows[0])
-                res(data.rows[0])
+            if(data && data[0]) {
+                var form = await this.bot.stores.forms.get(data[0].server_id, data[0].form);
+                if(form) data[0].form = form;
+                this.set(`${channel}`, data[0])
+                res(data[0])
             } else res(undefined);
         })
     }
@@ -121,16 +130,25 @@ class OpenResponseStore extends Collection {
     async getByMessage(channel, message) {
         return new Promise(async (res, rej) => {
             try {
-                var data = await this.db.query(`SELECT * FROM open_responses WHERE channel_id = $1 AND message_id = $2`,[channel, message]);
+                var data = await this.db.get(`SELECT * FROM open_responses WHERE channel_id = ? AND message_id = ?`, [channel, message], {
+                    id: Number,
+                    server_id: String,
+                    channel_id: String,
+                    message_id: String,
+                    user_id: String,
+                    form: String,
+                    questions: JSON.parse,
+                    answers: JSON.parse
+                });
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
             }
             
-            if(data.rows && data.rows[0]) {
-                var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-                if(form) data.rows[0].form = form;
-                res(data.rows[0])
+            if(data && data[0]) {
+                var form = await this.bot.stores.forms.get(data[0].server_id, data[0].form);
+                if(form) data[0].form = form;
+                res(data[0])
             } else res(undefined);
         })
     }
@@ -138,19 +156,28 @@ class OpenResponseStore extends Collection {
     async getByForm(server, hid) {
         return new Promise(async (res, rej) => {
             try {
-                var data = await this.db.query(`SELECT * FROM open_responses WHERE server_id = $1 AND form = $2`,[server, hid]);
+                var data = await this.db.get(`SELECT * FROM open_responses WHERE server_id = ? AND form = ?`, [server, hid], {
+                    id: Number,
+                    server_id: String,
+                    channel_id: String,
+                    message_id: String,
+                    user_id: String,
+                    form: String,
+                    questions: JSON.parse,
+                    answers: JSON.parse
+                });
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
             }
             
-            if(data.rows && data.rows[0]) {
+            if(data && data[0]) {
                 var form = await this.bot.stores.forms.get(server, hid);
-                for(var i = 0; i < data.rows.length; i++) {
-                    if(form) data.rows[i].form = form;
+                for(var i = 0; i < data.length; i++) {
+                    if(form) data[i].form = form;
                 }
 
-                res(data.rows)
+                res(data)
             } else res(undefined);
         })
     }
@@ -158,7 +185,7 @@ class OpenResponseStore extends Collection {
     async update(channel, data = {}) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`UPDATE open_responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE channel_id = $1`,[channel, ...Object.values(data)]);
+                await this.db.get(`UPDATE open_responses SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE channel_id = ?`,[...Object.values(data), channel]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -171,7 +198,7 @@ class OpenResponseStore extends Collection {
     async delete(channel) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`DELETE FROM open_responses WHERE channel_id = $1`, [channel]);
+                await this.db.get(`DELETE FROM open_responses WHERE channel_id = ?`, [channel]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -187,10 +214,10 @@ class OpenResponseStore extends Collection {
             try {
                 var responses = await this.getByForm(server, hid);
                 if(!responses?.[0]) return res();
-                await this.db.query(`
+                await this.db.get(`
                     DELETE FROM open_responses
-                    WHERE server_id = $1
-                    AND form = $2
+                    WHERE server_id = ?
+                    AND form = ?
                 `, [server, hid]);
                 if(responses)
                     for(var response of responses)

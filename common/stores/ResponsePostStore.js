@@ -26,12 +26,12 @@ class ResponsePostStore extends Collection {
     async create(server, channel, message, data = {}) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`INSERT INTO response_posts (
+                await this.db.get(`INSERT INTO response_posts (
                     server_id,
                     channel_id,
                     message_id,
                     response
-                ) VALUES ($1,$2,$3,$4)`,
+                ) VALUES (?,?,?,?)`,
                 [server, channel, message, data.response]);
             } catch(e) {
                 console.log(e);
@@ -45,12 +45,12 @@ class ResponsePostStore extends Collection {
     async index(server, channel, message, data = {}) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`INSERT INTO response_posts (
+                await this.db.get(`INSERT INTO response_posts (
                     server_id,
                     channel_id,
                     message_id,
                     response
-                ) VALUES ($1,$2,$3,$4)`,
+                ) VALUES (?,?,?,?)`,
                 [server, channel, message, data.response]);
             } catch(e) {
                 console.log(e);
@@ -73,22 +73,28 @@ class ResponsePostStore extends Collection {
             }
             
             try {
-                var data = await this.db.query(`
+                var data = await this.db.get(`
                     SELECT * FROM response_posts WHERE
-                    server_id = $1
-                    AND channel_id = $2
-                    AND message_id = $3
-                `, [server, channel, message]);
+                    server_id = ?
+                    AND channel_id = ?
+                    AND message_id = ?
+                `, [server, channel, message], {
+                    id: Number,
+                    server_id: String,
+                    channel_id: String,
+                    message_id: String,
+                    response: String
+                });
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
             }
             
-            if(data.rows && data.rows[0]) {
-                var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
-                if(response) data.rows[0].response = response;
-                this.set(`${server}-${channel}-${message}`, data.rows[0])
-                res(data.rows[0])
+            if(data && data[0]) {
+                var response = await this.bot.stores.responses.get(data[0].server_id, data[0].response);
+                if(response) data[0].response = response;
+                this.set(`${server}-${channel}-${message}`, data[0])
+                res(data[0])
             } else res(undefined);
         })
     }
@@ -96,16 +102,22 @@ class ResponsePostStore extends Collection {
     async getByResponse(server, hid) {
         return new Promise(async (res, rej) => {
             try {
-                var data = await this.db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
+                var data = await this.db.get(`SELECT * FROM response_posts WHERE server_id = ? AND response = ?`, [server, hid], {
+                    id: Number,
+                    server_id: String,
+                    channel_id: String,
+                    message_id: String,
+                    response: String
+                });
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
             }
             
-            if(data.rows && data.rows[0]) {
-                var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
-                if(response) data.rows[0].response = response;
-                res(data.rows[0])
+            if(data && data[0]) {
+                var response = await this.bot.stores.responses.get(data[0].server_id, data[0].response);
+                if(response) data[0].response = response;
+                res(data[0])
             } else res(undefined);
         })
     }
@@ -113,13 +125,13 @@ class ResponsePostStore extends Collection {
     async update(server, channel, message, data = {}) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`
+                await this.db.get(`
                     UPDATE response_posts SET
-                    ${Object.keys(data).map((k, i) => k+"=$"+(i+4)).join(",")}
-                    WHERE server_id = $1
-                    AND channel_id = $2
-                    AND message_id = $3
-                `, [server, channel, message, ...Object.values(data)]);
+                    ${Object.keys(data).map((k, i) => k+"=?").join(",")}
+                    WHERE server_id = ?
+                    AND channel_id = ?
+                    AND message_id = ?
+                `, [...Object.values(data), server, channel, message]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -132,11 +144,11 @@ class ResponsePostStore extends Collection {
     async delete(server, channel, message) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`
+                await this.db.get(`
                     DELETE FROM response_posts
-                    WHERE server_id = $1
-                    AND channel_id = $2
-                    AND message_id = $3
+                    WHERE server_id = ?
+                    AND channel_id = ?
+                    AND message_id = ?
                 `, [server, channel, message]);
             } catch(e) {
                 console.log(e);
@@ -151,10 +163,10 @@ class ResponsePostStore extends Collection {
     async deleteByResponse(server, hid) {
         return new Promise(async (res, rej) => {
             try {
-                await this.db.query(`
+                await this.db.get(`
                     DELETE FROM response_posts
-                    WHERE server_id = $1
-                    AND response = $2
+                    WHERE server_id = ?
+                    AND response = ?
                 `, [server, hid]);
                 super.delete(`${server}-${channel}-${message}`)
             } catch(e) {

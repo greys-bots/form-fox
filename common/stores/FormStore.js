@@ -11,7 +11,7 @@ class FormStore extends Collection {
 	async create(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO forms (
+				await this.db.get(`INSERT INTO forms (
 					server_id,
 					hid,
 					name,
@@ -39,7 +39,7 @@ class FormStore extends Collection {
 	async index(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO forms (
+				await this.db.get(`INSERT INTO forms (
 					server_id,
 					hid,
 					name,
@@ -72,7 +72,7 @@ class FormStore extends Collection {
 			}
 			
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = ? AND hid = ?`, {
+				var data = await this.db.get(`SELECT * FROM forms WHERE server_id = ? AND hid = ?`, [server, hid], {
 					id: Number,
 					server_id: String,
 					hid: String,
@@ -84,20 +84,22 @@ class FormStore extends Collection {
 					message: String,
 					color: String,
 					open: Boolean
-				}, [server, hid]);
+				});
+				console.log(data)
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				var form = data.rows[0];
+			if(data && data[0]) {
+				console.log(data)
+				var form = data[0];
 				if(form.questions.find(q => q == "")) {
 					form.questions = form.questions.filter(x => x != "");
 					form = await this.update(server, hid, {questions: form.questions});
 				}
 				this.set(`${server}-${hid}`, form)
-				res(data.rows[0])
+				res(data[0])
 			} else res(undefined);
 		})
 	}
@@ -105,7 +107,7 @@ class FormStore extends Collection {
 	async getAll(server) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = ?`, {
+				var data = await this.db.get(`SELECT * FROM forms WHERE server_id = ?`, [server], {
 					id: Number,
 					server_id: String,
 					hid: String,
@@ -117,14 +119,15 @@ class FormStore extends Collection {
 					message: String,
 					color: String,
 					open: Boolean
-				}, [server]);
+				});
+				console.log(data)
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				res(data.rows)
+			if(data && data[0]) {
+				res(data)
 			} else res(undefined);
 		})
 	}
@@ -132,7 +135,7 @@ class FormStore extends Collection {
 	async getByHids(server, ids) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = ? AND hid IN (?)`, {
+				var data = await this.db.get(`SELECT * FROM forms WHERE server_id = ? AND hid IN (?)`, [server, ids], {
 					id: Number,
 					server_id: String,
 					hid: String,
@@ -144,14 +147,14 @@ class FormStore extends Collection {
 					message: String,
 					color: String,
 					open: Boolean
-				}, [server, ids]);
+				});
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				res(data.rows)
+			if(data && data[0]) {
+				res(data)
 			} else res(undefined);
 		})
 	}
@@ -160,7 +163,7 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			if(data.questions) data.questions = JSON.stringify(data.questions);
 			try {
-				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE server_id = ? AND hid = ?`,[...Object.values(data), server, hid]);
+				await this.db.get(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE server_id = ? AND hid = ?`,[...Object.values(data), server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -254,7 +257,7 @@ class FormStore extends Collection {
 	async delete(server, hid) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`DELETE FROM forms WHERE server_id = ? AND hid = ?`, [server, hid]);
+				await this.db.get(`DELETE FROM forms WHERE server_id = ? AND hid = ?`, [server, hid]);
 				await this.bot.stores.formPosts.deleteByForm(server, hid);
 				await this.bot.stores.openResponses.deleteByForm(server, hid);
 				await this.bot.stores.responses.deleteByForm(server, hid);

@@ -29,7 +29,7 @@ class FormPostStore extends Collection {
 	async create(server, channel, message, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO form_posts (
+				await this.db.get(`INSERT INTO form_posts (
 					server_id,
 					channel_id,
 					message_id,
@@ -48,7 +48,7 @@ class FormPostStore extends Collection {
 	async index(server, channel, message, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO form_posts (
+				await this.db.get(`INSERT INTO form_posts (
 					server_id,
 					channel_id,
 					message_id,
@@ -72,18 +72,18 @@ class FormPostStore extends Collection {
 			}
 			
 			try {
-				var data = await this.db.query(`
+				var data = await this.db.get(`
 					SELECT * FROM form_posts WHERE
-					server_id = $1
-					AND channel_id = $2
-					AND message_id = $3
+					server_id = ?
+					AND channel_id = ?
+					AND message_id = ?
 				`, [server, channel, message]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 
-			if(data.rows && data.rows[0]) {
+			if(data && data[0]) {
 				var guild = this.bot.guilds.resolve(server);
 				if(!guild) return rej("Couldn't get guild!");
 				guild = await guild.fetch();
@@ -94,10 +94,10 @@ class FormPostStore extends Collection {
 					return res(undefined);
 				}
 
-				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-				if(form) data.rows[0].form = form;
-				this.set(`${server}-${channel}-${message}`, data.rows[0])
-				res(data.rows[0])
+				var form = await this.bot.stores.forms.get(data[0].server_id, data[0].form);
+				if(form) data[0].form = form;
+				this.set(`${server}-${channel}-${message}`, data[0])
+				res(data[0])
 			} else res(undefined);
 		})
 	}
@@ -105,7 +105,11 @@ class FormPostStore extends Collection {
 	async getByForm(server, hid) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM form_posts WHERE server_id = ? AND form = ?`,[server, hid]);
+				var data = await this.db.get(`
+					SELECT * FROM form_posts WHERE
+					server_id = ?
+					AND form = ?
+				`, [server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -115,20 +119,20 @@ class FormPostStore extends Collection {
 			if(!guild) return rej("Couldn't get guild!");
 			guild = await guild.fetch();
 			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					var chan = guild.channels.resolve(data.rows[i].channel_id);
-					var msg = chan?.messages.fetch(data.rows[i].message_id);
+			if(data && data[0]) {
+				for(var i = 0; i < data.length; i++) {
+					var chan = guild.channels.resolve(data[i].channel_id);
+					var msg = chan?.messages.fetch(data[i].message_id);
 					if(!chan || !msg) {
-						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
-						data.rows[i] = 'deleted';
+						await this.delete(server, data[i].channel_id, data[i].message_id);
+						data[i] = 'deleted';
 						continue;
 					}
 
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
+					var form = await this.bot.stores.forms.get(data[i].server_id, data[i].form);
+					if(form) data[i].form = form;
 				}
-				res(data.rows.filter(x => x != 'deleted'))
+				res(data.filter(x => x != 'deleted'))
 			} else res(undefined);
 		})
 	}
@@ -136,7 +140,7 @@ class FormPostStore extends Collection {
 	async update(server, channel, message, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`
+				await this.db.get(`
 					UPDATE form_posts SET
 					${Object.keys(data).map((k, i) => k+"=?").join(",")}
 					WHERE server_id = ?
@@ -155,7 +159,7 @@ class FormPostStore extends Collection {
 	async delete(server, channel, message) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`
+				await this.db.get(`
 					DELETE FROM form_posts
 					WHERE server_id = ?
 					AND channel_id = ?
@@ -176,11 +180,11 @@ class FormPostStore extends Collection {
 			try {
 				var posts = await this.getByForm(server, hid);
 				if(!posts?.[0]) return res();
-				await this.db.query(`
+				await this.db.get(`
 					DELETE FROM form_posts
 					WHERE server_id = ?
-					AND form = ?
-				`, [server, hid]);
+					AND form = ?`
+				, [server, hid]);
 				if(posts)
 					for(var post of posts)
 						super.delete(`${server}-${post.channel_id}-${post.message_id}`);

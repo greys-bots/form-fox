@@ -11,7 +11,7 @@ class ResponseStore extends Collection {
 	async create(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO responses (
+				await this.db.get(`INSERT INTO responses (
 					server_id,
 					hid,
 					user_id,
@@ -20,9 +20,9 @@ class ResponseStore extends Collection {
 					answers,
 					status,
 					received
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+				) VALUES (?,?,?,?,?,?,?,?)`,
 				[server, hid, data.user_id, data.form, data.questions || [],
-				data.answers || [], data.status || 'pending', data.received || new Date()]);
+				data.answers || [], data.status || 'pending', data.received || new Date().toISOString()]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -35,7 +35,7 @@ class ResponseStore extends Collection {
 	async index(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO responses (
+				await this.db.get(`INSERT INTO responses (
 					server_id,
 					hid,
 					user_id,
@@ -44,9 +44,9 @@ class ResponseStore extends Collection {
 					answers,
 					status,
 					received
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+				) VALUES (?,?,?,?,?,?,?,?)`,
 				[server, hid, data.user_id, data.form, data.questions || [],
-				data.answers || [], data.status || 'pending', data.received || new Date()]);
+				data.answers || [], data.status || 'pending', data.received || new Date().toISOString()]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -68,17 +68,27 @@ class ResponseStore extends Collection {
 			}
 			
 			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND hid = $2`,[server, hid]);
+				var data = await this.db.get(`SELECT * FROM responses WHERE server_id = ? AND hid = ?`, [server, hid], {
+					id: Number,
+					server_id: String,
+					hid: String,
+					user_id: String,
+					form: String,
+					questions: JSON.parse,
+					answers: JSON.parse,
+					status: String,
+					received: Date
+				});
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-				if(form) data.rows[0].form = form;
-				this.set(`${server}-${hid}`, data.rows[0])
-				res(data.rows[0])
+			if(data && data[0]) {
+				var form = await this.bot.stores.forms.get(data[0].server_id, data[0].form);
+				if(form) data[0].form = form;
+				this.set(`${server}-${hid}`, data[0])
+				res(data[0])
 			} else res(undefined);
 		})
 	}
@@ -86,18 +96,28 @@ class ResponseStore extends Collection {
 	async getAll(server) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1`,[server]);
+				var data = await this.db.get(`SELECT * FROM responses WHERE server_id = ?`, [server], {
+					id: Number,
+					server_id: String,
+					hid: String,
+					user_id: String,
+					form: String,
+					questions: JSON.parse,
+					answers: JSON.parse,
+					status: String,
+					received: Date
+				});
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
+			if(data && data[0]) {
+				for(var i = 0; i < data.length; i++) {
+					var form = await this.bot.stores.forms.get(data[i].server_id, data[i].form);
+					if(form) data[i].form = form;
 				}
-				res(data.rows)
+				res(data)
 			} else res(undefined);
 		})
 	}
@@ -105,18 +125,28 @@ class ResponseStore extends Collection {
 	async getByUser(server, user) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND user_id = $2`,[server, user]);
+				var data = await this.db.get(`SELECT * FROM responses WHERE server_id = ? AND user_id = ?`, [server, user], {
+					id: Number,
+					server_id: String,
+					hid: String,
+					user_id: String,
+					form: String,
+					questions: JSON.parse,
+					answers: JSON.parse,
+					status: String,
+					received: Date
+				});
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
+			if(data && data[0]) {
+				for(var i = 0; i < data.length; i++) {
+					var form = await this.bot.stores.forms.get(data[i].server_id, data[i].form);
+					if(form) data[i].form = form;
 				}
-				res(data.rows)
+				res(data)
 			} else res(undefined);
 		})
 	}
@@ -124,19 +154,29 @@ class ResponseStore extends Collection {
 	async getByForm(server, hid) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND form = $2`,[server, hid]);
+				var data = await this.db.get(`SELECT * FROM responses WHERE server_id = ? AND form = ?`, [server, hid], {
+					id: Number,
+					server_id: String,
+					hid: String,
+					user_id: String,
+					form: String,
+					questions: JSON.parse,
+					answers: JSON.parse,
+					status: String,
+					received: Date
+				});
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
 			}
 			
-			if(data.rows && data.rows[0]) {
+			if(data && data[0]) {
 				var form = await this.bot.stores.forms.get(server, hid);
-                for(var i = 0; i < data.rows.length; i++) {
-                    if(form) data.rows[i].form = form;
+                for(var i = 0; i < data.length; i++) {
+                    if(form) data[i].form = form;
                 }
                 
-				res(data.rows)
+				res(data)
 			} else res(undefined);
 		})
 	}
@@ -144,7 +184,7 @@ class ResponseStore extends Collection {
 	async update(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`UPDATE responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
+				await this.db.get(`UPDATE responses SET ${Object.keys(data).map((k, i) => k+"=?").join(",")} WHERE server_id = ? AND hid = ?`,[...Object.values(data), server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -157,7 +197,7 @@ class ResponseStore extends Collection {
 	async delete(server, hid) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND hid = $2`, [server, hid]);
+				await this.db.get(`DELETE FROM responses WHERE server_id = ? AND hid = ?`, [server, hid]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -173,7 +213,7 @@ class ResponseStore extends Collection {
 			try {
 				var responses = await this.getAll(server);
 				if(!responses?.[0]) return res();
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1`, [server]);
+				await this.db.get(`DELETE FROM responses WHERE server_id = ?`, [server]);
 				for(var response of responses) super.delete(`${server}-${response.hid}`);
 			} catch(e) {
 				console.log(e);
@@ -189,7 +229,7 @@ class ResponseStore extends Collection {
 			try {
 				var responses = await this.getByUser(server, user);
 				if(!responses?.[0]) return res();
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND user_id = $2`, [server, user]);
+				await this.db.get(`DELETE FROM responses WHERE server_id = ? AND user_id = ?`, [server, user]);
 				for(var response of responses) super.delete(`${server}-${response.hid}`);
 			} catch(e) {
 				console.log(e);
@@ -205,7 +245,7 @@ class ResponseStore extends Collection {
 			try {
 				var responses = await this.getByForm(server, form);
 				if(!responses?.[0]) return res();
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
+				await this.db.get(`DELETE FROM responses WHERE server_id = ? AND form = ?`, [server, form]);
 				for(var response of responses) {
 					await this.bot.stores.responsePosts.deleteByResponse(server, response.hid);
 					super.delete(`${server}-${response.hid}`);
