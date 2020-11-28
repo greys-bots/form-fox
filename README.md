@@ -34,6 +34,13 @@ Most commands come with shorter aliases for ease of typing. Form and response cr
 In-progress responses are saved for easy access later. Respond whenever you want; there's no time limit before you have to start over again.  
 This also applies to bot restarts. Your data will be saved as soon as you answer a question, and will be accessed again when you answer another one. No more losing responses because of bot crashes.
 
+## Self hosting
+1. Make sure you've got SQLite installed/downloaded (`sudo apt install sqlite3` or [download sqlite-tools from here](https://www.sqlite.org/download.html) and add extracted folder to PATH)
+2. Make sure you have Node installed; use `npm install` in the root folder
+3. Copy and rename `.env.example` to `.env`; fill it out with the correct info
+4. Run `node bot/bot` from the root folder
+5. Profit
+
 ## Support and Links
 [support server](https://discord.gg/EvDmXGt)  
 [our patreon](https://patreon.com/greysdawn)  
