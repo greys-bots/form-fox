@@ -11,9 +11,6 @@ module.exports = async (bot) => {
 	// promisify
 	db.get = function (...args) {
 		return new Promise((resolve, reject) => {
-			//dblite doesn't recognize select statements that start with whitespace
-			//so i guess we'll fix that ourselves for now
-			if(args[0].match(/^\s*SELECT/i)) args[0] = args[0].replace(/^\s*/, '');
 			this.query(...args, (err, data) => {
 				if(err) {
 					return reject(err);
