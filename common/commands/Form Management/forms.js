@@ -25,7 +25,8 @@ module.exports = {
 				var responses = await bot.stores.responses.getByForm(msg.guild.id, form.hid);
 
 				var embeds = [{embed: {
-					title: `${form.name} (${form.hid})`,
+					title: `${form.name} (${form.hid}) ` +
+						   `${form.emoji?.includes(':') ? '<:' + form.emoji + '>' : form.emoji || '📝'}`,
 					description: form.description,
 					fields: [
 						{name: "Message", value: form.message || "*(not set)*"},
@@ -68,7 +69,8 @@ module.exports = {
 			var responses = await bot.stores.responses.getByForm(msg.guild.id, form.hid);
 
 			var embed = {embed: {
-				title: `${form.name} (${form.hid})`,
+				title: `${form.name} (${form.hid}) ` +
+					   `${form.emoji?.includes(':') ? '<:' + form.emoji + '>' : form.emoji || '📝'}`,
 				description: form.description,
 				fields: [
 					{name: "Message", value: form.message || "*(not set)*"},

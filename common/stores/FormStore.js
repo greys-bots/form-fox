@@ -21,12 +21,15 @@ class FormStore extends Collection {
 					roles,
 					message,
 					color,
-					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+					open,
+					cooldown,
+					emoji
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [],
-				 data.message, data.color, data.open || true]);
+				 data.message, data.color, data.open || true,
+				 data.cooldown, data.emoji]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -49,12 +52,15 @@ class FormStore extends Collection {
 					roles,
 					message,
 					color,
-					open
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+					open,
+					cooldown,
+					emoji
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [],
-				 data.message, data.color, data.open || true]);
+				 data.message, data.color, data.open || true,
+				 data.cooldown, data.emoji]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -90,6 +96,26 @@ class FormStore extends Collection {
 		})
 	}
 
+	// async getByEmoji(server, emoji) {
+		// return new Promise(async (res, rej) => {
+			// try {
+				// var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND emoji = $2`,[server, emoji]);
+			// } catch(e) {
+				// console.log(e);
+				// return rej(e.message);
+			// }
+			// 
+			// if(data.rows && data.rows[0]) {
+				// var form = data.rows[0];
+				// if(form.questions.find(q => q == "")) {
+					// form.questions = form.questions.filter(x => x != "");
+					// form = await this.update(server, hid, {questions: form.questions});
+				// }
+				// res(data.rows[0])
+			// } else res(undefined);
+		// })
+	// }
+
 	async getAll(server) {
 		return new Promise(async (res, rej) => {
 			try {
@@ -124,6 +150,7 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			if(data.questions) data.questions = JSON.stringify(data.questions);
 			try {
+				var old = await this.get(server, hid);
 				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
 			} catch(e) {
 				console.log(e);
@@ -133,10 +160,10 @@ class FormStore extends Collection {
 			var form = await this.get(server, hid, true);
 			if(!form) return res(undefined); //that's just silly
 			var responses = await this.bot.stores.responses.getByForm(server, hid);
+			var posts = await this.bot.stores.formPosts.getByForm(server, hid);
 
 			var errs = [];
-			if(['name', 'description', 'open', 'color'].find(x => Object.keys(data).includes(x))) {
-				var posts = await this.bot.stores.formPosts.getByForm(server, hid);
+			if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
 				var guild = this.bot.guilds.resolve(server);
 				if(posts) {
 					for(var post of posts) {
@@ -148,6 +175,14 @@ class FormStore extends Collection {
 								errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: Message missing!`);
 								continue;
 							}
+
+							if(Object.keys(data).includes('emoji')) {
+								var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(old.emoji || '📝'));
+								if(react) react.remove();
+								msg.react(data.emoji || '📝');
+							}
+
+							if(post.bound) continue;
 
 							await msg.edit({embed: {
 								title: form.name,
@@ -184,6 +219,8 @@ class FormStore extends Collection {
 			var guild = this.bot.guilds.resolve(server);
 			if(posts) {
 				for(var post of posts) {
+					if(post.bound) continue;
+					
 					try {
 						var chan = guild.channels.resolve(post.channel_id);
 						var msg = await chan.messages.fetch(post.message_id);

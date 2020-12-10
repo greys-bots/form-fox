@@ -23,7 +23,7 @@ module.exports = {
 						  'react below to apply to this form!')
 				}
 			}});
-			message.react('📝');
+			message.react(form.emoji || '📝');
 			await bot.stores.formPosts.create(msg.guild.id, channel.id, message.id, {
 				form: form.hid
 			});

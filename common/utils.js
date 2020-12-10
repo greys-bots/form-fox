@@ -88,5 +88,15 @@ module.exports = {
 	recursivelyReadDirectory,
 	loadCommands,
 	registerSubcommands,
-	genCode
+	genCode,
+
+	dayDiff: (d1, d2) => {
+    	d1 = new Date(d1);
+    	d2 = new Date(d2);
+    	return Math.ceil((d2.getTime() - d1.getTime()) / DAY);
+    },
+    checkUrl(string) {
+    	// regex credit: https://stackoverflow.com/a/17773849
+    	return string.match(/0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/)
+    }
 }

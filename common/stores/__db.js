@@ -1,4 +1,4 @@
-var fs = require('fs');
+  var fs = require('fs');
 var {Pool} = require('pg');
 
 module.exports = async (bot) => {
@@ -23,7 +23,9 @@ module.exports = async (bot) => {
 			roles 		TEXT[],
 			message 	TEXT,
 			color 		TEXT,
-			open 		BOOLEAN
+			open 		BOOLEAN,
+			cooldown 	INTEGER,
+			emoji 		TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS extras (
@@ -37,7 +39,17 @@ module.exports = async (bot) => {
 			server_id 	TEXT,
 			channel_id 	TEXT,
 			message_id 	TEXT,
-			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE
+			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
+			bound 		BOOLEAN
+		);
+
+		CREATE TABLE IF NOT EXISTS hooks (
+			id 			SERIAL PRIMARY KEY,
+			server_id	TEXT,
+			form 		TEXT,
+			hid 		TEXT,
+			url 		TEXT,
+			events 		TEXT[]
 		);
 
 		CREATE TABLE IF NOT EXISTS open_responses (
