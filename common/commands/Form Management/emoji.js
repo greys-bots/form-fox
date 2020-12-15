@@ -27,7 +27,7 @@ module.exports = {
 			val = null;
 		} else {
 			val = args[1].includes(':') ?
-				  args[1].replace(/^<:(.*)>$/,'$1') :
+				  args[1].replace(/<:(.*)>/,'$1') :
 				  args[1];
 			if(form.emoji == val) return 'Form already using that emoji!';
 		}
