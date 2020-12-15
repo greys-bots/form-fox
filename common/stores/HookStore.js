@@ -14,13 +14,9 @@ class HookStore extends Collection {
 		// custom events
 		EVENTS.forEach(e => {
 			this.bot.on(e.toUpperCase(), async (response) => {
-				console.log(e);
-				console.log(response);
 				var hooks = await this.getByForm(response.server_id, response.form.hid);
-				console.log(hooks);
 				if(!hooks?.[0]) return;
 				hooks = hooks.filter(h => h.events.includes(e));
-				console.log(hooks);
 				if(!hooks[0]) return;
 
 				for(var hook of hooks) {
