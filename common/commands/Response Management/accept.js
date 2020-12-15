@@ -36,6 +36,7 @@ module.exports = {
                 }
             }
 
+            response = await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'accepted'});
             await user.send({embed: {
                 title: 'Response accepted!',
                 description: welc,
@@ -48,6 +49,7 @@ module.exports = {
                 color: parseInt('55aa55', 16),
                 timestamp: new Date().toISOString()
             }});
+            bot.emit('ACCEPT', response)
 
 			if(response.form.roles) {
 				var member = msg.guild.members.resolve(user.id);

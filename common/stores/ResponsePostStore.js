@@ -200,15 +200,10 @@ class ResponsePostStore extends Collection {
 
                 try {
                     await this.delete(msg.guild.id, msg.channel.id, msg.id);
-                    await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'denied'});
+                    post.response = await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'denied'});
                     await msg.edit({embed});
                     await msg.reactions.removeAll();
-                } catch(e) {
-                    console.log(e);
-                    return await msg.channel.send('ERR! '+(e.message || e));
-                }
 
-                try {
                     var user = await this.bot.users.fetch(post.response.user_id);
                     if(!user) return await msg.channel.send('ERR! Response denied, but couldn\'t fetch the user!');
 
@@ -224,6 +219,7 @@ class ResponsePostStore extends Collection {
                         color: parseInt('aa5555', 16),
                         timestamp: new Date().toISOString()
                     }})
+                    this.bot.emit('DENY', post.response);
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');
@@ -239,15 +235,10 @@ class ResponsePostStore extends Collection {
 
                 try {
                     await this.delete(msg.guild.id, msg.channel.id, msg.id);
-                    await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'accepted'});
+                    post.response = await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'accepted'});
                     await msg.edit({embed});
                     await msg.reactions.removeAll();
-                } catch(e) {
-                    console.log(e);
-                    return await msg.channel.send('ERR! '+(e.message || e));
-                }
 
-                try {
                     var user = await this.bot.users.fetch(post.response.user_id);
                     if(!user) return await msg.channel.send('ERR! Response accepted, but couldn\'t fetch the user!');
 
@@ -279,7 +270,7 @@ class ResponsePostStore extends Collection {
                             msg.channel.send('Err while adding roles: '+e.message);
                         }
                     }
-
+                    this.bot.emit('ACCEPT', post.response);
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);

@@ -42,7 +42,7 @@ module.exports = {
 		}
 
 		try {
-			await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'denied'});
+			response = await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'denied'});
 			await user.send({embed: {
 				title: 'Response denied!',
 				description: [
@@ -55,6 +55,7 @@ module.exports = {
 				color: parseInt('aa5555', 16),
 				timestamp: new Date().toISOString()
 			}})
+			bot.emit('DENY', response)
 		} catch(e) {
 			console.log(e);
 			return 'ERR! Response denied, but couldn\'t message the user!';

@@ -303,7 +303,7 @@ class OpenResponseStore extends Collection {
 
         try {
             var code = this.bot.utils.genCode(this.bot.chars);
-            await this.bot.stores.responses.create(response.server_id, code, {
+            var created = await this.bot.stores.responses.create(response.server_id, code, {
                 user_id: user.id,
                 form: response.form.hid,
                 questions: JSON.stringify(response.form.questions),
@@ -311,6 +311,7 @@ class OpenResponseStore extends Collection {
                          new Array(questions.length).fill("*(answer skipped!)*"),
                 status: 'pending'
             });
+            this.bot.emit('SUBMIT', created);
             respembed.embed.description += `\nResponse ID: ${code}`;
             var guild = this.bot.guilds.resolve(response.server_id);
             if(!guild) return Promise.reject("ERR! Guild not found! Aborting!");

@@ -68,6 +68,7 @@ module.exports.subcommands.add = {
 		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 		if(bot.utils.checkUrl(args[1])) return 'I need a real url!';
+		console.log(args.slice(2))
 		if(args.length > 2 && args.slice(2).find(a => !EVENTS.includes(a.toLowerCase())))
 			return 'Invalid events given! See command help for more info';
 

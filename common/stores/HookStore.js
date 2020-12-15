@@ -14,19 +14,23 @@ class HookStore extends Collection {
 		// custom events
 		EVENTS.forEach(e => {
 			this.bot.on(e.toUpperCase(), async (response) => {
-				var hooks = await this.getByForm(response.server_id, response.form);
+				console.log(e);
+				console.log(response);
+				var hooks = await this.getByForm(response.server_id, response.form.hid);
+				console.log(hooks);
 				if(!hooks?.[0]) return;
-				hooks = hooks.find(h => h.events.includes(e));
+				hooks = hooks.filter(h => h.events.includes(e));
+				console.log(hooks);
 				if(!hooks[0]) return;
 
 				for(var hook of hooks) {
 					try {
-						await this.bot.axios.post(hook.url, {
+						await axios.post(hook.url, {
 							action: e,
 							response
 						})
 					} catch(e) {
-						console.log(e.toString())
+						console.log(e.response)
 					}
 				}
 			})
