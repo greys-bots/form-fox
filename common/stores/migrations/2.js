@@ -19,7 +19,7 @@ module.exports = async (bot, db) => {
 	await db.query(`
 		ALTER TABLE forms ADD COLUMN cooldown	INTEGER;
 		ALTER TABLE forms ADD COLUMN emoji 		TEXT;
-		ALTER TABLE posts ADD COLUMN bound 		BOOLEAN;
+		ALTER TABLE form_posts ADD COLUMN bound 		BOOLEAN;
 	`);
 
 	if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 2)`);
