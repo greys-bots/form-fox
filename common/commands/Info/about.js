@@ -9,7 +9,7 @@ module.exports = {
 				{name: "Creators", value: "[greysdawn](https://github.com/greysdawn) | (GS)#6969"},
 				{name: "Invite", value: `[Clicky!](${bot.invite})`,inline: true},
 				{name: "Support Server", value: "[Clicky!](https://discord.gg/EvDmXGt)", inline: true},
-				{name: "Other Links", value: "[Repo](https://github.com/greys-bots/sheep) | [Website](https://sheep.greysdawn.com/)"},
+				{name: "Other Links", value: "[Repo](https://github.com/greys-bots/form-fox)"},
 				{name: "Stats", value: `Guilds: ${bot.guilds.cache.size} | Users: ${bot.users.cache.size}`},
 				{name: "Support my creators!", value: "[Ko-Fi](https://ko-fi.com/greysdawn) | [Patreon](https://patreon.com/greysdawn)"}
 			]
