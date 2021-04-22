@@ -362,7 +362,7 @@ class FormPostStore extends Collection {
 			if(existing) return await user.send('Please finish your current form before starting a new one!');
 
 			if(post.form.cooldown && post.form.cooldown > 0) {
-				var past = (await this.bot.stores.responses.getLast(msg.guild.id, user.id));
+				var past = (await this.bot.stores.responses.getByUser(msg.guild.id, user.id))?.pop();
 				if(past && past.status == 'denied') {
 					var diff = this.bot.utils.dayDiff(new Date(), past.received.getTime() + (post.form.cooldown * 24 * 60 * 60 * 1000));
 					if(diff > 0) return await user.send(`Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`)
