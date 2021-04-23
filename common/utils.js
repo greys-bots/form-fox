@@ -1,6 +1,11 @@
 const { Collection } = require('discord.js');
 const fs 			 = require('fs');
 
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
 const recursivelyReadDirectory = (dir) => {
 	var results = [];
 	var files = fs.readdirSync(dir, {withFileTypes: true});
