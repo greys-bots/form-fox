@@ -17,6 +17,14 @@ module.exports = {
 		try {
 			var existing = await bot.stores.openResponses.get(msg.author.dmChannel?.id);
 			if(existing) return 'Please finish your current form before starting a new one!';
+
+			if(form.cooldown) {
+				var past = (await bot.stores.responses.getByUser(msg.guild.id, msg.author.id))?.pop();
+				if(past && past.status == 'denied') {
+					var diff = bot.utils.dayDiff(new Date(), past.received.getTime() + (form.cooldown * 24 * 60 * 60 * 1000));
+					if(diff > 0) return await msg.author.send(`Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`)
+				}
+			}
 			
 			await msg.author.send({embed: {
 				title: form.name,
