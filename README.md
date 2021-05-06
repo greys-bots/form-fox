@@ -46,9 +46,9 @@ This also applies to bot restarts. Your data will be saved as soon as you answer
 
 ## Self hosting
 ### Requirements
-**Node:** version 14.0 or higher
-**Database:** For the master branch: PostgreSQL with any version, local or otherwise; for sqlite branch: SQLite 3
-**Tech:** You'll want some form of hosting computer, be it a VPS in the cloud or a computer that's always online. **This bot isn't likely to work with REPL.**
+**Node:** version 14.0 or higher  
+**Database:** For the master branch: PostgreSQL with any version, local or otherwise; for sqlite branch: SQLite 3  
+**Tech:** You'll want some form of hosting computer, be it a VPS in the cloud or a computer that's always online. **This bot isn't likely to work with REPL.**  
 You should also have a basic understanding of Node, Postgres, and JavaScript, especially if you plan to make changes.
 
 ### Steps
