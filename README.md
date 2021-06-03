@@ -64,3 +64,6 @@ The bot should now be online and accepting commands :)
 [support server](https://discord.gg/EvDmXGt)  
 [our patreon](https://patreon.com/greysdawn)  
 [our ko-fi](https://ko-fi.com/greysdawn)
+
+### Commissions
+We do commissions! If you're interested in a bot or website, check out [this doc](https://docs.google.com/document/d/1hvqvqdWj0mpHeNjo_mr2AHF7La32nkp4BDLxO1dvTHw/edit?usp=drivesdk) for more info!
