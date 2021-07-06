@@ -9,7 +9,8 @@ module.exports = async (bot) => {
 			id 					SERIAL PRIMARY KEY,
 			server_id 			TEXT,
 			response_channel 	TEXT,
-			message 			TEXT
+			message 			TEXT,
+			prefix 				TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (

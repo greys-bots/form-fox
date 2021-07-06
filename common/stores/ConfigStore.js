@@ -13,9 +13,11 @@ class ConfigStore extends Collection {
 			try {
 				await this.db.query(`INSERT INTO configs (
 					server_id,
-					response_channel
-				) VALUES ($1,$2)`,
-				[server, data.response_channel]);
+					response_channel,
+					message,
+					prefix
+				) VALUES ($1,$2,$3,$4)`,
+				[server, data.response_channel, data.message, data.prefix]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -30,9 +32,11 @@ class ConfigStore extends Collection {
 			try {
 				await this.db.query(`INSERT INTO configs (
 					server_id,
-					response_channel
-				) VALUES ($1,$2)`,
-				[server, data.response_channel]);
+					response_channel,
+					message,
+					prefix
+				) VALUES ($1,$2,$3,$4)`,
+				[server, data.response_channel, data.message, data.prefix]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);

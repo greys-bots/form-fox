@@ -8,8 +8,10 @@ const WELCOMES = [
 
 module.exports = async (msg, bot)=>{
 	if(msg.author.bot) return;
-	if(!msg.content.toLowerCase().startsWith(bot.prefix)) {
-		var thanks = msg.content.match(/^(thanks? ?(you)?|ty),? ?(form )?fox/i);
+	var config = await bot.stores.configs.get(msg.guild?.id);
+	var prefix = config?.prefix ? config.prefix : bot.prefix;
+	if(!msg.content.toLowerCase().startsWith(prefix)) {
+		var thanks = msg.content.match(/^(thanks? ?(you|u)?|ty),? ?(form )?fox/i);
 		if(thanks) return await msg.channel.send(WELCOMES[Math.floor(Math.random() * WELCOMES.length)]);
 		return;
 	}
@@ -19,7 +21,7 @@ module.exports = async (msg, bot)=>{
 		`Message: ${msg.content}`,
 		`--------------------`
 	];
-	let args = msg.content.replace(new RegExp(bot.prefix,"i"), "").split(" ");
+	let args = msg.content.replace(new RegExp(prefix,"i"), "").split(" ");
 	if(!args[0]) args.shift();
 	if(!args[0]) return msg.channel.send("Eee!");
 
@@ -37,10 +39,8 @@ module.exports = async (msg, bot)=>{
 	}
 
 	if(msg.guild) {
-		var config = {};
 		// var usages = {whitelist: [], blacklist: []};
 		if(msg.guild) {
-			config = await bot.stores.configs.get(msg.guild.id);
 			// usages = await bot.stores.usages.get(msg.guild.id);
 		}
 
