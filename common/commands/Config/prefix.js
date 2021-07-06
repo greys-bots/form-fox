@@ -14,7 +14,7 @@ module.exports = {
 			if(!cfg.prefix) return 'No prefix set!';
 
 			var message = await msg.channel.send(`Current prefix: ${cfg.prefix}\nWould you like to clear it?`);
-			REACTS.forEach(r => message.rect(r));
+			REACTS.forEach(r => message.react(r));
 
 			var conf = await bot.utils.getConfirmation(bot, message, msg.author);
 			if(conf.msg) return conf.msg;
