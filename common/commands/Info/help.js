@@ -6,6 +6,11 @@ module.exports = {
 		" [command] [subcommand] - Displays help for a command's subcommands"
 	],
 	execute: async (bot, msg, args) => {
+		var cfg;
+		if(msg.guild) cfg = await bot.stores.configs.get(msg.guild.id);
+		else cfg = {};
+
+		var prefix = cfg.prefix || bot.prefix;
 		if(!args[0]) {
 			//setup
 			var modules = bot.modules.map(m => m);
@@ -60,7 +65,7 @@ module.exports = {
 			}}];
 			for(var i = 0; i < modules.length; i++) {
 				var tmp_embeds = await bot.utils.genEmbeds(bot, modules[i].commands, c => {
-					return {name:  `**${bot.prefix + c.name}**`, value: c.help()}
+					return {name:  `**${prefix + c.name}**`, value: c.help()}
 				}, {
 					title: `**${modules[i].name}**`,
 					description: modules[i].description,
@@ -87,10 +92,10 @@ module.exports = {
 				title: `Help | ${command.name.toLowerCase()}`,
 				description: command.help(),
 				fields: [
-					{name: "**Usage**", value: `${command.usage().map(c => `**${bot.prefix + command.name}**${c}`).join("\n")}`},
+					{name: "**Usage**", value: `${command.usage().map(c => `**${prefix + command.name}**${c}`).join("\n")}`},
 					{name: "**Aliases**", value: `${command.alias ? command.alias.join(", ") : "(none)"}`},
 					{name: "**Subcommands**", value: `${command.subcommands ?
-							command.subcommands.map(sc => `**${bot.prefix}${sc.name}** - ${sc.help()}`).join("\n") : 
+							command.subcommands.map(sc => `**${prefix}${sc.name}** - ${sc.help()}`).join("\n") : 
 							"(none)"}`}
 				],
 				color: parseInt(command.module.color, 16) || parseInt("555555", 16),
@@ -109,7 +114,7 @@ module.exports = {
 			module.commands = module.commands.map(c => c);
 
 			var embeds = await bot.utils.genEmbeds(bot, module.commands, c => {
-				return {name: `**${bot.prefix + c.name}**`, value: c.help()}
+				return {name: `**${prefix + c.name}**`, value: c.help()}
 			}, {
 				title: `**${module.name}**`,
 				description: module.description,

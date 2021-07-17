@@ -350,10 +350,10 @@ class FormPostStore extends Collection {
 		var post = posts.find(p => (p.form.emoji || '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
 		if(!post) return;
 
-		await reaction.users.remove(user.id);
+		var cfg = await this.bot.stores.configs.get(msg.guild.id);
+		if(cfg.reacts) await reaction.users.remove(user.id);
 		if(!post.form.open) return;
 
-		var cfg = await this.bot.stores.configs.get(msg.guild.id);
 		if(!post.form.channel_id && !cfg?.response_channel)
 			return await user.send('No response channel set for that form! Ask the mods to set one first!');
 

@@ -10,7 +10,8 @@ module.exports = async (bot) => {
 			server_id 			TEXT,
 			response_channel 	TEXT,
 			message 			TEXT,
-			prefix 				TEXT
+			prefix 				TEXT,
+			reacts 				BOOLEAN
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (

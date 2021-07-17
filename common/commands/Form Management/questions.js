@@ -24,7 +24,7 @@ module.exports = {
 		var embeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
 			return {
 				name: `**${data.value}${data.required ? " (required)" : ""}**`,
-				value: `**Type:** ${TYPES.find(t => t.type == data.type).alias[0]}\n\n` +
+				value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
 					   (data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
 					   (data.other ? 'This question has an "other" option!' : '')
 			}
@@ -54,17 +54,43 @@ module.exports.subcommands.add = {
 		if(form.questions.length >= 20) return 'That form already has 20 questions!';
 
 		var resp;
-		var question = args.slice(1).join(" ");
+		var question = {value: args.slice(1).join(" "), type: 'text', required: false};
 		var position = form.questions.length + 1;
-		var required = false;
-		if(!question) {
+		if(!question.value) {
 			await msg.channel.send('What question would you like to add to the form?\nType `cancel` to cancel!');
 			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
-			question = resp.content;
+			question.value = resp.content;
 		}
 
+		var message = await msg.channel.send(
+			"What type of question would you like this to be?\n" +
+			"Question types:\n" +
+			"```\n" +
+			Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}\n`).join("") +
+			"```"
+		)
+		resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
+		if(!resp) return 'Timed out! Aborting!';
+		var type = Object.keys(TYPES).find(t => TYPES[t].alias.includes(resp.content.toLowerCase()));
+		if(!type) return "ERR! Invalid type!";
+		question.type = type;
+		await resp.delete();
+
+		if(TYPES[type].setup) {
+			var r = await TYPES[type].setup(bot, msg, message);
+			if(typeof r == "string") return r;
+
+			Object.assign(question, r)
+		}
+
+		message = await msg.channel.send(`Would you like this question to be required?`);
+		REACTS.forEach(r => message.react(r));
+
+		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+		if(confirm.confirmed) question.required = true;
+		
 		await msg.channel.send([
 			'What place do you want this question to be in?\n',
 			'Remember that the question will bump down any others that were ',
@@ -76,13 +102,7 @@ module.exports.subcommands.add = {
 		if(resp.content.toLowerCase() != 'last') position = parseInt(resp.content.toLowerCase());
 		if(isNaN(position)) return 'ERR! Please provide a real number!';
 
-		var message = await msg.channel.send(`Would you like this question to be required?`);
-		REACTS.forEach(r => message.react(r));
-
-		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
-		if(confirm.confirmed) required = true;
-
-		form.questions.splice(position - 1, 0, {value: question, type: 'text', required});
+		form.questions.splice(position - 1, 0, question);
 		try {
 			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
