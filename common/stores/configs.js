@@ -16,9 +16,10 @@ class ConfigStore extends Collection {
 					response_channel,
 					message,
 					prefix,
-					reacts
-				) VALUES ($1,$2,$3,$4,$5)`,
-				[server, data.response_channel, data.message, data.prefix, data.reacts || true]);
+					reacts,
+					embed
+				) VALUES ($1,$2,$3,$4,$5,$6)`,
+				[server, data.response_channel, data.message, data.prefix, data.reacts || true, data.embed || true]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -36,9 +37,10 @@ class ConfigStore extends Collection {
 					response_channel,
 					message,
 					prefix,
-					reacts
-				) VALUES ($1,$2,$3,$4,$5)`,
-				[server, data.response_channel, data.message, data.prefix, data.reacts || true]);
+					reacts,
+					embed
+				) VALUES ($1,$2,$3,$4,$5,$6)`,
+				[server, data.response_channel, data.message, data.prefix, data.reacts || true, data.embed || true]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);

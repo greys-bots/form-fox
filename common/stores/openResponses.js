@@ -1,4 +1,4 @@
-const NUMBERS = require('../extras').numbers;
+const { numbers: NUMBERS, qTypes: TYPES } = require('../extras');
 const { Collection } = require("discord.js");
 
 var menus = [];
@@ -420,89 +420,50 @@ class OpenResponseStore extends Collection {
                 try {
                     var res = await this.sendResponse(response, msg, user, config);
                 } catch(e) {
-                    menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
                     await msg.channel.send(e.message || e);
                 }
                 menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
                 await msg.channel.send(res);
                 return;
-                break;
             case '❌':
                 menus.push(msg.channel.id);
                 try {
                     var res = await this.cancelResponse(response, msg, user, config);
                 } catch(e) {
-                    menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
                     await msg.channel.send(e.message || e);
                 }
                 menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
                 await msg.channel.send(res);
                 return;
-                break;
             case '➡️':
                 menus.push(msg.channel.id);
                 try {
                     var res = await this.skipQuestion(response, msg, user, config);
                 } catch(e) {
-                    menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
                     await msg.channel.send(e.message || e);
                 }
                 menus.splice(menus.findIndex(c => c == msg.channel.id), 1);
                 if(res) await msg.channel.send(res);
                 return;
-                break;
         }
 
-        switch(question.type) {
-        	case 'mc':
-        		var index = NUMBERS.indexOf(reaction.emoji.name);
-				var embed = msg.embeds[0];
-        		if(question.choices[index - 1]) {
-        			response.answers.push(question.choices[index - 1]);
-	        		var message = await this.sendQuestion(response, msg);
-        		} else if(reaction.emoji.name == "🅾️") {
-        			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-	        		await msg.edit({embed});
+        var type = TYPES[question.type];
+        if(!type.handleReactAdd) return;
 
-	        		menus.push(msg.channel.id);
-	        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-					if(!response.selection) response.selection = [];
-	                response.selection.push('OTHER')
-        		} else return msg.channel.send('Invalid choice! Please select something else');
+        var res2 = await type.handleReactAdd(msg, response, question, reaction);
+        if(!res2) return;
+        response = res2.response;
 
-        		await this.update(msg.channel.id, {
-        			message_id: message?.id || msg.id,
-        			answers: response.answers,
-        			selection: response.selection
-        		});
-        		break;
-        	case 'cb':
-        		var index = NUMBERS.indexOf(reaction.emoji.name);
-        		var embed = msg.embeds[0];
-        		if(question.choices[index - 1]) {
-        			if(response.selection?.includes(question.choices[index - 1]))
-        				return;
-        				
-        			embed.fields[index].value = question.choices[index - 1] + " ✅";
-	        		await msg.edit({embed});
-	        		if(!response.selection) response.selection = [];
-	        		response.selection.push(question.choices[index - 1]);
-        		} else if(reaction.emoji.name == "🅾️") {
-        			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-	        		await msg.edit({embed});
+        if(res2.menu) menus.push(msg.channel.id);
 
-	        		menus.push(msg.channel.id);
-	        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-					if(!response.selection) response.selection = [];
-	                response.selection.push('OTHER')
-        		} else if(reaction.emoji.name == '✏️') {
-        			response.answers.push(response.selection.join("\n"));
-        			var message = await this.sendQuestion(response, msg);
-        		} else return msg.channel.send('Invalid choice! Please select something else');
+        var message;
+        if(res2.send) var message = await this.sendQuestion(response, msg);
 
-        		await this.update(msg.channel.id, {message_id: message?.id || msg.id, answers: response.answers, selection: response.selection});
-        		break;
-        }
+        await this.update(msg.channel.id, {
+            message_id: message?.id || msg.id,
+            answers: response.answers,
+            selection: response.selection
+        });
     }
 
     // for deselecting options
@@ -528,29 +489,18 @@ class OpenResponseStore extends Collection {
         }
 
         var question = questions[response.answers.length]; // current question
+        if(!question) return;
+        var type = TYPES[question.type];
+        if(!type.handleReactRemove) return;
 
-        switch(question.type) {
-        	case 'cb':
-        		var index = NUMBERS.indexOf(reaction.emoji.name);
-        		if(question.choices[index - 1]) {
-        			var embed = msg.embeds[0];
-        			embed.fields[index].value = question.choices[index - 1];
-        			await msg.edit({embed});
-        			response.selection.splice(index - 1, 1);
-        		} else if(reaction.emoji.name == "🅾️") {
-        			response.selection = response.selection.filter(x => question.choices.includes(x));
+        var res = await type.handleReactRemove(msg, response, question, reaction);
+        if(!res) return;
+        response = res.response;
 
-        			var embed = msg.embeds[0];
-        			embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
-        			await msg.edit({embed});
-        		} else return Promise.resolve();
-
-        		await this.update(msg.channel.id, {selection: response.selection});
-        		break;
-        	default:
-        		return Promise.resolve();
-        		break;
-        }
+        await this.update(msg.channel.id, {
+            answers: response.answers,
+            selection: response.selection
+        });
     }
 
     async handleMessage(message) {
@@ -567,7 +517,7 @@ class OpenResponseStore extends Collection {
             return message.channel.send("That form is invalid! This response is now closed");
         }
         var question = questions[response.answers.length];
-
+        var type = TYPES[question.type];
         var config = await this.bot.stores.configs.get(response.server_id);
 
         if(menus.includes(message.channel.id)) {
@@ -644,96 +594,23 @@ class OpenResponseStore extends Collection {
         }
 
         if(questions.length < response.answers.length + 1) return;
-        
-		switch(question.type) {
-			case 'mc':
-				var index = parseInt(message.content);
-				if(question.choices[index - 1]) {
-					response.answers.push(question.choices[index - 1]);
-				} else if(['other', 'o'].includes(message.content.toLowerCase()) && question.other) {
-    				var msg = await message.channel.messages.fetch(response.message_id);
-        			var embed = msg.embeds[0];
-	
-					embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-	        		await msg.edit({embed});
 
-	        		menus.push(msg.channel.id);
-	        		await message.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-	        		if(!response.selection) response.selection = [];
-	                response.selection.push('OTHER')
-	                
-					return await this.update(message.channel.id, {
-						selection: response.selection,
-						answers: response.answers
-					});
-				} else return message.channel.send('Invalid choice! Please select something else');
-				
-				break;
-			case 'cb':
-        		var index = parseInt(message.content);
-        		var msg = await message.channel.messages.fetch(response.message_id);
-        		var embed = msg.embeds[0];
-					
-        		if(question.choices[index - 1]) {
-        			if(response.selection?.includes(question.choices[index - 1])) {
-        				embed.fields[index].value = question.choices[index - 1];
-        				response.selection = response.selection.filter(x => x != question.choices[index - 1]);
-        			} else {
-        				embed.fields[index].value = question.choices[index - 1] + " ✅";
-        				if(!response.selection) response.selection = [];
-	        			response.selection.push(question.choices[index - 1]);
-        			}
+        if(!type.handleMessage) return;
 
-					await msg.edit({embed});
-					return await this.update(message.channel.id, {
-						message_id: msg.id,
-						selection: response.selection,
-						answers: response.answers
-					});
-        		} else if(['other', 'o'].includes(message.content.toLowerCase()) && question.other) {
-        			if(response.selection?.find(x => !question.choices.includes(x))) {
-        				response.selection = response.selection.filter(x => question.choices.includes(x));
-        				embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
-        				await msg.edit({embed});
-        			}
-        			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-	        		await msg.edit({embed});
+        var res2 = await type.handleMessage(message, response, question);
+        if(!res2) return;
+        response = res2.response;
 
-	        		menus.push(msg.channel.id);
-	        		await message.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-	        		if(!response.selection) response.selection = [];
-	                response.selection.push('OTHER')
-	                
-					return await this.update(message.channel.id, {
-						selection: response.selection,
-						answers: response.answers
-					});
-        		} else if(message.content.toLowerCase() == "select") {
-        			response.answers.push(response.selection.join("\n"));
-        		} else return msg.channel.send('Invalid choice! Please select something else');
-				break;
-			case 'text':
-				response.answers.push(message.content);
-				if(message.attachments.size > 0)
-				response.answers[response.answers.length - 1] += "\n\n**Attachments:**\n" + message.attachments.map(a => a.url).join("\n");
-				break;
-			case 'num':
-				if(isNaN(parseInt(message.content)))
-					return message.channel.send("Invalid response! Please provide a number value");
+        if(res2.menu) menus.push(message.channel.id);
 
-				response.answers.push(message.content);
-				break;
-			case 'dt':
-				var date = new Date(message.content);
-				if(isNaN(date))
-					return message.channel.send("Invalid response! Please send a valid date");
+        var msg;
+        if(res2.send) var msg = await this.sendQuestion(response, message);
 
-				response.answers.push(date);
-				break;
-		}
-
-		var msg = await this.sendQuestion(response, message);
-		await this.update(message.channel.id, {message_id: msg.id, answers: response.answers});
+        await this.update(message.channel.id, {
+            message_id: msg?.id || message.id,
+            answers: response.answers,
+            selection: response.selection
+        });
     }
 }
 

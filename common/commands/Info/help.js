@@ -8,9 +8,8 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		var cfg;
 		if(msg.guild) cfg = await bot.stores.configs.get(msg.guild.id);
-		else cfg = {};
 
-		var prefix = cfg.prefix || bot.prefix;
+		var prefix = cfg?.prefix || bot.prefix;
 		if(!args[0]) {
 			//setup
 			var modules = bot.modules.map(m => m);

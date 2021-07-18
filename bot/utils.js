@@ -1,7 +1,8 @@
 const {
 	confirmVals:STRINGS,
 	confirmReacts:REACTS,
-	numbers:NUMBERS
+	numbers:NUMBERS,
+	qTypes: TYPES
 } = require('../common/extras');
 
 module.exports = {
@@ -149,83 +150,21 @@ module.exports = {
     	if(!current) return Promise.resolve(undefined);
 
     	var question = {};
+    	var type = TYPES[current.type];
 
-    	switch(current.type) {
-    		case 'mc':
-    		case 'cb':
-    			question.message = [
-    				{
-    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
-    					value: current.value
-    				},
-    				...current.choices.map((c, i) => {
-    					return {name: `Option ${NUMBERS[i + 1]}`, value: c}
-    				})
-    			]
+    	question.message = [
+    		{
+				name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
+				value: current.value
+			}
+    	];
+    	if(type.message) question.message = question.message.concat(type.message(current));
 
-    			if(current.other) question.message.push({name: 'Other', value: 'Enter a custom response (react with 🅾️ or type "other")'})
+    	question.reacts = ['❌'];
+    	if(type.reacts) question.reacts = [...type.reacts(current), ...question.reacts];
 
-    			question.reacts = [
-    				...NUMBERS.slice(1, current.choices.length + 1),
-    				(current.other ? '🅾️' : null),
-    				(current.type == 'cb' ? '✏️' : null),
-    				'❌'
-    			].filter(x => x!=null);
-
-    			question.footer = {text:
-    				'react or type the respective emoji/character to choose an option! ' +
-    				(current.type == 'cb' ? 'react with ✏️ or type "select" to confirm selected choices! ' : '') +
-    				'react with ❌ or type "cancel" to cancel.'
-                }
-    			break;
-    		case 'num':
-    			question.message = [
-    				{
-    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
-    					value: current.value
-    				}
-    			]
-
-
-    			question.reacts = ['❌']
-
-    			question.footer = {text:
-    				'you can only respond with numbers for this question! ' +
-                    'react with ❌ or type "cancel" to cancel.'
-                }
-    			break;
-    		case 'dt':
-    			question.message = [
-    				{
-    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
-    					value: current.value
-    				}
-    			]
-
-
-    			question.reacts = ['❌']
-
-    			question.footer = {text:
-    				'you can only respond with a date for this question! ' +
-                    'react with ❌ or type "cancel" to cancel.'
-                }
-    			break;
-    		default:
-    			question.message = [
-    				{
-    					name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
-    					value: current.value
-    				}
-    			]
-
-
-    			question.reacts = ['❌']
-
-    			question.footer = {text:
-                    'react with ❌ or type "cancel" to cancel.'
-                }
-    			break;
-    	}
+    	question.footer = {text: 'react with ❌ or type "cancel" to cancel.'};
+    	if(type.text) question.footer.text = type.text + " " + question.footer.text;
 
     	if(!current.required) {
     		if(!questions.find((x, i) => x.required && i > number)) {

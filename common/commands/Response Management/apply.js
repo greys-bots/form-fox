@@ -26,17 +26,19 @@ module.exports = {
 				}
 			}
 			
-			await msg.author.send({embed: {
-				title: form.name,
-				description: form.description,
-				fields: form.questions.map((q,i) => {
-					return {
-						name: `Question ${i+1}`,
-						value: q.value
-					}
-				}),
-				color: parseInt(form.color || 'ee8833', 16)
-			}})
+			if(cfg?.embed) {
+				await msg.author.send({embed: {
+					title: form.name,
+					description: form.description,
+					fields: form.questions.map((q,i) => {
+						return {
+							name: `Question ${i+1}`,
+							value: q.value
+						}
+					}),
+					color: parseInt(form.color || 'ee8833', 16)
+				}})
+			}
 			
 			var question = await bot.utils.handleQuestion(form, 0);
 			var message = await msg.author.send({embed: {

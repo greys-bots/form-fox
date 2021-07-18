@@ -351,7 +351,7 @@ class FormPostStore extends Collection {
 		if(!post) return;
 
 		var cfg = await this.bot.stores.configs.get(msg.guild.id);
-		if(cfg.reacts) await reaction.users.remove(user.id);
+		if(cfg?.reacts) await reaction.users.remove(user.id);
 		if(!post.form.open) return;
 
 		if(!post.form.channel_id && !cfg?.response_channel)
@@ -368,18 +368,20 @@ class FormPostStore extends Collection {
 					if(diff > 0) return await user.send(`Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`)
 				}
 			}
-					
-			await user.send({embed: {
-				title: post.form.name,
-				description: post.form.description,
-				fields: post.form.questions.map((q,i) => {
-					return {
-						name: `Question ${i+1}${post.form.required?.includes(i+1) ? " (required)" : ""}`,
-						value: q.value
-					}
-				}),
-				color: parseInt(post.form.color || 'ee8833', 16)
-			}})
+			
+			if(cfg?.embed) {
+				await user.send({embed: {
+					title: post.form.name,
+					description: post.form.description,
+					fields: post.form.questions.map((q,i) => {
+						return {
+							name: `Question ${i+1}${post.form.required?.includes(i+1) ? " (required)" : ""}`,
+							value: q.value
+						}
+					}),
+					color: parseInt(post.form.color || 'ee8833', 16)
+				}})
+			}
 
 			var question = await this.bot.utils.handleQuestion(post.form, 0);
 			var message = await user.send({embed: {
