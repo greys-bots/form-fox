@@ -40,28 +40,16 @@ async function setup() {
 	files = fs.readdirSync(__dirname + "/events");
 	files.forEach(f => bot.on(f.slice(0,-3), (...args) => require(__dirname + "/events/"+f)(...args,bot)));
 
+	bot.handlers = {};
+	files = fs.readdirSync(__dirname + "/handlers");
+	files.forEach(f => bot.handlers[f.slice(0,-3)] = require(__dirname + "/handlers/"+f)(bot));
+
 	bot.utils = require(__dirname + "/utils");
 	Object.assign(bot.utils, require(__dirname + "/../common/utils"));
 
 	var data = bot.utils.loadCommands(__dirname + "/../common/commands");
 	
 	Object.keys(data).forEach(k => bot[k] = data[k]);
-}
-
-bot.parseCommand = async function(bot, msg, args) {
-	if(!args[0]) return undefined;
-	
-	var command = bot.commands.get(bot.aliases.get(args[0].toLowerCase()));
-	if(!command) return {command, nargs: args};
-
-	args.shift();
-
-	if(args[0] && command.subcommands?.get(command.sub_aliases.get(args[0].toLowerCase()))) {
-		command = command.subcommands.get(command.sub_aliases.get(args[0].toLowerCase()));
-		args.shift();
-	}
-
-	return {command, nargs: args};
 }
 
 bot.writeLog = async (log) => {

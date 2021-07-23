@@ -85,7 +85,7 @@ module.exports = {
 			return embeds;
 		}
 
-		let {command} = await bot.parseCommand(bot, msg, args);
+		let {command} = await bot.handlers.command.parse(args.join(" "));
 		if(command) {
 			var embed = {embed: {
 				title: `Help | ${command.name.toLowerCase()}`,
@@ -107,29 +107,7 @@ module.exports = {
 			if(command.permissions) embed.embed.fields.push({name: "**Permissions**", value: command.permissions.join(", ")});
 
 			return embed;
-		} else {
-			let module = bot.modules.get(args[0].toLowerCase());
-			if(!module) return "Command/module not found";
-			module.commands = module.commands.map(c => c);
-
-			var embeds = await bot.utils.genEmbeds(bot, module.commands, c => {
-				return {name: `**${prefix + c.name}**`, value: c.help()}
-			}, {
-				title: `**${module.name}**`,
-				description: module.description,
-				color: parseInt(module.color, 16) || parseInt("555555", 16),
-				footer: {
-						icon_url: bot.user.avatarURL(),
-						text: "I'm Fox! I help you handle forms!"
-					}
-			}, 10, {addition: ""});
-
-			for(let i=0; i<embeds.length; i++) {
-				if(embeds.length > 1) embeds[i].embed.title += ` (page ${i+1}/${embeds.length}, ${Object.keys(bot.commands).length} commands total)`;
-			}
-
-			return embeds;
-		}
+		} else return "Command not found!";
 	},
 	alias: ["h", "halp", "?"]
 }

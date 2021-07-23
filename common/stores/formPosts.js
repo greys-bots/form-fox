@@ -351,7 +351,7 @@ class FormPostStore extends Collection {
 		if(!post) return;
 
 		var cfg = await this.bot.stores.configs.get(msg.guild.id);
-		if(cfg?.reacts) await reaction.users.remove(user.id);
+		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
 		if(!post.form.open) return;
 
 		if(!post.form.channel_id && !cfg?.response_channel)
@@ -369,7 +369,7 @@ class FormPostStore extends Collection {
 				}
 			}
 			
-			if(cfg?.embed) {
+			if(cfg?.embed || post.form.embed) {
 				await user.send({embed: {
 					title: post.form.name,
 					description: post.form.description,

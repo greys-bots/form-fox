@@ -26,7 +26,7 @@ module.exports = {
 				}
 			}
 			
-			if(cfg?.embed) {
+			if(cfg?.embed || form.embed) {
 				await msg.author.send({embed: {
 					title: form.name,
 					description: form.description,
