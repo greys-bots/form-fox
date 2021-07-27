@@ -89,30 +89,6 @@ bot.on('error', (err)=> {
 	bot.writeLog(`=====ERROR=====\r\nStack: ${err.stack}`)
 })
 
-// to work against "inorganic growth" for now
-bot.on("guildCreate", async guild => {
-	var user = await bot.users.fetch(guild.ownerID);
-	var existing = bot.guilds.cache.find(g => g.id != guild.id && g.ownerID == user.id);
-
-	if(existing) {
-		try {
-			await user.send(
-				`Hello! Unfortunately, due to the way Discord handles bot ` +
-				`verification, I will have to leave your server (${guild.name}). ` +
-				`This is because you already have at least one server with me in it. ` +
-				`If you'd like updates for when you can add me back, ` +
-				`join the support server linked below and keep an eye `+
-				`on the Form Fox announcements channel!\n\n` +
-				`https://discord.gg/EvDmXGt`
-			);
-		} catch(e) {
-			console.log(e.message);
-		}
-
-		guild.leave();
-	}
-})
-
 process.on("unhandledRejection", (e) => console.log(e));
 
 setup();
