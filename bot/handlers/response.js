@@ -26,7 +26,7 @@ class ResponseHandler {
             }
         })
 
-        bot.on('message', async (...args) => {
+        bot.on('messageCreate', async (...args) => {
             try {
                 this.handleMessage(...args);
             } catch(e) {
@@ -383,7 +383,6 @@ class ResponseHandler {
             return message.channel.send("That form is invalid! This response is now closed");
         }
         var question = questions[response.answers.length];
-        var type = TYPES[question.type];
         var config = await this.bot.stores.configs.get(response.server_id);
 
         if(this.menus.has(message.channel.id)) {
@@ -426,11 +425,10 @@ class ResponseHandler {
                 try {
                     var res = await this.sendResponse(response, message, message.author, config);
                 } catch(e) {
-                    this.menus.delete(message.channel.id);
                     await message.channel.send(e.message || e);
                 }
                 this.menus.delete(message.channel.id);
-                await message.channel.send(res);
+                if(res) await message.channel.send(res);
                 return;
                 break;
             case 'cancel':
@@ -438,11 +436,10 @@ class ResponseHandler {
                 try {
                     var res = await this.cancelResponse(response, message, message.author, config);
                 } catch(e) {
-                    this.menus.delete(message.channel.id);
                     await message.channel.send(e.message || e);
                 }
                 this.menus.delete(message.channel.id);
-                await message.channel.send(res);
+                if(res) await message.channel.send(res);
                 return;
                 break;
             case 'skip':
@@ -460,6 +457,7 @@ class ResponseHandler {
         }
 
         if(questions.length < response.answers.length + 1) return;
+        var type = TYPES[question.type];
 
         if(!type.handleMessage) return;
 

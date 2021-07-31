@@ -15,7 +15,7 @@ module.exports = {
 			case 0:
 				var embeds = [{embed: {
 					title: 'Default settings',
-					description: `${cfg.react ?? "*(not set)*"}`,
+					description: `${cfg.reacts ?? "*(not set)*"}`,
 					color: parseInt('ee8833', 16)
 				}}];
 
@@ -25,7 +25,7 @@ module.exports = {
 					chan = msg.guild.channels.cache.find(c => c.id == f.channel_id);
 					return {embed: {
 						title: `Value for form ${f.name} (${f.hid})`,
-						description: `${form.react ?? "*(not set)*"}`,
+						description: `${form.reacts ?? "*(not set)*"}`,
 						color: parseInt('ee8833', 16)
 					}}
 				}))
@@ -41,8 +41,8 @@ module.exports = {
 				if(VALS.includes(args[0].toLowerCase())) val = true;
 				else val = false;
 
-				if(!cfg.server_id) await bot.stores.configs.create(msg.guild.id, {embed: val});
-				else await bot.stores.configs.update(msg.guild.id, {embed: val});
+				if(!cfg.server_id) await bot.stores.configs.create(msg.guild.id, {reacts: val});
+				else await bot.stores.configs.update(msg.guild.id, {reacts: val});
 
 				return "Global config set!";
 				break;
@@ -55,7 +55,7 @@ module.exports = {
 				else val = false;
 
 				try {
-					await bot.stores.forms.update(msg.guild.id, form.hid, {embed: val});
+					await bot.stores.forms.update(msg.guild.id, form.hid, {reacts: val});
 				} catch(e) {
 					return "ERR! "+e;
 				}

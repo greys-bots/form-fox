@@ -60,6 +60,7 @@ const qTypes = {
 			var index = parseInt(message.content);
 			if(question.choices[index - 1]) {
 				response.answers.push(question.choices[index - 1]);
+				return {response, send: true};
 			} else if(['other', 'o', '🅾'].includes(message.content.toLowerCase()) && question.other) {
 				var msg = await message.channel.messages.fetch(response.message_id);
     			var embed = msg.embeds[0];
