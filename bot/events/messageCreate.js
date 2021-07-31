@@ -65,7 +65,7 @@ module.exports = async (msg, bot)=>{
 	
 	if(!result) return;
 	if(typeof result == "object" && result[0]) { //embeds
-		var message = await msg.channel.send(result[0]);
+		var message = await msg.channel.send({embeds: [result[0].embed]});
 		if(result[1]) {
 			if(!bot.menus) bot.menus = {};
 			bot.menus[message.id] = {

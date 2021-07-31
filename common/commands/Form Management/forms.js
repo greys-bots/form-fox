@@ -26,12 +26,12 @@ module.exports = {
 
 				var embeds = [{embed: {
 					title: `${form.name} (${form.hid}) ` +
-						   `${form.emoji?.includes(':') ? '<:' + form.emoji + '>' : form.emoji || '📝'}`,
+						   `${form.emoji?.includes(':') ? '<' + form.emoji + '>' : form.emoji || '📝'}`,
 					description: form.description,
 					fields: [
 						{name: "Message", value: form.message || "*(not set)*"},
 						{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
-						{name: "Response count", value: (responses?.length || '0')},
+						{name: "Response count", value: (responses?.length.toString() || '0')},
 						{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'}
 					],
 					color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
@@ -41,7 +41,7 @@ module.exports = {
 				var qembeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
 					return {
 						name: `**${data.value}${data.required ? " (required)" : ""}**`,
-						value: `**Type:** ${TYPES.find(t => t.type == data.type).alias[0]}\n\n` +
+						value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
 							   (data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
 							   (data.other ? 'This question has an "other" option!' : '')
 					}
@@ -75,7 +75,7 @@ module.exports = {
 				fields: [
 					{name: "Message", value: form.message || "*(not set)*"},
 					{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
-					{name: "Response count", value: (responses?.length || '0')},
+					{name: "Response count", value: (responses?.length.toString() || '0')},
 					{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'},
 					{name: "Questions", value: `Use \`${bot.prefix}form ${form.hid}\` to see questions`}
 				],

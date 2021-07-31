@@ -20,7 +20,7 @@ const qTypes = {
 		},
 		setup: async (bot, msg, message) => {
 			await message.edit(`Please enter up to 10 options to choose from, separated by new lines.`);
-			var resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 5 * 60 * 1000})).first();
+			var resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 5 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
 			var choices = resp.content.split("\n");
 			await resp.delete()
@@ -101,7 +101,7 @@ const qTypes = {
 		},
 		setup: async (bot, msg, message) => {
 			await message.edit(`Please enter up to 10 options to choose from, separated by new lines.`);
-			var resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 5 * 60 * 1000})).first();
+			var resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 5 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
 			var choices = resp.content.split("\n");
 			await resp.delete()

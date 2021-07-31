@@ -186,7 +186,7 @@ class ResponsePostStore extends Collection {
                     'Type `skip` to skip adding one, or ',
                     '`cancel` to cancel the denial!'
                 ].join(''));
-                var resp = await msg.channel.awaitMessages(m => m.author.id == user.id, {time: 2 * 60 * 1000, max: 1});
+                var resp = await msg.channel.awaitMessages({filter: m => m.author.id == user.id, time: 2 * 60 * 1000, max: 1});
                 if(!resp?.first()) return await msg.channel.send('Err! Timed out!');
                 resp = resp.first().content;
                 if(resp.toLowerCase() == 'cancel') return await msg.channel.send('Action cancelled!');
@@ -201,13 +201,13 @@ class ResponsePostStore extends Collection {
                 try {
                     await this.delete(msg.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'denied'});
-                    await msg.edit({embed});
+                    await msg.edit({embeds: [embed]});
                     await msg.reactions.removeAll();
 
                     var user = await this.bot.users.fetch(post.response.user_id);
                     if(!user) return await msg.channel.send('ERR! Response denied, but couldn\'t fetch the user!');
 
-                    await user.send({embed: {
+                    await user.send({embeds: [{
                         title: 'Response denied!',
                         description: [
                             `Server: ${msg.guild.name} (${msg.guild.id})`,
@@ -218,7 +218,7 @@ class ResponsePostStore extends Collection {
                         fields: [{name: 'Reason', value: reason}],
                         color: parseInt('aa5555', 16),
                         timestamp: new Date().toISOString()
-                    }})
+                    }]})
                     this.bot.emit('DENY', post.response);
                 } catch(e) {
                     console.log(e);
@@ -236,7 +236,7 @@ class ResponsePostStore extends Collection {
                 try {
                     await this.delete(msg.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'accepted'});
-                    await msg.edit({embed});
+                    await msg.edit({embeds: [embed]});
                     await msg.reactions.removeAll();
 
                     var user = await this.bot.users.fetch(post.response.user_id);
@@ -249,7 +249,7 @@ class ResponsePostStore extends Collection {
                         }
                     }
 
-                    await user.send({embed: {
+                    await user.send({embeds: [{
                         title: 'Response accepted!',
                         description: welc,
                         fields: [
@@ -260,7 +260,7 @@ class ResponsePostStore extends Collection {
                         ],
                         color: parseInt('55aa55', 16),
                         timestamp: new Date().toISOString()
-                    }});
+                    }]});
 
                     if(post.response.form.roles?.[0]) {
                         var member = msg.guild.members.resolve(user.id);

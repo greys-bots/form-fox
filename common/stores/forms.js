@@ -189,18 +189,18 @@ class FormStore extends Collection {
 
 							if(post.bound) continue;
 
-							await msg.edit({embed: {
+							await msg.edit({embeds: [{
 								title: form.name,
 								description: form.description,
 								color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-								fields: [{name: 'Response Count', value: responses?.length || 0}],
+								fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 								footer: {
 									text: `Form ID: ${form.hid} | ` +
 										  (!form.open ?
 										  'this form is not accepting responses right now!' :
 										  'react below to apply to this form!')
 								}
-							}})
+							}]})
 						} catch(e) {
 							errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 						}
@@ -234,18 +234,18 @@ class FormStore extends Collection {
 							return rej('Message missing!');
 						}
 
-						await msg.edit({embed: {
+						await msg.edit({embeds: [{
 							title: form.name,
 							description: form.description,
 							color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-							fields: [{name: 'Response Count', value: responses?.length || 0}],
+							fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 							footer: {
 								text: `Form ID: ${form.hid} | ` +
 									  (!form.open ?
 									  'this form is not accepting responses right now!' :
 									  'react below to apply to this form!')
 							}
-						}})
+						}]})
 					} catch(e) {
 						errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
 					}

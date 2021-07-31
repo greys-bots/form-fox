@@ -11,7 +11,6 @@ class CommandHandler {
 		if(!args[0]) return undefined;
 	
 		var command = this.bot.commands.get(this.bot.aliases.get(args[0].toLowerCase()));
-		console.log(this.bot.commands)
 		if(!command) return {command, args};
 
 		args.shift();
@@ -32,6 +31,12 @@ class CommandHandler {
 			var check = this.checkPerms(ctx);
 			if(!check) return "You don't have permission to use that command!";
 		}
+		if(command.cooldown && this.cooldowns.get(`${msg.author.id}-${command.name}`)) {
+			var s = Math.ceil((this.cooldowns.get(`${msg.author.id}-${command.name}`) - Date.now()) / 1000)
+			var m = await msg.channel.send(`Cool down time! Please wait **${s}s** before using this command`);
+			setTimeout(() => m.delete(), s * 1000);
+			return;
+		}
 
 		try {
 			var res = await command.execute(this.bot, msg, args);
@@ -39,6 +44,10 @@ class CommandHandler {
 			return Promise.reject(e.message);
 		}
 
+		if(command.cooldown) {
+			this.cooldowns.set(`${msg.author.id}-${command.name}`, Date.now() + (command.cooldown * 1000));
+			setTimeout(() => this.cooldowns.delete(`${msg.author.id}-${command.name}`), command.cooldown * 1000);
+		}
 		return res;
 	}
 

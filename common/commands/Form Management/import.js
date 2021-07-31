@@ -44,5 +44,5 @@ module.exports = {
 	alias: ['imp'],
 	permissions: ['MANAGE_MESSAGES'],
 	guildOnly: true,
-	cooldown: 60000
+	cooldown: 60
 }

@@ -1,11 +1,24 @@
-const Discord		= require("discord.js");
-const fs			= require("fs");
-const path 			= require("path");
+const { Client, Intents } = require("discord.js");
+const fs				  = require("fs");
+const path 				  = require("path");
 
 require('dotenv').config();
 
-const bot = new Discord.Client({
-	partials: ['MESSAGE', 'USER', 'CHANNEL', 'GUILD_MEMBER', 'REACTION'],
+const bot = new Client({
+	intents: [
+		Intents.FLAGS.GUILDS,
+		Intents.FLAGS.GUILD_MESSAGES,
+		Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+		Intents.FLAGS.DIRECT_MESSAGES,
+		Intents.FLAGS.DIRECT_MESSAGE_REACTIONS
+	],
+	partials: [
+		'MESSAGE',
+		'USER',
+		'CHANNEL',
+		'GUILD_MEMBER',
+		'REACTION'
+	],
 	messageCacheMaxSize: 0,
 	messageCacheLifetime: 1,
 	messageSweepInterval: 1
@@ -75,30 +88,6 @@ bot.on("ready", async ()=> {
 bot.on('error', (err)=> {
 	console.log(`Error:\n${err.stack}`);
 	bot.writeLog(`=====ERROR=====\r\nStack: ${err.stack}`)
-})
-
-// to work against "inorganic growth" for now
-bot.on("guildCreate", async guild => {
-	var user = await bot.users.fetch(guild.ownerID);
-	var existing = bot.guilds.cache.find(g => g.id != guild.id && g.ownerID == user.id);
-
-	if(existing) {
-		try {
-			await user.send(
-				`Hello! Unfortunately, due to the way Discord handles bot ` +
-				`verification, I will have to leave your server (${guild.name}). ` +
-				`This is because you already have at least one server with me in it. ` +
-				`If you'd like updates for when you can add me back, ` +
-				`join the support server linked below and keep an eye `+
-				`on the Form Fox announcements channel!\n\n` +
-				`https://discord.gg/EvDmXGt`
-			);
-		} catch(e) {
-			console.log(e.message);
-		}
-
-		guild.leave();
-	}
 })
 
 process.on("unhandledRejection", (e) => console.log(e));
