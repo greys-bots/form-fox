@@ -33,11 +33,11 @@ module.exports = {
 				if(!form) return 'Form not found!';
 
 				var roles = msg.guild.roles.cache.filter(r => form.roles.includes(r.id));
-				await msg.channel.send({embed: {
+				await msg.channel.send({embeds: [{
 					title: `Roles for form ${form.name} (${form.hid})`,
 					description: roles.map(r => r.mention).join('\n') || '*(none set)*',
 					color: parseInt('ee8833', 16)
-				}})
+				}]})
 
 				if(roles[0]) {
 					var message = await msg.channel.send('Would you like to clear these roles?');

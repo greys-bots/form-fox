@@ -351,7 +351,7 @@ class FormPostStore extends Collection {
 		if(!post) return;
 
 		var cfg = await this.bot.stores.configs.get(msg.guild.id);
-		if(cfg?.reacts) await reaction.users.remove(user.id);
+		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
 		if(!post.form.open) return;
 
 		if(!post.form.channel_id && !cfg?.response_channel)
@@ -369,8 +369,8 @@ class FormPostStore extends Collection {
 				}
 			}
 			
-			if(cfg?.embed) {
-				await user.send({embed: {
+			if(cfg?.embed || post.form.embed) {
+				await user.send({embeds: [{
 					title: post.form.name,
 					description: post.form.description,
 					fields: post.form.questions.map((q,i) => {
@@ -380,17 +380,17 @@ class FormPostStore extends Collection {
 						}
 					}),
 					color: parseInt(post.form.color || 'ee8833', 16)
-				}})
+				}]})
 			}
 
-			var question = await this.bot.utils.handleQuestion(post.form, 0);
-			var message = await user.send({embed: {
+			var question = await this.bot.handlers.response.handleQuestion(post.form, 0);
+			var message = await user.send({embeds: [{
 				title: post.form.name,
 				description: post.form.description,
 				fields: question.message,
 				color: parseInt(post.form.color || 'ee8833', 16),
 				footer: question.footer
-			}});
+			}]});
 
 			question.reacts.forEach(r => message.react(r));
 			await this.bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {

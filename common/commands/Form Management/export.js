@@ -21,5 +21,6 @@ module.exports = {
 	},
 	alias: ['exp'],
 	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	guildOnly: true,
+	cooldown: 60
 }

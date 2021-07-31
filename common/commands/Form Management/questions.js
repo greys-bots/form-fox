@@ -58,7 +58,7 @@ module.exports.subcommands.add = {
 		var position = form.questions.length + 1;
 		if(!question.value) {
 			await msg.channel.send('What question would you like to add to the form?\nType `cancel` to cancel!');
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			question.value = resp.content;
@@ -71,7 +71,7 @@ module.exports.subcommands.add = {
 			Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}\n`).join("") +
 			"```"
 		)
-		resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
+		resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 2 * 60 * 1000})).first();
 		if(!resp) return 'Timed out! Aborting!';
 		var type = Object.keys(TYPES).find(t => TYPES[t].alias.includes(resp.content.toLowerCase()));
 		if(!type) return "ERR! Invalid type!";
@@ -97,7 +97,7 @@ module.exports.subcommands.add = {
 			'in its place or after it!\n',
 			'(Use `last` to put it at the end of the other questions!)'
 		]);
-		resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+		resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 		if(!resp) return 'ERR! Timed out!';
 		if(resp.content.toLowerCase() != 'last') position = parseInt(resp.content.toLowerCase());
 		if(isNaN(position)) return 'ERR! Please provide a real number!';
@@ -131,7 +131,7 @@ module.exports.subcommands.remove = {
 		var question = args.slice(1);
 		if(!question) {
 			await msg.channel.send('What question would you like to remove?\nType `cancel` to cancel!');
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			question = resp.content;
@@ -167,16 +167,16 @@ module.exports.subcommands.set = {
 		var data = {};
 		data.questions = [];
 
-		var fmessage = await msg.channel.send({embed: {
+		var fmessage = await msg.channel.send({embeds: [{
 			title: form.name,
 			description: form.description
-		}})
+		}]})
 		var i = 0;
 		var message;
 		while(i < 20) {
 			if(i == 0) message = await msg.channel.send(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
 			else await message.edit(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 2 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			if(resp.content.toLowerCase() == 'done') break;
@@ -192,12 +192,12 @@ module.exports.subcommands.set = {
 			if(confirm.message) await confirm.message.delete();
 			await message.reactions.removeAll();
 
-			await fmessage.edit({embed: {
+			await fmessage.edit({embeds: [{
 				title: data.name,
 				description: data.description,
 				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${q.required ? ' (required)' : ''}`, value: q.value} }),
 				color: parseInt('ee8833', 16)
-			}});
+			}]});
 
 			i++;
 		}
@@ -230,7 +230,7 @@ module.exports.subcommands.rephrase = {
 		var question = args.slice(2).join(" ");
 		if(!question) {
 			await msg.channel.send('What question number would you like to rephrase?\nType `cancel` to cancel!');
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			position = resp.content;
@@ -241,7 +241,7 @@ module.exports.subcommands.rephrase = {
 			question = 
 
 			await msg.channel.send("Enter the new question!");
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			question = resp.content;
 		}
@@ -275,7 +275,7 @@ module.exports.subcommands.reorder = {
 		var position = args[2];
 		if(!position) {
 			await msg.channel.send('What question would you like reorder?\nType `cancel` to cancel!');
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			question = resp.content;
@@ -286,7 +286,7 @@ module.exports.subcommands.reorder = {
 				'in its place or after it!\n',
 				'(Use `last` to put it at the end of the other questions!)'
 			]);
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() != 'last') position = resp.content;
 			else position = form.questions.length;

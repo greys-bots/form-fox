@@ -1,4 +1,5 @@
-const {Collection} = require("discord.js");
+const { Collection } = require("discord.js");
+const { qTypes: TYPES } = require('../extras');
 
 class FormStore extends Collection {
 	constructor(bot, db) {
@@ -23,13 +24,15 @@ class FormStore extends Collection {
 					color,
 					open,
 					cooldown,
-					emoji
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+					emoji,
+					reacts,
+					embed
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [],
 				 data.message, data.color, data.open || true,
-				 data.cooldown, data.emoji]);
+				 data.cooldown, data.emoji, data.reacts, data.embed]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -54,13 +57,15 @@ class FormStore extends Collection {
 					color,
 					open,
 					cooldown,
-					emoji
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+					emoji,
+					reacts,
+					embed
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, data.roles || [],
 				 data.message, data.color, data.open || true,
-				 data.cooldown, data.emoji]);
+				 data.cooldown, data.emoji, data.reacts ?? true, data.embed ?? true]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -184,18 +189,18 @@ class FormStore extends Collection {
 
 							if(post.bound) continue;
 
-							await msg.edit({embed: {
+							await msg.edit({embeds: [{
 								title: form.name,
 								description: form.description,
 								color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-								fields: [{name: 'Response Count', value: responses?.length || 0}],
+								fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 								footer: {
 									text: `Form ID: ${form.hid} | ` +
 										  (!form.open ?
 										  'this form is not accepting responses right now!' :
 										  'react below to apply to this form!')
 								}
-							}})
+							}]})
 						} catch(e) {
 							errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 						}
@@ -229,18 +234,18 @@ class FormStore extends Collection {
 							return rej('Message missing!');
 						}
 
-						await msg.edit({embed: {
+						await msg.edit({embeds: [{
 							title: form.name,
 							description: form.description,
 							color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-							fields: [{name: 'Response Count', value: responses?.length || 0}],
+							fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 							footer: {
 								text: `Form ID: ${form.hid} | ` +
 									  (!form.open ?
 									  'this form is not accepting responses right now!' :
 									  'react below to apply to this form!')
 							}
-						}})
+						}]})
 					} catch(e) {
 						errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
 					}
@@ -324,9 +329,14 @@ class FormStore extends Collection {
 		return new Promise(async (res, rej) => {
 			try {
 				var forms = await this.getAll(server);
-				var updated = 0, created = 0;
+				var updated = 0, created = 0, failed = [];
 				for(var form of data) {
-					if(forms && forms.find(f => f.hid == form.hid)) {
+					var verify = this.verify(form);
+					if(verify.ok) {
+						failed.push(`${form.name || form.hid || "(invalid form)"} - ${verify.reason}`);
+						continue;
+					}
+					if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
 						await this.update(server, form.hid, form);
 						updated++;
 					} else {
@@ -338,8 +348,33 @@ class FormStore extends Collection {
 				return rej(e);
 			}
 
-			return res({updated, created, forms: await this.getAll(server)});
+			return res({updated, created, failed, forms: await this.getAll(server)});
 		})
+	}
+
+	verify(form) {
+		if(!form.questions || form.questions.length == 0)
+			return {ok: false, reason: "Questions must be present"};
+
+		if(form.questions > 20)
+			return {ok: false, reason: "Max of 20 questions per form"};
+
+		if(form.questions.find(q => !q.value?.lengtg))
+			return {ok: false, reason: "Questions must have a value"};
+
+		if(form.questions.find(q => q.value.length > 100))
+			return {ok: false, reason: "Questions must be 100 characters or less"};
+
+		if(form.questions.find(q => !TYPES[q.type]))
+			return {ok: false, reason: "Questions must have a valid type"};
+
+		if(!form.name)
+			return {ok: false, reason: "Form must have a name"};
+
+		if(form.description.length > 2048)
+			return {ok: false, reason: "Description must be 2048 chars or less"};
+
+		return {ok: true};
 	}
 }
 

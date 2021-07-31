@@ -20,7 +20,7 @@ module.exports = {
             'Type `skip` to skip adding one, or ',
             '`cancel` to cancel the denial!'
         ].join(''));
-		var resp = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {time: 2 * 60 * 1000, max: 1});
+		var resp = await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1});
         if(!resp?.first()) return 'Err! Timed out!';
         resp = resp.first().content;
         if(resp.toLowerCase() == 'cancel') return 'Action cancelled!';
@@ -34,7 +34,7 @@ module.exports = {
 			embed.timestamp = new Date().toISOString();
 			try {
 				await bot.stores.responsePosts.delete(message.guild.id, message.channel.id, message.id);
-				await message.edit({embed});
+				await message.edit({embeds: [embed]});
 				await message.reactions.removeAll();
 			} catch(e) {
 				return 'ERR! '+(e.message || e);
@@ -43,7 +43,7 @@ module.exports = {
 
 		try {
 			response = await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'denied'});
-			await user.send({embed: {
+			await user.send({embeds: [{
 				title: 'Response denied!',
 				description: [
 					`Server: ${msg.guild.name} (${msg.guild.id})`,
@@ -54,7 +54,7 @@ module.exports = {
 				fields: [{name: 'Reason', value: reason}],
 				color: parseInt('aa5555', 16),
 				timestamp: new Date().toISOString()
-			}})
+			}]})
 			bot.emit('DENY', response)
 		} catch(e) {
 			console.log(e);

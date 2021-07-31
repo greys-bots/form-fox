@@ -16,6 +16,8 @@ module.exports = {
 			console.log(e);
 			return "Please attach a valid .json file!";
 		}
+		if(!data.length || !Array.isArray(data)) return "Data should be an array of forms!";
+		if(data.length > 100) return "You can only import up to 100 forms at a time!";
 
 		var message = await msg.channel.send("WARNING: This will overwrite your existing data. Are you sure you want to import these forms?");
 		["✅","❌"].forEach(r => message.react(r));
@@ -28,14 +30,19 @@ module.exports = {
 		} catch(e) {
 			return "ERR!\n"+e;
 		}
-		
-		return (
-			"Forms imported!\n" +
+
+		var m = "Forms imported!\n" +
 			`Updated: ${results.updated}\n` +
-			`Created: ${results.created}`
-		);
+			`Created: ${results.created}\n` +
+			`Failed: ${results.failed.length}\n`;
+
+		if(results.failed.length) {
+			m += results.failed.join("\n");
+		}
+		return m;
 	},
 	alias: ['imp'],
 	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	guildOnly: true,
+	cooldown: 60
 }

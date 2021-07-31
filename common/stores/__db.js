@@ -28,7 +28,9 @@ module.exports = async (bot) => {
 			color 		TEXT,
 			open 		BOOLEAN,
 			cooldown 	INTEGER,
-			emoji 		TEXT
+			emoji 		TEXT,
+			reacts 		BOOLEAN,
+			embed 		BOOLEAN
 		);
 
 		CREATE TABLE IF NOT EXISTS extras (

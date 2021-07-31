@@ -33,7 +33,7 @@ module.exports = {
 				`Type anything not on the list to continue with the process and only copy questions`
 			)
 
-			var resp = await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 60000});
+			var resp = await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 60000});
 			if(!resp || !resp.first()) return "ERR! No response!";
 			resp = resp.first().content.toLowerCase().split(/,?\s+/g);
 		}

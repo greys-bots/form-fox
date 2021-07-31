@@ -16,7 +16,7 @@ module.exports = {
 			var required = form.questions.filter(q => q.required);
 			if(!required?.[0]) return 'That form has no required questions!';
 
-			var message = await msg.channel.send({embed: {
+			var message = await msg.channel.send({embeds: [{
 				title: 'Required Questions',
 				fields: required.map((q, i) => {
 					return {
@@ -29,7 +29,7 @@ module.exports = {
                     'react with ❌ to cancel. ',
                     'you can respond with "y", "yes", or "✅" to clear as well'
                 ].join("")}
-			}});
+			}]});
 
 			REACTS.forEach(r => message.react(r));
 			

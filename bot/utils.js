@@ -60,7 +60,7 @@ module.exports = {
 				} else {
 					this.index -= 1;
 				}
-				await m.edit(this.data[this.index]);
+				await m.edit({embeds: [this.data[this.index].embed]});
 				if(m.channel.type != "dm") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
@@ -70,7 +70,7 @@ module.exports = {
 				} else {
 					this.index += 1;
 				}
-				await m.edit(this.data[this.index]);
+				await m.edit({embeds: [this.data[this.index].embed]});
 				if(m.channel.type != "dm") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
@@ -79,20 +79,6 @@ module.exports = {
 				delete bot.menus[m.id];
 				break;
 		}
-	},
-	cleanText: function(text){
-		if (typeof(text) === "string") {
-			return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
-		} else	{
-			return text;
-		}
-	},
-
-	checkPermissions: async (bot, msg, cmd)=>{
-		return new Promise((res)=> {
-			if(cmd.permissions) res(msg.member.permissions.has(cmd.permissions))
-			else res(true);
-		})
 	},
 
 	getConfirmation: async (bot, msg, user) => {
@@ -103,7 +89,7 @@ module.exports = {
 				   message.author.id != user.id) return;
 
 				clearTimeout(timeout);
-				bot.removeListener('message', msgListener);
+				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
 				if(STRINGS[0].includes(message.content.toLowerCase())) return res({confirmed: true, message});
 				else return res({confirmed: false, message, msg: 'Action cancelled!'});
@@ -114,19 +100,19 @@ module.exports = {
 				   ruser.id != user.id) return;
 
 				clearTimeout(timeout);
-				bot.removeListener('message', msgListener);
+				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
 				if(react.emoji.name == REACTS[0]) return res({confirmed: true, react});
 				else return res({confirmed: false, react, msg: 'Action cancelled!'});
 			}
 
 			const timeout = setTimeout(async () => {
-				bot.removeListener('message', msgListener);
+				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
 				res({confirmed: false, msg: 'ERR! Timed out!'})
 			}, 30000);
 
-			bot.on('message', msgListener);
+			bot.on('messageCreate', msgListener);
 			bot.on('messageReactionAdd', reactListener);
 		})
 	},
@@ -136,46 +122,11 @@ module.exports = {
 				if(message.channel.id != msg.channel.id ||
 				   message.author.id != user.id) return;
 
-				bot.removeListener('message', msgListener);
+				bot.removeListener('messageCreate', msgListener);
 				return res(message)
 			}
 
-			bot.on('message', msgListener);
+			bot.on('messageCreate', msgListener);
 		})
-	},
-
-	handleQuestion: async (data, number) => {
-    	var questions = data.questions?.[0] ? data.questions : data.form.questions;
-    	var current = questions[number];
-    	if(!current) return Promise.resolve(undefined);
-
-    	var question = {};
-    	var type = TYPES[current.type];
-
-    	question.message = [
-    		{
-				name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
-				value: current.value
-			}
-    	];
-    	if(type.message) question.message = question.message.concat(type.message(current));
-
-    	question.reacts = ['❌'];
-    	if(type.reacts) question.reacts = [...type.reacts(current), ...question.reacts];
-
-    	question.footer = {text: 'react with ❌ or type "cancel" to cancel.'};
-    	if(type.text) question.footer.text = type.text + " " + question.footer.text;
-
-    	if(!current.required) {
-    		if(!questions.find((x, i) => x.required && i > number)) {
-    			question.footer.text += ' react with ✅ or type "submit" to finish early.';
-    			question.reacts.push('✅');
-    		}
-
-    		question.footer.text += ' react with ➡️ or type "skip" to skip this question!';
-    		question.reacts.push('➡️');
-    	}
-
-    	return question
-    }
+	}
 }

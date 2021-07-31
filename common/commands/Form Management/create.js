@@ -13,39 +13,39 @@ module.exports = {
 		var data = {};
 		var message, confirm;
 
-		var form = await msg.channel.send({embed: {
+		var form = await msg.channel.send({embeds: [{
 			title: 'New Form',
 			color: parseInt('ee8833', 16)
-		}});
+		}]});
 
 		message = await msg.channel.send("What do you want to name the form?\n(Type `cancel` to cancel!)");
-		var resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 60 * 1000})).first();
+		var resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 60 * 1000})).first();
 		if(!resp) return 'Timed out! Aborting!';
 		if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 		data.name = resp.content;
 		await resp.delete();
-		await form.edit({embed: {
+		await form.edit({embeds: [{
 			title: resp.content,
 			color: parseInt('ee8833', 16)
-		}})
+		}]})
 
 		await message.edit("What do you want the form's description to be?\n(Type `cancel` to cancel!)");
-		resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 60 * 1000})).first();
+		resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 60 * 1000})).first();
 		if(!resp) return 'Timed out! Aborting!';
 		if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 		data.description = resp.content;
 		await resp.delete();
-		await form.edit({embed: {
+		await form.edit({embeds: [{
 			title: data.name,
 			description: resp.content,
 			color: parseInt('ee8833', 16)
-		}})
+		}]})
 
 		data.questions = [];
 		var i = 0;
 		while(i < 20) {
 			await message.edit(`Enter a question! Current question: ${i+1}/20\n(Type \`done\` to finish, or \`cancel\` to cancel!)`);
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 2 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			if(resp.content.toLowerCase() == 'done') break;
@@ -59,7 +59,7 @@ module.exports = {
 				Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}\n`).join("") +
 				"```"
 			)
-			resp = (await msg.channel.awaitMessages(m => m.author.id == msg.author.id, {max: 1, time: 2 * 60 * 1000})).first();
+			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 2 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
 			var type = Object.keys(TYPES).find(t => TYPES[t].alias.includes(resp.content.toLowerCase()));
 			if(!type) return "ERR! Invalid type!";
@@ -82,11 +82,11 @@ module.exports = {
 			if(confirm.message) await confirm.message.delete();
 			await message.reactions.removeAll();
 
-			await form.edit({embed: {
+			await form.edit({embeds: [{
 				title: data.name,
 				description: data.description,
 				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${q.required ? ' (required)' : ''}`, value: q.value} }),
-			}});				color: parseInt('ee8833', 16)
+			}]});				color: parseInt('ee8833', 16)
 
 
 			i++;

@@ -11,18 +11,18 @@ module.exports = {
 
 		var responses = await bot.stores.responses.getByForm(msg.guild.id, form.hid);
 		try {
-			var message = await channel.send({embed: {
+			var message = await channel.send({embeds: [{
 				title: form.name,
 				description: form.description,
 				color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-				fields: [{name: 'Response Count', value: responses?.length || 0}],
+				fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 				footer: {
 					text: `Form ID: ${form.hid} | ` +
 						  (!form.open ?
 						  'this form is not accepting responses right now!' :
 						  'react below to apply to this form!')
 				}
-			}});
+			}]});
 			message.react(form.emoji || '📝');
 			await bot.stores.formPosts.create(msg.guild.id, channel.id, message.id, {
 				form: form.hid

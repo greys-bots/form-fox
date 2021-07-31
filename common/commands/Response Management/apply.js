@@ -26,8 +26,8 @@ module.exports = {
 				}
 			}
 			
-			if(cfg?.embed) {
-				await msg.author.send({embed: {
+			if(cfg?.embed || form.embed) {
+				await msg.author.send({embeds: [{
 					title: form.name,
 					description: form.description,
 					fields: form.questions.map((q,i) => {
@@ -37,17 +37,17 @@ module.exports = {
 						}
 					}),
 					color: parseInt(form.color || 'ee8833', 16)
-				}})
+				}]})
 			}
 			
-			var question = await bot.utils.handleQuestion(form, 0);
-			var message = await msg.author.send({embed: {
+			var question = await bot.handlers.response.handleQuestion(form, 0);
+			var message = await msg.author.send({embeds: [{
 				title: form.name,
 				description: form.description,
 				fields: question.message,
 				color: parseInt(form.color || 'ee8833', 16),
 				footer: question.footer
-			}});
+			}]});
 			
 			question.reacts.forEach(r => message.react(r));
 			await bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
