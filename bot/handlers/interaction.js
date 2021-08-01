@@ -11,14 +11,14 @@ class InteractionHandler {
 		})
 
 		bot.once('ready', async () => {
-			await this.load(__dirname + '../../../common/slashcommands');
+			await this.load(__dirname + '/../../common/slashcommands');
 			console.log('slash commands loaded!')
 		})
 	}
 
 	async load(path) {
-		var slashGroups = new Collection();
 		var slashCommands = new Collection();
+		var slashData = new Collection();
 
 		var files = this.bot.utils.recursivelyReadDirectory(path);
 
@@ -28,18 +28,37 @@ class InteractionHandler {
 			var file = path_frags[path_frags.length - 1];
 			var command = require(f);
 
+			var {execute, ephemeral, ...data} = command;
+			if(command.options) {
+				var d2 = command.options.map(({execute, ephemeral, ...o}) => o);
+				data.options = d2;
+			}
+
 			if(mods[0]) {
-				var group = slashGroups.get(mods[0]);
+				var group = slashCommands.get(mods[0]);
+				var g2 = slashData.get(mods[0]);
 				if(!group) {
 					var mod;
 					if(file == '__mod.js') mod = require(f);
-					else mod = require(path + "/" + mods[0] + "/__mod.js");
+					else mod = require(f.replace(file, "/__mod.js"));
+					group = {
+						...mod,
+						options: []
+					};
 
-					//finish auto-loading groups here
+					slashCommands.set(mod.name, group);
+					slashData.set(mod.name, group);
 				}
+
+				group.options.push(command)
+				g2.options.push({
+					...data,
+					type: data.type || 1
+				})
+			} else {
+				slashCommands.set(command.name, command);
+				slashData.set(command.name, data)
 			}
-			command.name = file.slice(0, -3).toLowerCase();
-			slashCommands.set(command.name, command);
 		}
 
 		this.bot.slashCommands = slashCommands;
@@ -47,7 +66,8 @@ class InteractionHandler {
 		try {
 			if(!this.bot.application?.owner) await this.bot.application?.fetch();
 
-			var cmds = this.bot.slashCommands.map(({execute, ephemeral, ...data}) => data);
+			var cmds = slashData.map(d => d);
+			console.log(cmds)
 			await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
 			return;
 		} catch(e) {
@@ -62,10 +82,29 @@ class InteractionHandler {
 		if(ctx.isSelectMenu()) this.handleSelect(ctx);
 	}
 
-	async handleCommand(ctx) {
-		var {commandName} = ctx;
+	parse(ctx) {
+		var cmd = this.bot.slashCommands.get(ctx.commandName);
+		if(!cmd) return;
 
-		var cmd = this.bot.slashCommands.get(commandName);
+		if(ctx.options.getSubcommand(false)) {
+			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommand());
+			if(!cmd) return;
+		}
+
+		if(ctx.options.getSubcommandGroup(false)) {
+			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommandGroup());
+			if(!cmd) return;
+			var opt = ctx.options.get(ctx.options.getSubcommandGroup());
+			if(opt.options.getSubcommand(false)) {
+				cmd = cmd.options.find(o => o.name == ctx.options.getSubcommand());
+			} else return
+		}
+
+		return cmd;
+	}
+
+	async handleCommand(ctx) {
+		var cmd = this.parse(ctx);
 		if(!cmd) return;
 
 		try {

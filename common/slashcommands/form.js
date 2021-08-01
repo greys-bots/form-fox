@@ -1,6 +1,13 @@
 module.exports = {
 	name: 'form',
-	description: 'View a specific form',
+	description: 'Commands for managing forms',
+	options: []
+}
+
+module.exports.options.push({
+	name: 'view',
+	description: 'View existing forms',
+	type: 1,
 	options: [
 		{
 			name: "form_id",
@@ -45,4 +52,4 @@ module.exports = {
 		}]}
 	},
 	ephemeral: true
-}
+})
