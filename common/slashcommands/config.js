@@ -7,18 +7,19 @@ module.exports = {
 module.exports.options.push({
 	name: 'channel',
 	description: 'Set a response channel',
+	type: 1,
 	options: [
-		{
-			name: 'form_id',
-			description: "ID of a form to change",
-			type: 3,
-			required: 'false'
-		},
 		{
 			name: 'channel',
 			description: 'The channel to set',
 			type: 7,
 			required: true
+		},
+		{
+			name: 'form_id',
+			description: "ID of a form to change",
+			type: 3,
+			required: 'false'
 		}
 	],
 	async execute(ctx) {

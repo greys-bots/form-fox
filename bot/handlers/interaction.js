@@ -24,8 +24,9 @@ class InteractionHandler {
 
 		for(f of files) {
 			var path_frags = f.replace(path, "").split(/(?:\\|\/)/);
-			var mods = path_frags.slice(0, -1);
+			var mods = path_frags.slice(1, -1);
 			var file = path_frags[path_frags.length - 1];
+			if(file == '__mod.js') continue;
 			var command = require(f);
 
 			var {execute, ephemeral, ...data} = command;
@@ -45,15 +46,19 @@ class InteractionHandler {
 						...mod,
 						options: []
 					};
+					g2 = {
+						...mod,
+						options: []
+					};
 
 					slashCommands.set(mod.name, group);
-					slashData.set(mod.name, group);
+					slashData.set(mod.name, g2);
 				}
 
 				group.options.push(command)
 				g2.options.push({
 					...data,
-					type: data.type || 1
+					type: data.type ?? 1
 				})
 			} else {
 				slashCommands.set(command.name, command);
@@ -67,7 +72,6 @@ class InteractionHandler {
 			if(!this.bot.application?.owner) await this.bot.application?.fetch();
 
 			var cmds = slashData.map(d => d);
-			console.log(cmds)
 			await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
 			return;
 		} catch(e) {
@@ -86,18 +90,16 @@ class InteractionHandler {
 		var cmd = this.bot.slashCommands.get(ctx.commandName);
 		if(!cmd) return;
 
-		if(ctx.options.getSubcommand(false)) {
-			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommand());
-			if(!cmd) return;
-		}
-
 		if(ctx.options.getSubcommandGroup(false)) {
 			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommandGroup());
 			if(!cmd) return;
-			var opt = ctx.options.get(ctx.options.getSubcommandGroup());
-			if(opt.options.getSubcommand(false)) {
-				cmd = cmd.options.find(o => o.name == ctx.options.getSubcommand());
-			} else return
+			var opt = ctx.options.getSubcommand(false);
+			if(opt) {
+				cmd = cmd.options.find(o => o.name == opt);
+			} else return;
+		} else if(ctx.options.getSubcommand(false)) {
+			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommand());
+			if(!cmd) return;
 		}
 
 		return cmd;
