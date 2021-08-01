@@ -80,6 +80,23 @@ const registerSubcommands = function(command, module, name) {
 	return command;
 }
 
+// const loadSlashCommands = (path) => {
+// 	var slashCommands = new Collection();
+
+// 	var files = recursivelyReadDirectory(path);
+
+// 	for(f of files) {
+// 		var path_frags = f.replace(path, "").split(/(?:\\|\/)/);
+// 		var file = path_frags[path_frags.length - 1];
+
+// 		var command = require(f);
+// 		command.name = file.slice(0, -3).toLowerCase();
+// 		slashCommands.set(command.name, command);
+// 	}
+
+// 	return {slashCommands};
+// }
+
 const genCode = function(table, num = 4) {
 	var string = "";
 	for(var i = 0; i < num; i++) {
@@ -93,6 +110,7 @@ module.exports = {
 	recursivelyReadDirectory,
 	loadCommands,
 	registerSubcommands,
+	// loadSlashCommands,
 	genCode,
 
 	dayDiff: (d1, d2) => {

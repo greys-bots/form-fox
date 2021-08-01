@@ -61,7 +61,6 @@ async function setup() {
 	Object.assign(bot.utils, require(__dirname + "/../common/utils"));
 
 	var data = bot.utils.loadCommands(__dirname + "/../common/commands");
-	
 	Object.keys(data).forEach(k => bot[k] = data[k]);
 }
 
