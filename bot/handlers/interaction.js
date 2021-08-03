@@ -29,9 +29,9 @@ class InteractionHandler {
 			if(file == '__mod.js') continue;
 			var command = require(f);
 
-			var {execute, ephemeral, ...data} = command;
+			var {execute, ephemeral, perms, guildOnly, ...data} = command;
 			if(command.options) {
-				var d2 = command.options.map(({execute, ephemeral, ...o}) => o);
+				var d2 = command.options.map(({execute, ephemeral, perms, guildOnly, ...o}) => o);
 				data.options = d2;
 			}
 
@@ -181,8 +181,7 @@ class InteractionHandler {
 						return;
 					}
 
-					if(typeof res.ephemeral == "boolean") return await ctx.reply(res);
-					else return await ctx.reply({...res, ephemeral: cmd.ephemeral ?? false})
+					return await ctx.reply({...res, ephemeral: cmd.ephemeral ?? true})
 			}
 		}
 	}
@@ -203,6 +202,11 @@ class InteractionHandler {
 
 		var menu = this.menus.get(message.id);
 		menu.handle(ctx);
+	}
+
+	checkPerms(cmd, member) {
+		if(!cmd.perms || !cmd.perms[0]) return true;
+		return member.permissions.has(cmd.permissions);
 	}
 
 	async paginate(menu, ctx) {

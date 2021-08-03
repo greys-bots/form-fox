@@ -1,13 +1,6 @@
 module.exports = {
-	name: 'config',
-	description: "Commands for configuring options",
-	options: []
-}
-
-module.exports.options.push({
 	name: 'channel',
 	description: 'Set a response channel',
-	type: 1,
 	options: [
 		{
 			name: 'channel',
@@ -34,4 +27,4 @@ module.exports.options.push({
 		var cfg = await ctx.client.stores.configs.get(ctx.guildId);
 		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {channel: channel.channel.id});
 	}
-})
+}

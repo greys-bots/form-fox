@@ -7,7 +7,7 @@ module.exports = {
 
 		var pmsg = "My default prefix is `" + bot.prefix + "`";
 		if(cfg?.prefix) pmsg += `, and my prefix for this server is \`${cfg.prefix}\``
-		return ({embed: {
+		return ({embeds: [{
 			title: '**About**',
 			description: "Eee! I'm Fox! I help people set up forms and responses here on Discord!\nMy prefix is `ff!`",
 			fields:[
@@ -18,7 +18,7 @@ module.exports = {
 				{name: "Stats", value: `Guilds: ${bot.guilds.cache.size} | Users: ${bot.users.cache.size}`},
 				{name: "Support my creators!", value: "[Ko-Fi](https://ko-fi.com/greysdawn) | [Patreon](https://patreon.com/greysdawn)"}
 			]
-		}})
+		}]})
 	},
 	alias: ['abt', 'a']
 }
