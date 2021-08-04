@@ -1,8 +1,8 @@
 const tc = require('tinycolor2');
 
 module.exports = {
-	name: 'close',
-	description: 'Closes a form, turning off responses',
+	name: 'color',
+	description: "Changes a form's color",
 	options: [
 		{
 			name: 'form_id',
@@ -20,20 +20,65 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase();
 		var c = ctx.options.get('color')?.value;
-		var form = ctx.client.stores.forms.get(ctx.guildId, id);
+		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
-		if(!color) {
+		if(!c) {
 			if(!form.color) return 'Form has no color set!';
 
-			await ctx.reply({
-				content: `Current color: **#${form.color}.** Would you like to clear it?`,
+			var rdata = {
+				content: `Current color: **#${form.color}.**`,
 				ephemeral: true,
-				
-			})
+				components: [
+					{
+						type: 1,
+						components: [
+							{
+								type: 2,
+								style: 4,
+								label: 'Clear',
+								custom_id: 'clear',
+								emoji: { name: '🗑'}
+							}
+						]
+					}
+				]
+			}
+			await ctx.reply(rdata);
+
+			var reply = await ctx.editReply(rdata);
+			var click = await reply.awaitMessageComponent({filter: (int) => int.customId == "clear" && int.user.id == ctx.user.id, time: 30000});
+			if(!click) {
+				await click.update({components: {type: 1, components: [{
+					type: 2,
+					style: 4,
+					label: 'clear',
+					custom_id: 'clear',
+					emoji: {name: '🗑'},
+					disabled: true
+				}]}});
+
+				return;
+			}
+
+			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color: undefined});
+			await ctx.followUp('Color reset!');
+			await click.update({components: [{type: 1, components: [{
+				type: 2,
+				style: 4,
+				label: 'clear',
+				custom_id: 'clear',
+				emoji: {name: '🗑'},
+				disabled: true
+			}]}]});
+			return;
 		}
 		
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {open: false});
+		var color = tc(c);
+		if(!color.isValid()) return 'That color isn\'t valid!';
+
+		color = color.toHex();
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color});
 		return 'Form updated!';
 	},
 	perms: ['MANAGE_MESSAGES'],

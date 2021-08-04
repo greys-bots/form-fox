@@ -210,7 +210,7 @@ class InteractionHandler {
 	}
 
 	async paginate(menu, ctx) {
-		var {data, interaction} = menu;
+		var {data} = menu;
 		var {customId: id} = ctx;
 
 		switch(id) {
