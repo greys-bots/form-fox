@@ -35,7 +35,6 @@ module.exports = {
 						color: parseInt(form.color, 16)
 					}
 				],
-				ephemeral: true,
 				components: [
 					{
 						type: 1,
@@ -45,7 +44,7 @@ module.exports = {
 			}
 			await ctx.reply(rdata);
 
-			var reply = await ctx.editReply(rdata);
+			var reply = await ctx.fetchReply();
 			var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
 			var msg;
 			if(conf.msg) {
@@ -54,16 +53,32 @@ module.exports = {
 				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color: undefined});
 				msg = 'Color reset!';
 			}
-			await (conf.interaction ? conf.interaction : ctx).update({
-				content: msg,
-				components: [{
-					type: 1,
-					components: clearBtns.map(b => {
-						b.disabled = true;
-						return b;
-					})
-				}]
-			});
+
+			if(conf.interaction) {
+				await conf.interaction.update({
+					content: msg,
+					embeds: [],
+					components: [{
+						type: 1,
+						components: clearBtns.map(b => {
+							b.disabled = true;
+							return b;
+						})
+					}]
+				})
+			} else {
+				await ctx.editReply({
+					content: msg,
+					embeds: [],
+					components: [{
+						type: 1,
+						components: clearBtns.map(b => {
+							b.disabled = true;
+							return b;
+						})
+					}]
+				})
+			}
 			return;
 		}
 		

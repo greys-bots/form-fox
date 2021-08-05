@@ -37,7 +37,6 @@ module.exports = {
 						embeds[i].embed.title += ` (${i+1}/${embeds.length})`;
 
 				return embeds;
-				break;
 			case 1:
 				var val;
 				if(VALS.includes(args[0].toLowerCase())) val = true;
@@ -47,7 +46,6 @@ module.exports = {
 				else await bot.stores.configs.update(msg.guild.id, {embed: val});
 
 				return "Global config set!";
-				break;
 			case 2:
 				var form = forms.find(f => f.hid == args[0].toLowerCase());
 				if(!form) return 'Form not found!';
@@ -63,7 +61,6 @@ module.exports = {
 				}
 
 				return "Form config set!";
-				break;
 		}
 	},
 	guildOnly: true,

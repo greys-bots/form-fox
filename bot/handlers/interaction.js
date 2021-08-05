@@ -113,12 +113,13 @@ class InteractionHandler {
 			var res = await cmd.execute(ctx);
 		} catch(e) {
 			console.error(e);
-			return await ctx.reply({content: "Error:\n" + e.message, ephemeral: true})
+			if(ctx.replied) return await ctx.followUp({content: "Error:\n" + e.message, ephemeral: true});
+			else return await ctx.reply({content: "Error:\n" + e.message, ephemeral: true});
 		}
 
 		if(!res) return;
 
-		var type = ctx.replied ? 'followUp' : 'reply';
+		var type = ctx.replied ? 'followUp' : 'reply'; // ew gross but it probably works
 		switch(typeof res) {
 			case 'string':
 				return await ctx[type]({content: res, ephemeral: cmd.ephemeral ?? false})
@@ -183,7 +184,7 @@ class InteractionHandler {
 					return;
 				}
 
-				return await ctx[type]({...res, ephemeral: cmd.ephemeral ?? true})
+				return await ctx[type]({...res, ephemeral: cmd.ephemeral ?? false})
 		}
 	}
 

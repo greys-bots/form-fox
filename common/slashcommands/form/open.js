@@ -1,6 +1,6 @@
 module.exports = {
-	name: 'close',
-	description: 'Closes a form, turning off responses',
+	name: 'open',
+	description: 'Opens a form, turning on responses',
 	options: [
 		{
 			name: 'form_id',
@@ -14,7 +14,7 @@ module.exports = {
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);
 		if(!form) return 'Form not found!';
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {open: false});
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {open: true});
 		return 'Form updated!';
 	},
 	perms: ['MANAGE_MESSAGES'],
