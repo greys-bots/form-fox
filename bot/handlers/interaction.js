@@ -116,73 +116,74 @@ class InteractionHandler {
 			return await ctx.reply({content: "Error:\n" + e.message, ephemeral: true})
 		}
 
-		if(res) {
-			switch(typeof res) {
-				case 'string':
-					return await ctx.reply({content: res, ephemeral: cmd.ephemeral ?? false})
-				case 'object':
-					if(Array.isArray(res)) {
-						var reply = {
-							embeds: [res[0]],
-							ephemeral: cmd.ephemeral ?? false
-						};
-						if(!res[1]) return await ctx.reply(reply);
+		if(!res) return;
 
-						reply = {
-							...reply,
-							components: [
-								{
-									type: 1,
-									components: [
-										{
-											type: 2,
-											label: "First",
-											style: 1,
-											custom_id: 'first'
-										},
-										{
-											type: 2,
-											label: 'Previous',
-											style: 1,
-											custom_id: 'prev'
-										},
-										{
-											type: 2,
-											label: 'Next',
-											style: 1,
-											custom_id: 'next'
-										},
-										{
-											type: 2,
-											label: 'Last',
-											style: 1,
-											custom_id: 'last'
-										}
-									]
-								}
-							]
-						}
-						await ctx.reply(reply);
-						var message = await ctx.editReply(reply);
+		var type = ctx.replied ? 'followUp' : 'reply';
+		switch(typeof res) {
+			case 'string':
+				return await ctx[type]({content: res, ephemeral: cmd.ephemeral ?? false})
+			case 'object':
+				if(Array.isArray(res)) {
+					var reply = {
+						embeds: [res[0]],
+						ephemeral: cmd.ephemeral ?? false
+					};
+					if(!res[1]) return await ctx[type](reply);
 
-						var menu = {
-							user: ctx.user.id,
-							interaction: ctx,
-							data: res,
-							index: 0,
-							timeout: setTimeout(() => {
-								if(!this.menus.get(message.id)) return;
-								this.menus.delete(message.id);
-							}, 5 * 60000)
-						}
+					reply = {
+						...reply,
+						components: [
+							{
+								type: 1,
+								components: [
+									{
+										type: 2,
+										label: "First",
+										style: 1,
+										custom_id: 'first'
+									},
+									{
+										type: 2,
+										label: 'Previous',
+										style: 1,
+										custom_id: 'prev'
+									},
+									{
+										type: 2,
+										label: 'Next',
+										style: 1,
+										custom_id: 'next'
+									},
+									{
+										type: 2,
+										label: 'Last',
+										style: 1,
+										custom_id: 'last'
+									}
+								]
+							}
+						]
+					}
+					await ctx[type](reply);
+					var message = await ctx.editReply(reply);
 
-						this.menus.set(message.id, menu);
-
-						return;
+					var menu = {
+						user: ctx.user.id,
+						interaction: ctx,
+						data: res,
+						index: 0,
+						timeout: setTimeout(() => {
+							if(!this.menus.get(message.id)) return;
+							this.menus.delete(message.id);
+						}, 5 * 60000)
 					}
 
-					return await ctx.reply({...res, ephemeral: cmd.ephemeral ?? true})
-			}
+					this.menus.set(message.id, menu);
+
+					return;
+				}
+
+				return await ctx[type]({...res, ephemeral: cmd.ephemeral ?? true})
 		}
 	}
 

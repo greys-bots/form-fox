@@ -1,7 +1,8 @@
 const {
-	confirmVals:STRINGS,
-	confirmReacts:REACTS,
-	numbers:NUMBERS,
+	confirmVals: STRINGS,
+	confirmReacts: REACTS,
+	confirmBtns: BUTTONS,
+	numbers: NUMBERS,
 	qTypes: TYPES
 } = require('../common/extras');
 
@@ -91,6 +92,7 @@ module.exports = {
 				clearTimeout(timeout);
 				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
+				bot.removeListener('interactionCreate', intListener)
 				if(STRINGS[0].includes(message.content.toLowerCase())) return res({confirmed: true, message});
 				else return res({confirmed: false, message, msg: 'Action cancelled!'});
 			}
@@ -102,8 +104,22 @@ module.exports = {
 				clearTimeout(timeout);
 				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
+				bot.removeListener('interactionCreate', intListener)
 				if(react.emoji.name == REACTS[0]) return res({confirmed: true, react});
 				else return res({confirmed: false, react, msg: 'Action cancelled!'});
+			}
+
+			function intListener(intr) {
+				if(!intr.isButton()) return;
+				if(intr.channelId !== msg.channel.id ||
+				   intr.user.id !== user.id) return;
+
+				clearTimeout(timeout);
+				bot.removeListener('messageCreate', msgListener);
+				bot.removeListener('messageReactionAdd', reactListener);
+				bot.removeListener('interactionCreate', intListener)
+				if(BUTTONS[0].includes(intr.customId)) return res({confirmed: true, interaction: intr});
+				else return res({confirmed: false, interaction: intr, msg: 'Action cancelled!'});
 			}
 
 			const timeout = setTimeout(async () => {
@@ -114,6 +130,7 @@ module.exports = {
 
 			bot.on('messageCreate', msgListener);
 			bot.on('messageReactionAdd', reactListener);
+			bot.on('interactionCreate', intListener)
 		})
 	},
 	awaitMessage: async (bot, msg, user) => {

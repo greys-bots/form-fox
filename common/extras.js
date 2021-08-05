@@ -291,5 +291,39 @@ module.exports = {
 	numbers,
 	confirmReacts,
 	confirmVals: [['y', 'yes', '✅'], ['n', 'no', '❌']],
-	events: ['submit', 'accept', 'deny']
+	confirmBtns: [['yes', 'clear'], ['no', 'cancel']],
+	events: ['submit', 'accept', 'deny'],
+
+	clearBtns: [
+		{
+			type: 2,
+			style: 4,
+			label: 'Clear',
+			custom_id: 'clear',
+			emoji: { name: '🗑'}
+		},
+		{
+			type: 2,
+			style: 1,
+			label: 'Cancel',
+			custom_id: 'cancel',
+			emoji: { name: '❌'}
+		}
+	],
+	confBtns: [
+		{
+			type: 2,
+			style: 3,
+			label: 'Confirm',
+			custom_id: 'yes',
+			emoji: { name: '✅'}
+		},
+		{
+			type: 2,
+			style: 4,
+			label: 'Cancel',
+			custom_id: 'no',
+			emoji: { name: '❌'}
+		}
+	]
 }

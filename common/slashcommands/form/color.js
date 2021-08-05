@@ -1,5 +1,7 @@
 const tc = require('tinycolor2');
 
+const { clearBtns } = require('../../extras');
+
 module.exports = {
 	name: 'color',
 	description: "Changes a form's color",
@@ -18,7 +20,7 @@ module.exports = {
 		}
 	],
 	async execute(ctx) {
-		var id = ctx.options.get('form_id').value.toLowerCase();
+		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var c = ctx.options.get('color')?.value;
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
@@ -27,50 +29,41 @@ module.exports = {
 			if(!form.color) return 'Form has no color set!';
 
 			var rdata = {
-				content: `Current color: **#${form.color}.**`,
+				embeds: [
+					{
+						description: `Current color: **#${form.color}.**`,
+						color: parseInt(form.color, 16)
+					}
+				],
 				ephemeral: true,
 				components: [
 					{
 						type: 1,
-						components: [
-							{
-								type: 2,
-								style: 4,
-								label: 'Clear',
-								custom_id: 'clear',
-								emoji: { name: '🗑'}
-							}
-						]
+						components: clearBtns
 					}
 				]
 			}
 			await ctx.reply(rdata);
 
 			var reply = await ctx.editReply(rdata);
-			var click = await reply.awaitMessageComponent({filter: (int) => int.customId == "clear" && int.user.id == ctx.user.id, time: 30000});
-			if(!click) {
-				await click.update({components: {type: 1, components: [{
-					type: 2,
-					style: 4,
-					label: 'clear',
-					custom_id: 'clear',
-					emoji: {name: '🗑'},
-					disabled: true
-				}]}});
-
-				return;
+			var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+			var msg;
+			if(conf.msg) {
+				msg = conf.msg;
+			} else {
+				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color: undefined});
+				msg = 'Color reset!';
 			}
-
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color: undefined});
-			await ctx.followUp('Color reset!');
-			await click.update({components: [{type: 1, components: [{
-				type: 2,
-				style: 4,
-				label: 'clear',
-				custom_id: 'clear',
-				emoji: {name: '🗑'},
-				disabled: true
-			}]}]});
+			await (conf.interaction ? conf.interaction : ctx).update({
+				content: msg,
+				components: [{
+					type: 1,
+					components: clearBtns.map(b => {
+						b.disabled = true;
+						return b;
+					})
+				}]
+			});
 			return;
 		}
 		
