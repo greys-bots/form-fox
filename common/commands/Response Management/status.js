@@ -8,7 +8,7 @@ module.exports = {
 
 		if(msg.channel.type == 'dm') {
 			var response = await bot.stores.responses.get(args[0], args[1].toLowerCase());
-		} else var response = await bot.stores.responses.get(msg.guild.id, args[0].toLowerCase());
+		} else var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
 
 		if(!response) return 'Response not found!';
 

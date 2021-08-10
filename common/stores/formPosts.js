@@ -19,7 +19,15 @@ class FormPostStore extends Collection {
 
 		this.bot.on('messageDelete', async ({guild, channel, id}) => {
 			try {
-				await this.delete(guild.id, channel.id, id);
+				await this.delete(channel.guild.id, channel.id, id);
+			} catch(e) {
+				console.log(e.message || e);
+			}
+		})
+
+		this.bot.on('interactionCreate', (...args) => {
+			try {
+				this.handleInteractions(...args);
 			} catch(e) {
 				console.log(e.message || e);
 			}
@@ -336,33 +344,15 @@ class FormPostStore extends Collection {
 		})
 	}
 
-	async handleReactions(reaction, user) {
-		if(this.bot.user.id == user.id) return;
-		if(user.bot) return;
-
-		var msg;
-		if(reaction.message.partial) msg = await reaction.message.fetch();
-		else msg = reaction.message;
-		if(!msg.guild) return;
-
-		var posts = await this.getByMessage(msg.guild.id, msg.id);
-		if(!posts?.[0]) return;
-		var post = posts.find(p => (p.form.emoji || '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
-		if(!post) return;
-
-		var cfg = await this.bot.stores.configs.get(msg.guild.id);
-		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
-		if(!post.form.open) return;
-
-		if(!post.form.channel_id && !cfg?.response_channel)
-			return await user.send('No response channel set for that form! Ask the mods to set one first!');
+	async openResponse(ctx) {
+		var {post, user, config: cfg, message: msg} = ctx;
 
 		try {
 			var existing = await this.bot.stores.openResponses.get(user.dmChannel?.id);
 			if(existing) return await user.send('Please finish your current form before starting a new one!');
 
 			if(post.form.cooldown && post.form.cooldown > 0) {
-				var past = (await this.bot.stores.responses.getByUser(msg.guild.id, user.id))?.pop();
+				var past = (await this.bot.stores.responses.getByUser(msg.channel.guild.id, user.id))?.pop();
 				if(past && past.status == 'denied') {
 					var diff = this.bot.utils.dayDiff(new Date(), past.received.getTime() + (post.form.cooldown * 24 * 60 * 60 * 1000));
 					if(diff > 0) return await user.send(`Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`)
@@ -393,7 +383,7 @@ class FormPostStore extends Collection {
 			}]});
 
 			question.reacts.forEach(r => message.react(r));
-			await this.bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
+			return await this.bot.stores.openResponses.create(msg.channel.guild.id, message.channel.id, message.id, {
 				user_id: user.id,
 				form: post.form.hid,
 				questions: JSON.stringify(post.form.questions)
@@ -401,10 +391,66 @@ class FormPostStore extends Collection {
 		} catch(e) {
 			console.log(e);
 			if(e.message) {
-				var channel = msg.guild.channels.resolve(post.form.channel_id || cfg.response_channel);
+				var channel = msg.channel.guild.channels.resolve(post.form.channel_id || cfg.response_channel);
 				return await channel.send('Err while starting response process: '+e.message);
 			} else return await user.send('ERR! Couldn\'t start response process: '+e);
 		}
+	}
+
+	async handleReactions(reaction, user) {
+		if(this.bot.user.id == user.id) return;
+		if(user.bot) return;
+
+		var msg;
+		if(reaction.message.partial) msg = await reaction.message.fetch();
+		else msg = reaction.message;
+		if(!msg.channel.guild) return;
+
+		var posts = await this.getByMessage(msg.channel.guild.id, msg.id);
+		if(!posts?.[0]) return;
+		var post = posts.find(p => (p.form.emoji || '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
+		if(!post) return;
+
+		var cfg = await this.bot.stores.configs.get(msg.channel.guild.id);
+		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
+		if(!post.form.open) return;
+
+		if(!post.form.channel_id && !cfg?.response_channel)
+			return await user.send('No response channel set for that form! Ask the mods to set one first!');
+
+		await this.openResponse({
+			user,
+			post,
+			config: cfg,
+			message: msg
+		})
+	}
+
+	async handleInteractions(intr) {
+		if(!intr.isButton()) return;
+		if(!intr.inGuild()) return;
+		var { user, message: msg, component: button } = intr;
+
+		var posts = await this.getByMessage(intr.guildId, msg.id);
+		if(!posts?.[0]) return;
+		var id = button.customId.split('-')[0];
+		var post = posts.find(p => p.form.hid == id);
+		if(!post) return;
+
+		var cfg = await this.bot.stores.configs.get(intr.guildId);
+		if(!post.form.open) return;
+
+		if(!post.form.channel_id && !cfg?.response_channel)
+			return await user.send('No response channel set for that form! Ask the mods to set one first!');
+
+		await this.openResponse({
+			user,
+			post,
+			config: cfg,
+			message: msg
+		})
+
+		await intr.reply({content: 'Form started! Check your DMs!', ephemeral: true})
 	}
 }
 

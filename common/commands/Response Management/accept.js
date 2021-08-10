@@ -4,14 +4,14 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a response to accept!';
 
-		var response = await bot.stores.responses.get(msg.guild.id, args[0].toLowerCase());
+		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!response) return 'Response not found!';
 
 		var user = await bot.users.fetch(response.user_id);
 		if(!user) return "Couldn't get that response's user!";
 
-		var post = await bot.stores.responsePosts.getByResponse(msg.guild.id, response.hid);
-		var chan = msg.guild.channels.resolve(post?.channel_id);
+		var post = await bot.stores.responsePosts.getByResponse(msg.channel.guild.id, response.hid);
+		var chan = msg.channel.guild.channels.resolve(post?.channel_id);
 		var message = await chan?.messages.fetch(post?.message_id);
 
 		if(message) {
@@ -20,7 +20,7 @@ module.exports = {
 			embed.footer = {text: 'Response accepted!'};
 			embed.timestamp = new Date().toISOString();
 			try {
-				await bot.stores.responsePosts.delete(message.guild.id, message.channel.id, message.id);
+				await bot.stores.responsePosts.delete(message.channel.guild.id, message.channel.id, message.id);
 				await message.edit({embeds: [embed]});
 				await message.reactions.removeAll();
 			} catch(e) {
@@ -36,12 +36,12 @@ module.exports = {
                 }
             }
 
-            response = await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'accepted'});
+            response = await bot.stores.responses.update(msg.channel.guild.id, response.hid, {status: 'accepted'});
             await user.send({embeds: [{
                 title: 'Response accepted!',
                 description: welc,
                 fields: [
-                	{name: 'Server', value: `${msg.guild.name} (${msg.guild.id})`},
+                	{name: 'Server', value: `${msg.channel.guild.name} (${msg.channel.guild.id})`},
                 	{name: 'Form name', value: `${response.form.name}`},
                 	{name: 'Form ID', value: `${response.form.hid}`},
                 	{name: 'Response ID', value: `${response.hid}`}
@@ -52,7 +52,7 @@ module.exports = {
             bot.emit('ACCEPT', response)
 
 			if(response.form.roles) {
-				var member = msg.guild.members.resolve(user.id);
+				var member = msg.channel.guild.members.resolve(user.id);
 				try {
 					await member.roles.add(response.form.roles);
 				} catch(e) {

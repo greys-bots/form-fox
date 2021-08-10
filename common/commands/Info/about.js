@@ -3,7 +3,7 @@ module.exports = {
 	usage: ()=> [" - Just what's on the tin"],
 	execute: async (bot, msg, args) => {
 		var cfg;
-		if(msg.guild) cfg = await bot.stores.configs.get(msg.guild.id);
+		if(msg.channel.guild) cfg = await bot.stores.configs.get(msg.channel.guild.id);
 
 		var pmsg = "My default prefix is `" + bot.prefix + "`";
 		if(cfg?.prefix) pmsg += `, and my prefix for this server is \`${cfg.prefix}\``

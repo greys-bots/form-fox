@@ -15,11 +15,11 @@ module.exports = {
 		'If no events are given, it\'ll automatically subscribe to all!',
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need at least a form!';
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		if(!args[1]) {
-			var hooks = await bot.stores.hooks.getByForm(msg.guild.id, form.hid);
+			var hooks = await bot.stores.hooks.getByForm(msg.channel.guild.id, form.hid);
 			if(!hooks?.[0]) return 'No hooks registered!';
 
 			return hooks.map(h => {
@@ -39,8 +39,8 @@ module.exports = {
 			return 'Invalid events given! See command help for more info';
 
 		try {
-			await bot.stores.hooks.deleteByForm(msg.guild.id, form.hid);
-			var hook = await bot.stores.hooks.create(msg.guild.id, form.hid, {
+			await bot.stores.hooks.deleteByForm(msg.channel.guild.id, form.hid);
+			var hook = await bot.stores.hooks.create(msg.channel.guild.id, form.hid, {
 				url: args[1],
 				events: args.length > 2 ? args.slice(2).map(a => a.toLowerCase()) : ['submit', 'accept', 'deny']
 			})
@@ -65,7 +65,7 @@ module.exports.subcommands.add = {
 	],
 	execute: async (bot, msg, args) => {
 		if(!args[1]) return "I need at least a form and a url!";
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 		if(bot.utils.checkUrl(args[1])) return 'I need a real url!';
 		console.log(args.slice(2))
@@ -73,7 +73,7 @@ module.exports.subcommands.add = {
 			return 'Invalid events given! See command help for more info';
 
 		try {
-			var hook = await bot.stores.hooks.create(msg.guild.id, form.hid, {
+			var hook = await bot.stores.hooks.create(msg.channel.guild.id, form.hid, {
 				url: args[1],
 				events: args.length > 2 ? args.slice(2).map(a => a.toLowerCase()) : ['submit', 'accept', 'deny']
 			})
@@ -97,13 +97,13 @@ module.exports.subcommands.remove = {
 	],
 	execute: async (bot, msg, args) => {
 		if(!args[1]) return "I need at least a form and a hook!";
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
-		var hook = await bot.stores.hooks.get(msg.guild.id, form.hid, args[1].toLowerCase());
+		var hook = await bot.stores.hooks.get(msg.channel.guild.id, form.hid, args[1].toLowerCase());
 		if(!hook) return 'Hook not found!';
 
 		try {
-			await bot.stores.hooks.delete(msg.guild.id, form.hid, hook.hid);
+			await bot.stores.hooks.delete(msg.channel.guild.id, form.hid, hook.hid);
 		} catch(e) {
 			return 'Err! '+e;
 		}

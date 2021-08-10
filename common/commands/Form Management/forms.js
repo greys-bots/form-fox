@@ -9,7 +9,7 @@ module.exports = {
 		' closed - List closed forms'
 	],
 	execute: async (bot, msg, args) => {
-		var forms = await bot.stores.forms.getAll(msg.guild.id);
+		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
 		if(!forms?.[0]) return "No forms created yet!";
 
 		var query = args[0]?.toLowerCase();
@@ -20,9 +20,9 @@ module.exports = {
 				var form = forms.find(f => f.hid == args[0].toLowerCase());
 				if(!form) return "Form not found!";
 
-				var channel = msg.guild.channels.resolve(form.channel_id);
-				var roles = msg.guild.roles.cache.filter(r => form.roles?.includes(r.id));
-				var responses = await bot.stores.responses.getByForm(msg.guild.id, form.hid);
+				var channel = msg.channel.guild.channels.resolve(form.channel_id);
+				var roles = msg.channel.guild.roles.cache.filter(r => form.roles?.includes(r.id));
+				var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 				var embeds = [{embed: {
 					title: `${form.name} (${form.hid}) ` +
@@ -64,9 +64,9 @@ module.exports = {
 		var embeds = [];
 
 		for(var form of forms) {
-			var channel = msg.guild.channels.resolve(form.channel_id);
-			var roles = msg.guild.roles.cache.filter(r => form.roles.includes(r.id));
-			var responses = await bot.stores.responses.getByForm(msg.guild.id, form.hid);
+			var channel = msg.channel.guild.channels.resolve(form.channel_id);
+			var roles = msg.channel.guild.roles.cache.filter(r => form.roles.includes(r.id));
+			var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 			var embed = {embed: {
 				title: `${form.name} (${form.hid}) ` +

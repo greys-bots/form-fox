@@ -10,7 +10,7 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to delete!';
 		var message;
-		var forms = (await bot.stores.forms.getAll(msg.guild.id) || []);
+		var forms = (await bot.stores.forms.getAll(msg.channel.guild.id) || []);
 		if(!forms?.[0]) return 'No forms to delete!';
 
 		args = args.join(" ").toLowerCase().split(" ");
@@ -26,7 +26,7 @@ module.exports = {
 				if(confirm.msg) return confirm.msg;
 
 				try {
-					await bot.stores.forms.deleteAll(msg.guild.id);
+					await bot.stores.forms.deleteAll(msg.channel.guild.id);
 				} catch(e) {
 					return 'ERR! '+e;
 				}
@@ -46,7 +46,7 @@ module.exports = {
 				if(confirm.msg) return confirm.msg;
 
 				try {
-					await bot.stores.forms.delete(msg.guild.id, form.hid);
+					await bot.stores.forms.delete(msg.channel.guild.id, form.hid);
 				} catch(e) {
 					return 'ERR! '+e;
 				}
@@ -70,7 +70,7 @@ module.exports = {
 				if(confirm.msg) return confirm.msg;
 
 				try {
-					await bot.stores.forms.deleteByHids(msg.guild.id, forms.map(f => f.hid));
+					await bot.stores.forms.deleteByHids(msg.channel.guild.id, forms.map(f => f.hid));
 				} catch(e) {
 					return 'ERR! '+e;
 				}
@@ -87,7 +87,7 @@ module.exports = {
 				if(confirm.msg) return confirm.msg;
 
 				try {
-					await bot.stores.forms.deleteByHids(msg.guild.id, forms.map(f => f.hid));
+					await bot.stores.forms.deleteByHids(msg.channel.guild.id, forms.map(f => f.hid));
 				} catch(e) {
 					return 'ERR! '+e;
 				}

@@ -29,7 +29,14 @@ class InteractionHandler {
 			if(file == '__mod.js') continue;
 			var command = require(f);
 
-			var {execute, ephemeral, perms, guildOnly, ...data} = command;
+			var {
+				execute,
+				ephemeral,
+				perms,
+				guildOnly,
+				ownerOnly,
+				...data
+			} = command;
 			if(command.options) {
 				var d2 = command.options.map(({execute, ephemeral, perms, guildOnly, ...o}) => o);
 				data.options = d2;
@@ -109,6 +116,12 @@ class InteractionHandler {
 		var cmd = this.parse(ctx);
 		if(!cmd) return;
 
+		var check = this.checkPerms(cmd, ctx);
+		if(!check) return await ctx.reply({
+			content: "You don't have permission to use this command!",
+			ephemeral: true
+		});
+		
 		try {
 			var res = await cmd.execute(ctx);
 		} catch(e) {
@@ -184,7 +197,7 @@ class InteractionHandler {
 					return;
 				}
 
-				return await ctx[type]({...res, ephemeral: cmd.ephemeral ?? false})
+				return await ctx[type]({...res, ephemeral: (res.ephemeral ?? cmd.ephemeral) ?? false})
 		}
 	}
 
@@ -206,9 +219,12 @@ class InteractionHandler {
 		menu.handle(ctx);
 	}
 
-	checkPerms(cmd, member) {
+	checkPerms(cmd, ctx) {
+		if(cmd.ownerOnly && ctx.user.id !== process.env.OWNER)
+			return false;
+		if(ctx.guildOnly && !ctx.member) return false; // pre-emptive in case of dm slash cmds
 		if(!cmd.perms || !cmd.perms[0]) return true;
-		return member.permissions.has(cmd.permissions);
+		return ctx.member.permissions.has(cmd.permissions);
 	}
 
 	async paginate(menu, ctx) {

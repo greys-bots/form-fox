@@ -6,10 +6,10 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to apply to!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
-		var cfg = await bot.stores.configs.get(msg.guild.id);
+		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
 
 		if(!form.channel_id && !cfg?.response_channel)
 			return 'No response channel set for that form! Ask the mods to set one!';
@@ -19,7 +19,7 @@ module.exports = {
 			if(existing) return 'Please finish your current form before starting a new one!';
 
 			if(form.cooldown) {
-				var past = (await bot.stores.responses.getByUser(msg.guild.id, msg.author.id))?.pop();
+				var past = (await bot.stores.responses.getByUser(msg.channel.guild.id, msg.author.id))?.pop();
 				if(past && past.status == 'denied') {
 					var diff = bot.utils.dayDiff(new Date(), past.received.getTime() + (form.cooldown * 24 * 60 * 60 * 1000));
 					if(diff > 0) return await msg.author.send(`Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`)
@@ -50,7 +50,7 @@ module.exports = {
 			}]});
 			
 			question.reacts.forEach(r => message.react(r));
-			await bot.stores.openResponses.create(msg.guild.id, message.channel.id, message.id, {
+			await bot.stores.openResponses.create(msg.channel.guild.id, message.channel.id, message.id, {
 				user_id: msg.author.id,
 				form: form.hid,
 				questions: JSON.stringify(form.questions)

@@ -1,11 +1,11 @@
 module.exports = {
-	name: 'channel',
-	description: 'Set a response channel',
+	name: "reacts",
+	description: "Change if the user's reaction is removed when applying to a form",
 	options: [
 		{
-			name: 'channel',
-			description: 'The channel to set',
-			type: 7,
+			name: 'value',
+			description: 'The value for whether the react is removed',
+			type: 5,
 			required: true
 		},
 		{
@@ -16,20 +16,20 @@ module.exports = {
 		}
 	],
 	async execute(ctx) {
+		var val = ctx.options.getBoolean('value');
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
-		var chan = ctx.options.getChannel('channel');
 
 		if(farg) {
 			var form = await ctx.client.stores.forms.get(ctx.guildId, farg);
 			if(!form) return 'Form not found!';
 
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {channel_id: chan.id});
+			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {reacts: val});
 			return "Form updated!";
 		}
 
 		var cfg = await ctx.client.stores.configs.get(ctx.guildId);
-		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {channel: channel.id});
-		else await ctx.client.stores.configs.update(ctx.guildId, {channel: channel.id});
+		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {reacts: val});
+		else await ctx.client.stores.configs.update(ctx.guildId, {reacts: val});
 		
 		return "Config updated!";
 	}

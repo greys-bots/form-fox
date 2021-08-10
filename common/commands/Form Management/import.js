@@ -26,7 +26,7 @@ module.exports = {
 		if(confirm.msg) return confirm.msg;
 
 		try {
-			var results = await bot.stores.forms.import(msg.guild.id, data);
+			var results = await bot.stores.forms.import(msg.channel.guild.id, data);
 		} catch(e) {
 			return "ERR!\n"+e;
 		}

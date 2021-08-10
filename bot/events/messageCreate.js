@@ -8,7 +8,7 @@ const WELCOMES = [
 
 module.exports = async (msg, bot)=>{
 	if(msg.author.bot) return;
-	var config = await bot.stores.configs.get(msg.guild?.id);
+	var config = await bot.stores.configs.get(msg.channel.guild?.id);
 	var prefix = config?.prefix ? config.prefix : bot.prefix;
 	if(!msg.content.toLowerCase().startsWith(prefix)) {
 		var thanks = msg.content.match(/^(thanks? ?(you|u)?|ty),? ?(form )?fox/i);
@@ -18,7 +18,7 @@ module.exports = async (msg, bot)=>{
 	if(msg.content.toLowerCase() == prefix) return msg.channel.send("Eee!");
 	
 	var log = [
-		`Guild: ${msg.guild?.name || "DMs"} (${msg.guild?.id || msg.channel.id})`,
+		`Guild: ${msg.channel.guild?.name || "DMs"} (${msg.channel.guild?.id || msg.channel.id})`,
 		`User: ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})`,
 		`Message: ${msg.content}`,
 		`--------------------`
@@ -32,9 +32,9 @@ module.exports = async (msg, bot)=>{
 		return await msg.channel.send("Command not found!");
 	}
 
-	// if(msg.guild) {
+	// if(msg.channel.guild) {
 		// var usages = {whitelist: [], blacklist: []};
-		// usages = await bot.stores.usages.get(msg.guild.id);
+		// usages = await bot.stores.usages.get(msg.channel.guild.id);
 	// }
 
 	// if(usages && !msg.member.permissions.has('MANAGE_MESSAGES')) {
@@ -65,7 +65,7 @@ module.exports = async (msg, bot)=>{
 	
 	if(!result) return;
 	if(Array.isArray(result)) { //embeds
-		var message = await msg.channel.send({embeds: [result[0].embed]});
+		var message = await msg.channel.send({embeds: [result[0].embed ?? result[0]]});
 		if(result[1]) {
 			if(!bot.menus) bot.menus = {};
 			bot.menus[message.id] = {

@@ -9,7 +9,7 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need at least a form!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		if(!args[1]) {
@@ -37,7 +37,7 @@ module.exports = {
 			if(confirm) return confirm;
 
 			try {
-				await bot.stores.forms.update(msg.guild.id, form.hid, {required: []});
+				await bot.stores.forms.update(msg.channel.guild.id, form.hid, {required: []});
 			} catch(e) {
 				return 'ERR! '+e;
 			}
@@ -56,7 +56,7 @@ module.exports = {
 		}
 
 		try {
-			await bot.stores.forms.update(msg.guild.id, form.hid, {required});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {required});
 		} catch(e) {
 			return 'ERR! '+e;
 		}

@@ -26,8 +26,8 @@ class CommandHandler {
 
 	async handle(ctx) {
 		var {command, args, msg} = ctx;
-		if(command.guildOnly && !msg.guild) return "That command is guild only!";
-		if(msg.guild) {
+		if(command.guildOnly && !msg.channel.guild) return "That command is guild only!";
+		if(msg.channel.guild) {
 			var check = this.checkPerms(ctx);
 			if(!check) return "You don't have permission to use that command!";
 		}

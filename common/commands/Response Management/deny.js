@@ -4,14 +4,14 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a response to deny!';
 
-		var response = await bot.stores.responses.get(msg.guild.id, args[0].toLowerCase());
+		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!response) return 'Response not found!';
 
 		var user = await bot.users.fetch(response.user_id);
 		if(!user) return "Couldn't get that response's user!";
 
-		var post = await bot.stores.responsePosts.getByResponse(msg.guild.id, response.hid);
-		var chan = msg.guild.channels.resolve(post?.channel_id);
+		var post = await bot.stores.responsePosts.getByResponse(msg.channel.guild.id, response.hid);
+		var chan = msg.channel.guild.channels.resolve(post?.channel_id);
 		var message = await chan?.messages.fetch(post?.message_id);
 
 		var reason;
@@ -33,7 +33,7 @@ module.exports = {
 			embed.footer = {text: 'Response denied!'};
 			embed.timestamp = new Date().toISOString();
 			try {
-				await bot.stores.responsePosts.delete(message.guild.id, message.channel.id, message.id);
+				await bot.stores.responsePosts.delete(message.channel.guild.id, message.channel.id, message.id);
 				await message.edit({embeds: [embed]});
 				await message.reactions.removeAll();
 			} catch(e) {
@@ -42,11 +42,11 @@ module.exports = {
 		}
 
 		try {
-			response = await bot.stores.responses.update(msg.guild.id, response.hid, {status: 'denied'});
+			response = await bot.stores.responses.update(msg.channel.guild.id, response.hid, {status: 'denied'});
 			await user.send({embeds: [{
 				title: 'Response denied!',
 				description: [
-					`Server: ${msg.guild.name} (${msg.guild.id})`,
+					`Server: ${msg.channel.guild.name} (${msg.channel.guild.id})`,
 					`Form name: ${response.form.name}`,
 					`Form ID: ${response.form.hid}`,
 					`Response ID: ${response.hid}`

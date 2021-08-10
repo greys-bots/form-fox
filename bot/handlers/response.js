@@ -151,10 +151,10 @@ class ResponseHandler {
             if(!channel) return Promise.reject("ERR! Guild response channel missing! Aborting!");
             var rmsg = await channel.send({embeds: [respembed]});
             ['✅','❌'].forEach(r => rmsg.react(r));
-            await this.bot.stores.responsePosts.create(rmsg.guild.id, channel.id, rmsg.id, {
+            await this.bot.stores.responsePosts.create(rmsg.channel.guild.id, channel.id, rmsg.id, {
                 response: code
             })
-            await this.bot.stores.forms.updateCount(rmsg.guild.id, response.form.hid);
+            await this.bot.stores.forms.updateCount(rmsg.channel.guild.id, response.form.hid);
         } catch(e) {
             console.log(e.message || e);
             return Promise.reject('ERR! '+(e.message || e));

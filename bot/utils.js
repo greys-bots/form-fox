@@ -61,7 +61,7 @@ module.exports = {
 				} else {
 					this.index -= 1;
 				}
-				await m.edit({embeds: [this.data[this.index].embed]});
+				await m.edit({embeds: [this.data[this.index].embed ?? this.data[this.index]]});
 				if(m.channel.type != "dm") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
@@ -71,7 +71,7 @@ module.exports = {
 				} else {
 					this.index += 1;
 				}
-				await m.edit({embeds: [this.data[this.index].embed]});
+				await m.edit({embeds: [this.data[this.index].embed ?? this.data[this.index]]});
 				if(m.channel.type != "dm") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
@@ -145,5 +145,50 @@ module.exports = {
 
 			bot.on('messageCreate', msgListener);
 		})
+	},
+
+	awaitSelection: async (ctx, choices, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 3,
+			custom_id: 'copy_selector',
+			options: choices,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'copy_selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => {c.disabled = true; return c})
+			}]
+		});
+
+		return resp.values;
 	}
 }

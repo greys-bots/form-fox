@@ -2,7 +2,7 @@ const {Collection} = require("discord.js");
 
 const VARIABLES = {
     '$USER': `user`,
-    '$GUILD': `msg.guild.name`
+    '$GUILD': `msg.channel.guild.name`
 }
 
 class ResponsePostStore extends Collection {
@@ -173,9 +173,9 @@ class ResponsePostStore extends Collection {
         var msg;
         if(reaction.message.partial) msg = await reaction.message.fetch();
         else msg = reaction.message;
-        if(!msg.guild) return;
+        if(!msg.channel.guild) return;
 
-        var post = await this.get(msg.guild.id, msg.channel.id, msg.id);
+        var post = await this.get(msg.channel.guild.id, msg.channel.id, msg.id);
         if(!post) return;
 
         switch(reaction.emoji.name) {
@@ -199,8 +199,8 @@ class ResponsePostStore extends Collection {
                 embed.timestamp = new Date().toISOString();
 
                 try {
-                    await this.delete(msg.guild.id, msg.channel.id, msg.id);
-                    post.response = await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'denied'});
+                    await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
+                    post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'denied'});
                     await msg.edit({embeds: [embed]});
                     await msg.reactions.removeAll();
 
@@ -210,7 +210,7 @@ class ResponsePostStore extends Collection {
                     await user.send({embeds: [{
                         title: 'Response denied!',
                         description: [
-                            `Server: ${msg.guild.name} (${msg.guild.id})`,
+                            `Server: ${msg.channel.guild.name} (${msg.channel.guild.id})`,
                             `Form name: ${post.response.form.name}`,
                             `Form ID: ${post.response.form.hid}`,
                             `Response ID: ${post.response.hid}`
@@ -234,8 +234,8 @@ class ResponsePostStore extends Collection {
                 embed.timestamp = new Date().toISOString();
 
                 try {
-                    await this.delete(msg.guild.id, msg.channel.id, msg.id);
-                    post.response = await this.bot.stores.responses.update(msg.guild.id, post.response.hid, {status: 'accepted'});
+                    await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
+                    post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
                     await msg.edit({embeds: [embed]});
                     await msg.reactions.removeAll();
 
@@ -253,7 +253,7 @@ class ResponsePostStore extends Collection {
                         title: 'Response accepted!',
                         description: welc,
                         fields: [
-                        	{name: 'Server', value: `${msg.guild.name} (${msg.guild.id})`},
+                        	{name: 'Server', value: `${msg.channel.guild.name} (${msg.channel.guild.id})`},
                         	{name: 'Form name', value: `${post.response.form.name}`},
                         	{name: 'Form ID', value: `${post.response.form.hid}`},
                         	{name: 'Response ID', value: `${post.response.hid}`}
@@ -263,7 +263,7 @@ class ResponsePostStore extends Collection {
                     }]});
 
                     if(post.response.form.roles?.[0]) {
-                        var member = msg.guild.members.resolve(user.id);
+                        var member = msg.channel.guild.members.resolve(user.id);
                         try {
                             await member.roles.add(post.response.form.roles);
                         } catch(e) {

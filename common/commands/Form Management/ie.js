@@ -11,8 +11,8 @@ module.exports = {
 	desc: ()=> `The "info embed" shows the user a list of questions they'll be answering, along with info `+
 			   `about the form itself. Making this \`false\` means it won't be sent`,
 	execute: async (bot, msg, args) => {
-		var cfg = await bot.stores.configs.get(msg.guild.id);
-		var forms = await bot.stores.forms.getAll(msg.guild.id);
+		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
+		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
 		switch(args.length) {
 			case 0:
 				var embeds = [{embed: {
@@ -24,7 +24,7 @@ module.exports = {
 				if(!forms?.[0]) return embeds;
 
 				embeds = embeds.concat(forms.map(f => {
-					chan = msg.guild.channels.cache.find(c => c.id == f.channel_id);
+					chan = msg.channel.guild.channels.cache.find(c => c.id == f.channel_id);
 					return {embed: {
 						title: `Channel for form ${f.name} (${f.hid})`,
 						description: `${form.embed ?? "*(not set)*"}`,
@@ -42,8 +42,8 @@ module.exports = {
 				if(VALS.includes(args[0].toLowerCase())) val = true;
 				else val = false;
 
-				if(!cfg.server_id) await bot.stores.configs.create(msg.guild.id, {embed: val});
-				else await bot.stores.configs.update(msg.guild.id, {embed: val});
+				if(!cfg.server_id) await bot.stores.configs.create(msg.channel.guild.id, {embed: val});
+				else await bot.stores.configs.update(msg.channel.guild.id, {embed: val});
 
 				return "Global config set!";
 			case 2:
@@ -55,7 +55,7 @@ module.exports = {
 				else val = false;
 
 				try {
-					await bot.stores.forms.update(msg.guild.id, form.hid, {embed: val});
+					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {embed: val});
 				} catch(e) {
 					return "ERR! "+e;
 				}

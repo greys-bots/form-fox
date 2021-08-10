@@ -38,17 +38,30 @@ module.exports = {
 			await ctx.client.stores.forms.delete(ctx.guildId, form.hid);
 			msg = 'Form deleted!';
 		}
-		await (conf.interaction ? conf.interaction : ctx).update({
-			content: msg,
-			embeds: [],
-			components: [{
-				type: 1,
-				components: confBtns.map(b => {
-					b.disabled = true;
-					return b;
-				})
-			}]
-		});
+
+		if(conf.interaction) {
+			await conf.interaction.update({
+				content: msg,
+				embeds: [],
+				components: [{
+					type: 1,
+					components: confBtns.map(b => {
+						return {... b, disabled: true};
+					})
+				}]
+			})
+		} else {
+			await ctx.editReply({
+				content: msg,
+				embeds: [],
+				components: [{
+					type: 1,
+					components: confBtns.map(b => {
+						return {... b, disabled: true};
+					})
+				}]
+			})
+		}
 
 		return;
 	},

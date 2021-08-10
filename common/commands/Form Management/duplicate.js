@@ -16,7 +16,7 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return "I need a form ID to duplicate!";
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return "Form not found!";
 
 		var resp;
@@ -50,7 +50,7 @@ module.exports = {
 		data.questions = form.questions;
 
 		try {
-			await bot.stores.forms.create(msg.guild.id, code, data);
+			await bot.stores.forms.create(msg.channel.guild.id, code, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}

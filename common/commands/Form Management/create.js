@@ -96,7 +96,7 @@ module.exports = {
 
 		var code = bot.utils.genCode(bot.chars);
 		try {
-			await bot.stores.forms.create(msg.guild.id, code, data);
+			await bot.stores.forms.create(msg.channel.guild.id, code, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}

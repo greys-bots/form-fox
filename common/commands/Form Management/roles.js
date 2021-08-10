@@ -10,11 +10,11 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		switch(args.length) {
 			case 0:
-				var forms = await bot.stores.forms.getAll(msg.guild.id);
+				var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
 				var embeds = []
 
 				for(var form of forms) {
-					var roles = msg.guild.roles.cache.filter(r => form.roles.includes(r.id));
+					var roles = msg.channel.guild.roles.cache.filter(r => form.roles.includes(r.id));
 					embeds.push({embed: {
 						title: `Roles for form ${form.name} (${form.hid})`,
 						description: roles.map(r => r.mention).join('\n') || '*(none set)*',
@@ -29,10 +29,10 @@ module.exports = {
 				return embeds;
 				break;
 			case 1:
-				var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(!form) return 'Form not found!';
 
-				var roles = msg.guild.roles.cache.filter(r => form.roles.includes(r.id));
+				var roles = msg.channel.guild.roles.cache.filter(r => form.roles.includes(r.id));
 				await msg.channel.send({embeds: [{
 					title: `Roles for form ${form.name} (${form.hid})`,
 					description: roles.map(r => r.mention).join('\n') || '*(none set)*',
@@ -47,7 +47,7 @@ module.exports = {
 					if(confirm.msg) return confirm.msg;
 
 					try {
-						await bot.stores.forms.update(msg.guild.id, form.hid, {roles: []});
+						await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: []});
 					} catch(e) {
 						return 'ERR! '+e;
 					}
@@ -57,11 +57,11 @@ module.exports = {
 				return;
 				break;
 			default:
-				var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(!form) return 'Form not found!';
 
 				var roles = args.slice(1).map(a => {
-					return msg.guild.roles.cache.find(r => {
+					return msg.channel.guild.roles.cache.find(r => {
 						return [r.name.toLowerCase(), r.id]
 							.includes(a.toLowerCase().replace(/[<@&>]/g, ''))
 					})?.id
@@ -69,7 +69,7 @@ module.exports = {
 				if(!roles[0]) return 'No valid roles given!';
 
 				try {
-					await bot.stores.forms.update(msg.guild.id, form.hid, {roles: roles});
+					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: roles});
 				} catch(e) {
 					return 'ERR! '+e;
 				}

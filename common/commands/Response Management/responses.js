@@ -9,12 +9,12 @@ module.exports = {
 		' <form id> from:[user id] - List responses from a certain user'
 	],
 	execute: async (bot, msg, args) => {
-		var responses = await bot.stores.responses.getAll(msg.guild.id);
+		var responses = await bot.stores.responses.getAll(msg.channel.guild.id);
 		if(!responses?.[0]) return "No responses received yet!";
 
 		if(args[0]) {
 			if(!['accepted', 'denied', 'pending'].includes(args[0].toLowerCase())) {
-				var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(form) {
 					responses = responses.filter(x => x.form.hid == form.hid);
 					if(args[1] && args[1].startsWith('from:')) responses = responses.filter(x => x.user_id == args[1].replace('from:', ''));

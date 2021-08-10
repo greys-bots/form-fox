@@ -6,7 +6,7 @@ module.exports = {
 	],
 	desc: ()=> "NOTE: This doesn't save responses! Just forms",
 	execute: async (bot, msg, args) => {
-		var data = await bot.stores.forms.export(msg.guild.id, args);
+		var data = await bot.stores.forms.export(msg.channel.guild.id, args);
 		if(!data?.[0]) return 'No forms to export!';
 
 		return {

@@ -7,7 +7,7 @@ module.exports = {
 		" [prefix] - Sets a new prefix"
 	],
 	execute: async (bot, msg, args) => {
-		var cfg = await bot.stores.configs.get(msg.guild.id);
+		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
 		if(!cfg) cfg = {prefix: "", new: true};
 
 		if(!args[0]) {
@@ -19,12 +19,12 @@ module.exports = {
 			var conf = await bot.utils.getConfirmation(bot, message, msg.author);
 			if(conf.msg) return conf.msg;
 
-			await bot.stores.configs.update(msg.guild.id, { prefix: null });
+			await bot.stores.configs.update(msg.channel.guild.id, { prefix: null });
 			return 'Prefix reset!';
 		}
 
-		if(cfg.new) await bot.stores.configs.create(msg.guild.id, { prefix: args[0].toLowerCase() });
-		else await bot.stores.configs.update(msg.guild.id, { prefix: args[0].toLowerCase() });
+		if(cfg.new) await bot.stores.configs.create(msg.channel.guild.id, { prefix: args[0].toLowerCase() });
+		else await bot.stores.configs.update(msg.channel.guild.id, { prefix: args[0].toLowerCase() });
 
 		return 'Prefix changed!';
 	},

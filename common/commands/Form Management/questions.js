@@ -18,7 +18,7 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		var embeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
@@ -49,7 +49,7 @@ module.exports.subcommands.add = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 		if(form.questions.length >= 20) return 'That form already has 20 questions!';
 
@@ -104,7 +104,7 @@ module.exports.subcommands.add = {
 
 		form.questions.splice(position - 1, 0, question);
 		try {
-			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -122,7 +122,7 @@ module.exports.subcommands.remove = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 		if(form.questions.length <= 1)
 			return "That form can't have any more questions removed!";
@@ -143,7 +143,7 @@ module.exports.subcommands.remove = {
 
 		form.questions.splice(question - 1, 1);
 		try {
-			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -161,7 +161,7 @@ module.exports.subcommands.set = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		var data = {};
@@ -203,7 +203,7 @@ module.exports.subcommands.set = {
 		}
 
 		try {
-			await bot.stores.forms.update(msg.guild.id, form.hid, data);
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -222,7 +222,7 @@ module.exports.subcommands.rephrase = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		var resp;
@@ -248,7 +248,7 @@ module.exports.subcommands.rephrase = {
 
 		form.questions[position - 1].value = question;
 		try {
-			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -267,7 +267,7 @@ module.exports.subcommands.reorder = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.guild.id, args[0].toLowerCase());
+		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		var resp;
@@ -302,7 +302,7 @@ module.exports.subcommands.reorder = {
 		form.questions.splice(question - 1, 1);
 		form.questions.splice(position - 1, 0, tmp);
 		try {
-			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
