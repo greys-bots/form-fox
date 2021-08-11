@@ -3,16 +3,18 @@ const tc = require('tinycolor2');
 const { confBtns } = require('../../extras');
 
 module.exports = {
-	name: 'delete',
-	description: "Deletes a form",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'delete',
+		description: "Deletes a form",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

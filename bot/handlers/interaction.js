@@ -30,16 +30,9 @@ class InteractionHandler {
 			delete require.cache[require.resolve(f)];
 			var command = require(f);
 
-			var {
-				execute,
-				ephemeral,
-				perms,
-				guildOnly,
-				ownerOnly,
-				...data
-			} = command;
+			var {data} = command;
 			if(command.options) {
-				var d2 = command.options.map(({execute, ephemeral, perms, guildOnly, ...o}) => o);
+				var d2 = command.options.map(({data: d}) => d);
 				data.options = d2;
 			}
 
@@ -101,14 +94,14 @@ class InteractionHandler {
 		if(!cmd) return;
 
 		if(ctx.options.getSubcommandGroup(false)) {
-			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommandGroup());
+			cmd = cmd.options.find(o => o.data.name == ctx.options.getSubcommandGroup());
 			if(!cmd) return;
 			var opt = ctx.options.getSubcommand(false);
 			if(opt) {
-				cmd = cmd.options.find(o => o.name == opt);
+				cmd = cmd.options.find(o => o.data.name == opt);
 			} else return;
 		} else if(ctx.options.getSubcommand(false)) {
-			cmd = cmd.options.find(o => o.name == ctx.options.getSubcommand());
+			cmd = cmd.options.find(o => o.data.name == ctx.options.getSubcommand());
 			if(!cmd) return;
 		}
 

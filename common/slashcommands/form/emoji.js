@@ -1,22 +1,24 @@
 const { clearBtns } = require('../../extras');
 
 module.exports = {
-	name: 'emoji',
-	description: "Changes a form's emoji",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'emoji',
-			description: 'The emoji to use for binding reacts. Omit to view/clear current value',
-			type: 3,
-			required: false
-		}
-	],
+	data: {
+		name: 'emoji',
+		description: "Changes a form's emoji",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'emoji',
+				description: 'The emoji to use for binding reacts. Omit to view/clear current value',
+				type: 3,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var e = ctx.options.get('emoji')?.value;

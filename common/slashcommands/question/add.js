@@ -1,47 +1,49 @@
 const { qTypes: TYPES, confBtns } = require('../../extras');
 
 module.exports = {
-	name: 'add',
-	description: "Add a question to a form",
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'question',
-			description: "The question to add",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'type',
-			description: "The type of the question",
-			type: 3,
-			required: true,
-			choices: Object.keys(TYPES).map(t => {
-				return {
-					name: TYPES[t].alias[0],
-					value: t
-				}
-			})
-		},
-		{
-			name: 'required',
-			description: "If the question is required",
-			type: 5,
-			required: true
-		},
-		{
-			name: 'position',
-			description: "Where to put the question. Leave empty for last",
-			type: 4,
-			required: false
-		}
-	],
+	data: {
+		name: 'add',
+		description: "Add a question to a form",
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'question',
+				description: "The question to add",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'type',
+				description: "The type of the question",
+				type: 3,
+				required: true,
+				choices: Object.keys(TYPES).map(t => {
+					return {
+						name: TYPES[t].alias[0],
+						value: t
+					}
+				})
+			},
+			{
+				name: 'required',
+				description: "If the question is required",
+				type: 5,
+				required: true
+			},
+			{
+				name: 'position',
+				description: "Where to put the question. Leave empty for last",
+				type: 4,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

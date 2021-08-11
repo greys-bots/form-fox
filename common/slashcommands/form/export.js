@@ -1,12 +1,14 @@
 module.exports = {
-	name: 'export',
-	description: "Export forms",
-	options: [{
-		name: 'forms',
-		description: "IDs of specific forms to export, separated by spaces",
-		type: 3,
-		required: false
-	}],
+	data: {
+		name: 'export',
+		description: "Export forms",
+		options: [{
+			name: 'forms',
+			description: "IDs of specific forms to export, separated by spaces",
+			type: 3,
+			required: false
+		}]
+	},
 	async execute(ctx) {
 		var ids = ctx.options.get('forms')?.value.toLowercase().trim().split(" ");
 

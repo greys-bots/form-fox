@@ -1,14 +1,16 @@
 const { qTypes:TYPES } = require('../../extras');
 
 module.exports = {
-	name: 'view',
-	description: "View a form's questions",
-	options: [{
-		name: 'form_id',
-		description: "The form's ID",
-		type: 3,
-		required: true
-	}],
+	data: {
+		name: 'view',
+		description: "View a form's questions",
+		options: [{
+			name: 'form_id',
+			description: "The form's ID",
+			type: 3,
+			required: true
+		}]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

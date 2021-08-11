@@ -1,22 +1,24 @@
 const { confBtns } = require('../../extras');
 
 module.exports = {
-	name: 'delete',
-	description: "Delete a question from a form",
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'question',
-			description: "The question number to delete",
-			type: 4,
-			required: true
-		}
-	],
+	data: {
+		name: 'delete',
+		description: "Delete a question from a form",
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'question',
+				description: "The question number to delete",
+				type: 4,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -38,7 +40,7 @@ module.exports = {
 					{name: "Choices", value: q.choices ? q.choices.join("\n") : "(none)"}
 				]
 			}],
-			components: clearBtns,
+			components: [{type: 1, components: confBtns}],
 			fetchReply: true
 		});
 

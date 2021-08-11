@@ -1,24 +1,25 @@
 const { events: EVENTS, clearBtns } = require(__dirname + '/../../extras');
 
-module.exports = {
+module.exports = {data: {
 	name: 'hook',
 	description: 'Commands for handling form hooks',
-	type: 2,
-	options: []
-}
+	type: 2
+}, options: []}
 
 var opts = module.exports.options;
 
 opts.push({
-	name: 'view',
-	description: "View a form's existing hooks",
-	type: 1,
-	options: [{
-		name: 'form_id',
-		description: "The form's ID",
-		type: 3,
-		required: true
-	}],
+	data: {
+		name: 'view',
+		description: "View a form's existing hooks",
+		type: 1,
+		options: [{
+			name: 'form_id',
+			description: "The form's ID",
+			type: 3,
+			required: true
+		}]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -42,23 +43,25 @@ opts.push({
 })
 
 opts.push({
-	name: 'set',
-	description: 'Set a hook for a form',
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'url',
-			description: "The hook's URL",
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'set',
+		description: 'Set a hook for a form',
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'url',
+				description: "The hook's URL",
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -86,23 +89,25 @@ opts.push({
 })
 
 opts.push({
-	name: 'add',
-	description: 'Add a hook to a form',
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'url',
-			description: "The hook's URL",
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'add',
+		description: 'Add a hook to a form',
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'url',
+				description: "The hook's URL",
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -129,23 +134,25 @@ opts.push({
 })
 
 opts.push({
-	name: 'delete',
-	description: "Delete an existing hook",
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'hook_id',
-			description: "The hook's ID",
-			type: 3,
-			required: true
-		},
-	],
+	data: {
+		name: 'delete',
+		description: "Delete an existing hook",
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'hook_id',
+				description: "The hook's ID",
+				type: 3,
+				required: true
+			},
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -162,17 +169,19 @@ opts.push({
 })
 
 opts.push({
-	name: 'clear',
-	description: "Delete ALL of a form's existing hooks",
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'clear',
+		description: "Delete ALL of a form's existing hooks",
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

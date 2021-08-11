@@ -1,22 +1,24 @@
 const { clearBtns } = require('../../extras');
 
 module.exports = {
-	name: 'description',
-	description: "Changes a form's description",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'description',
-			description: 'The new description',
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'description',
+		description: "Changes a form's description",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'description',
+				description: 'The new description',
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var d = ctx.options.get('description')?.value;

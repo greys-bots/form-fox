@@ -1,20 +1,22 @@
 module.exports = {
-	name: "reacts",
-	description: "Change if the user's reaction is removed when applying to a form",
-	options: [
-		{
-			name: 'value',
-			description: 'The value for whether the react is removed',
-			type: 5,
-			required: true
-		},
-		{
-			name: 'form_id',
-			description: "ID of a form to change",
-			type: 3,
-			required: false
-		}
-	],
+	data: {
+		name: "reacts",
+		description: "Change if the user's reaction is removed when applying to a form",
+		options: [
+			{
+				name: 'value',
+				description: 'The value for whether the react is removed',
+				type: 5,
+				required: true
+			},
+			{
+				name: 'form_id',
+				description: "ID of a form to change",
+				type: 3,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var val = ctx.options.getBoolean('value');
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();

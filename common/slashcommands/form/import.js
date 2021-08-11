@@ -2,14 +2,16 @@ const fetch = require('node-fetch');
 const { confBtns } = require(__dirname + '/../../extras');
 
 module.exports = {
-	name: 'import',
-	description: "Import forms",
-	options: [{
-		name: 'url',
-		description: "The .json URL to import",
-		type: 3,
-		required: true
-	}],
+	data: {
+		name: 'import',
+		description: "Import forms",
+		options: [{
+			name: 'url',
+			description: "The .json URL to import",
+			type: 3,
+			required: true
+		}]
+	},
 	async execute(ctx) {
 		var url = ctx.options.get('url').value.trim();
 		var data;

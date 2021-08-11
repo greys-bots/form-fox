@@ -1,22 +1,24 @@
 const { clearBtns } = require('../../extras');
 
 module.exports = {
-	name: 'message',
-	description: "Changes a form's acceptance message",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'message',
-			description: 'The new acceptance message. Omit to view/clear current value',
-			type: 3,
-			required: false
-		}
-	],
+	data: {
+		name: 'message',
+		description: "Changes a form's acceptance message",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'message',
+				description: 'The new acceptance message. Omit to view/clear current value',
+				type: 3,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var m = ctx.options.get('message')?.value;

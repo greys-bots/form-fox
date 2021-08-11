@@ -1,20 +1,22 @@
 module.exports = {
-	name: 'channel',
-	description: 'Set a response channel',
-	options: [
-		{
-			name: 'channel',
-			description: 'The channel to set',
-			type: 7,
-			required: true
-		},
-		{
-			name: 'form_id',
-			description: "ID of a form to change",
-			type: 3,
-			required: false
-		}
-	],
+	data: {
+		name: 'channel',
+		description: 'Set a response channel',
+		options: [
+			{
+				name: 'channel',
+				description: 'The channel to set',
+				type: 7,
+				required: true
+			},
+			{
+				name: 'form_id',
+				description: "ID of a form to change",
+				type: 3,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		var chan = ctx.options.getChannel('channel');

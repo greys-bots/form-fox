@@ -3,22 +3,24 @@ const tc = require('tinycolor2');
 const { clearBtns } = require('../../extras');
 
 module.exports = {
-	name: 'color',
-	description: "Changes a form's color",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'color',
-			description: 'The color you want. Omit to view/clear current color',
-			type: 3,
-			required: false
-		}
-	],
+	data: {
+		name: 'color',
+		description: "Changes a form's color",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'color',
+				description: 'The color you want. Omit to view/clear current color',
+				type: 3,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var c = ctx.options.get('color')?.value;

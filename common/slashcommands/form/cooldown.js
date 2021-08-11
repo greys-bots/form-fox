@@ -1,22 +1,24 @@
 const { clearBtns } = require('../../extras');
 
 module.exports = {
-	name: 'cooldown',
-	description: "Changes a form's cooldown",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'cooldown',
-			description: 'The number of days for the cooldown. Omit to view/clear current value',
-			type: 4,
-			required: false
-		}
-	],
+	data: {
+		name: 'cooldown',
+		description: "Changes a form's cooldown",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'cooldown',
+				description: 'The number of days for the cooldown. Omit to view/clear current value',
+				type: 4,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var c = ctx.options.get('cooldown')?.value;

@@ -1,26 +1,28 @@
 module.exports = {
-	name: 'unbind',
-	description: "Unbind a form's apply react from a message",
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'msg_id',
-			description: "The message to unbind from",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'channel',
-			description: "The channel the message belongs to. Defaults to the command channel",
-			type: 7,
-			required: false
-		}
-	],
+	data: {
+		name: 'unbind',
+		description: "Unbind a form's apply react from a message",
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'msg_id',
+				description: "The message to unbind from",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'channel',
+				description: "The channel the message belongs to. Defaults to the command channel",
+				type: 7,
+				required: false
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

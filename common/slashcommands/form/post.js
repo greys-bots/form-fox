@@ -1,20 +1,22 @@
 module.exports = {
-	name: 'post',
-	description: 'Posts a form in the given channel',
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'channel',
-			description: 'The channel to post in',
-			type: 7,
-			required: true
-		}
-	],
+	data: {
+		name: 'post',
+		description: 'Posts a form in the given channel',
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'channel',
+				description: 'The channel to post in',
+				type: 7,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var chan = ctx.options.getChannel('channel');

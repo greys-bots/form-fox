@@ -1,22 +1,24 @@
 const { clearBtns } = require('../../extras');
 
 module.exports = {
-	name: 'name',
-	description: "Changes a form's name",
-	options: [
-		{
-			name: 'form_id',
-			description: 'The form\'s ID',
-			type: 3,
-			required: true
-		},
-		{
-			name: 'name',
-			description: 'The new name',
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'name',
+		description: "Changes a form's name",
+		options: [
+			{
+				name: 'form_id',
+				description: 'The form\'s ID',
+				type: 3,
+				required: true
+			},
+			{
+				name: 'name',
+				description: 'The new name',
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var n = ctx.options.get('name')?.value;

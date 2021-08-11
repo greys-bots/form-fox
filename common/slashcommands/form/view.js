@@ -1,16 +1,18 @@
 module.exports = {
-	name: 'view',
-	description: 'View existing forms',
-	options: [
-		{
-			name: "form_id",
-			description: "The form's ID",
-			type: 3,
-			required: false
-		}
-	],
+	data: {
+		name: 'view',
+		description: 'View existing forms',
+		options: [
+			{
+				name: "form_id",
+				description: "The form's ID",
+				type: 3,
+				required: false
+			}
+		]
+	},
 	execute: async (ctx) => {
-		var arg = ctx.options.get('form_id').value.toLowerCase().trim();
+		var arg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		if(!arg) {
 			var forms = await ctx.client.stores.forms.getAll(ctx.guildId);
 			if(!forms?.[0]) return 'No forms available';
@@ -36,7 +38,7 @@ module.exports = {
 			return embeds;
 		}
 
-		var form = await ctx.client.stores.forms.get(ctx.guildId, arg.value);
+		var form = await ctx.client.stores.forms.get(ctx.guildId, arg);
 		if(!form) return 'Form not found!';
 
 		var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, form.hid);

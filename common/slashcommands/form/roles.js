@@ -1,25 +1,26 @@
 const { clearBtns } = require(__dirname + '/../../extras');
 
 
-module.exports = {
+module.exports = {data: {
 	name: 'roles',
 	description: 'Manage roles added to users when applying to forms',
-	type: 2,
-	options: []
-}
+	type: 2
+}, options: []}
 
 var opts = module.exports.options;
 
 opts.push({
-	name: 'view',
-	description: "View a form's set roles",
-	type: 1,
-	options: [{
-		name: 'form_id',
-		description: "The form's ID",
-		type: 3,
-		required: true
-	}],
+	data: {
+		name: 'view',
+		description: "View a form's set roles",
+		type: 1,
+		options: [{
+			name: 'form_id',
+			description: "The form's ID",
+			type: 3,
+			required: true
+		}]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -36,23 +37,25 @@ opts.push({
 })
 
 opts.push({
-	name: 'set',
-	description: "Set the roles for a form",
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		},
-		{
-			name: 'roles',
-			description: 'The roles you want. Use mentions here',
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'set',
+		description: "Set the roles for a form",
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			},
+			{
+				name: 'roles',
+				description: 'The roles you want. Use mentions here',
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var roles = ctx.options.get('roles').value;
 		roles = roles.match(/(\d)+/g);
@@ -73,22 +76,24 @@ opts.push({
 })
 
 opts.push({
-	name: 'add',
-	description: 'Add a role to a form',
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		}, {
-			name: 'role',
-			description: "The role to add",
-			type: 8,
-			required: true
-		}
-	],
+	data: {
+		name: 'add',
+		description: 'Add a role to a form',
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			}, {
+				name: 'role',
+				description: "The role to add",
+				type: 8,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var role = ctx.options.getRole('role');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
@@ -105,22 +110,24 @@ opts.push({
 })
 
 opts.push({
-	name: 'remove',
-	description: 'Remove a role from a form',
-	type: 1,
-	options: [
-		{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true
-		}, {
-			name: 'role',
-			description: "The role to remove",
-			type: 8,
-			required: true
-		}
-	],
+	data: {
+		name: 'remove',
+		description: 'Remove a role from a form',
+		type: 1,
+		options: [
+			{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true
+			}, {
+				name: 'role',
+				description: "The role to remove",
+				type: 8,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var role = ctx.options.getRole('role');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
@@ -136,15 +143,17 @@ opts.push({
 })
 
 opts.push({
-	name: 'clear',
-	description: "Clear all roles on a form",
-	type: 1,
-	options: [{
-		name: 'form_id',
-		description: "The form's ID",
-		type: 3,
-		required: true
-	}],
+	data: {
+		name: 'clear',
+		description: "Clear all roles on a form",
+		type: 1,
+		options: [{
+			name: 'form_id',
+			description: "The form's ID",
+			type: 3,
+			required: true
+		}]
+	},
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

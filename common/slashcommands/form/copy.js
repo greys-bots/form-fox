@@ -1,16 +1,18 @@
 const OPTIONS = require(__dirname + '/../../extras').options;
 
 module.exports = {
-	name: 'copy',
-	description: 'Copy a form and its data',
-	options: [
-		{
-			name: 'form_id',
-			description: 'The ID of the form to copy',
-			type: 3,
-			required: true
-		}
-	],
+	data: {
+		name: 'copy',
+		description: 'Copy a form and its data',
+		options: [
+			{
+				name: 'form_id',
+				description: 'The ID of the form to copy',
+				type: 3,
+				required: true
+			}
+		]
+	},
 	async execute(ctx) {
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, farg);
