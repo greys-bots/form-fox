@@ -27,6 +27,7 @@ class InteractionHandler {
 			var mods = path_frags.slice(1, -1);
 			var file = path_frags[path_frags.length - 1];
 			if(file == '__mod.js') continue;
+			delete require.cache[require.resolve(f)];
 			var command = require(f);
 
 			var {
@@ -47,15 +48,17 @@ class InteractionHandler {
 				var g2 = slashData.get(mods[0]);
 				if(!group) {
 					var mod;
-					if(file == '__mod.js') mod = require(f);
-					else mod = require(f.replace(file, "/__mod.js"));
+					delete require.cache[require.resolve(f.replace(file, "/__mod.js"))];
+					mod = require(f.replace(file, "/__mod.js"));
 					group = {
 						...mod,
-						options: []
+						options: [],
+						type: 1
 					};
 					g2 = {
 						...mod,
-						options: []
+						options: [],
+						type: 1
 					};
 
 					slashCommands.set(mod.name, group);
@@ -88,7 +91,7 @@ class InteractionHandler {
 	}
 
 	async handle(ctx) {
-		if(ctx.isCommand()) this.handleCommand(ctx);
+		if(ctx.isCommand() || ctx.isContextMenu()) this.handleCommand(ctx);
 		if(ctx.isButton()) this.handleButtons(ctx);
 		if(ctx.isSelectMenu()) this.handleSelect(ctx);
 	}
@@ -121,6 +124,10 @@ class InteractionHandler {
 			content: "You don't have permission to use this command!",
 			ephemeral: true
 		});
+		if(cmd.guildOnly && !ctx.guildId) return await ctx.reply({
+			content: "That command is guild only!",
+			ephemeral: true
+		})
 		
 		try {
 			var res = await cmd.execute(ctx);

@@ -173,8 +173,10 @@ class FormStore extends Collection {
 				if(posts) {
 					for(var post of posts) {
 						try {
-							var chan = guild.channels.resolve(post.channel_id);
-							var msg = await chan.messages.fetch(post.message_id);
+							try {
+								var chan = guild.channels.resolve(post.channel_id);
+								var msg = await chan.messages.fetch(post.message_id);
+							} catch(e) { }
 							if(!msg) {
 								await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
 								errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: Message missing!`);

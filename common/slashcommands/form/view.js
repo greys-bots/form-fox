@@ -10,7 +10,7 @@ module.exports = {
 		}
 	],
 	execute: async (ctx) => {
-		var arg = ctx.options.get('form_id');
+		var arg = ctx.options.get('form_id').value.toLowerCase().trim();
 		if(!arg) {
 			var forms = await ctx.client.stores.forms.getAll(ctx.guildId);
 			if(!forms?.[0]) return 'No forms available';

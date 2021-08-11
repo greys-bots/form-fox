@@ -98,8 +98,10 @@ class FormPostStore extends Collection {
 				var guild = this.bot.guilds.resolve(server);
 				if(!guild) return rej("Couldn't get guild!");
 				guild = await guild.fetch();
-				var chan = guild.channels.resolve(channel);
-				var msg = chan?.messages.fetch(message);
+				try {
+					var chan = guild.channels.resolve(data.rows[0].channel_id);
+					var msg = chan?.messages.fetch(message);
+				} catch(e) { }
 				if(!chan || !msg) {
 					await this.delete(server, channel, message);
 					return res(undefined);
@@ -164,8 +166,10 @@ class FormPostStore extends Collection {
 				var guild = this.bot.guilds.resolve(server);
 				if(!guild) return rej("Couldn't get guild!");
 				guild = await guild.fetch();
-				var chan = guild.channels.resolve(data.rows[0].channel_id);
-				var msg = chan?.messages.fetch(message);
+				try {
+					var chan = guild.channels.resolve(data.rows[0].channel_id);
+					var msg = chan?.messages.fetch(message);
+				} catch(e) { }
 				if(!chan || !msg) {
 					await this.delete(server, data.rows[0].channel_id, message);
 					return res(undefined);
@@ -197,8 +201,10 @@ class FormPostStore extends Collection {
 			
 			if(data.rows && data.rows[0]) {
 				for(var i = 0; i < data.rows.length; i++) {
-					var chan = guild.channels.resolve(data.rows[i].channel_id);
-					var msg = chan?.messages.fetch(data.rows[i].message_id);
+					try {
+						var chan = guild.channels.resolve(data.rows[i].channel_id);
+						var msg = chan?.messages.fetch(data.rows[i].message_id);
+					} catch(e) { }
 					if(!chan || !msg) {
 						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
 						data.rows[i] = 'deleted';
@@ -233,8 +239,10 @@ class FormPostStore extends Collection {
 			
 			if(data.rows && data.rows[0]) {
 				for(var i = 0; i < data.rows.length; i++) {
-					var chan = guild.channels.resolve(data.rows[i].channel_id);
-					var msg = chan?.messages.fetch(data.rows[i].message_id);
+					try {
+						var chan = guild.channels.resolve(data.rows[i].channel_id);
+						var msg = chan?.messages.fetch(data.rows[i].message_id);
+					} catch(e) { }
 					if(!chan || !msg) {
 						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
 						data.rows[i] = 'deleted';
@@ -268,8 +276,10 @@ class FormPostStore extends Collection {
 			
 			if(data.rows && data.rows[0]) {
 				for(var i = 0; i < data.rows.length; i++) {
-					var chan = guild.channels.resolve(data.rows[i].channel_id);
-					var msg = chan?.messages.fetch(data.rows[i].message_id);
+					try {
+						var chan = guild.channels.resolve(data.rows[i].channel_id);
+						var msg = chan?.messages.fetch(data.rows[i].message_id);
+					} catch(e) { }
 					if(!chan || !msg) {
 						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
 						data.rows[i] = 'deleted';
