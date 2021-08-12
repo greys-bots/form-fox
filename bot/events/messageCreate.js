@@ -64,7 +64,7 @@ module.exports = async (msg, bot)=>{
 	bot.writeLog(log.join('\r\n'));
 	
 	if(!result) return;
-	if(typeof result == "object" && result[0]) { //embeds
+	if(Array.isArray(result)) { //embeds
 		var message = await msg.channel.send({embeds: [result[0].embed]});
 		if(result[1]) {
 			if(!bot.menus) bot.menus = {};
@@ -85,5 +85,10 @@ module.exports = async (msg, bot)=>{
 			};
 			["⬅️", "➡️", "⏹️"].forEach(r => message.react(r));
 		}
-	} else await msg.channel.send(result);
+	} else if(typeof result == "object") {
+		if(result.embed || result.title)
+			await msg.channel.send({embeds: [result.embed ?? result]});
+		else await msg.channel.send(result);
+	}
+	else await msg.channel.send(result);
 }
