@@ -50,7 +50,7 @@ class ResponseHandler {
 
             question.reacts.forEach(r => msg.react(r));
             
-            return Promise.resolve(msg);
+            return msg;
         } else {
         	var content = {content: "How's this look?", embeds: [{
                 title: response.form.name,
@@ -72,7 +72,7 @@ class ResponseHandler {
             var msg = await message.channel.send(content);
             ['✅','❌'].forEach(r => msg.react(r));
 
-            return Promise.resolve(msg);
+            return msg;
         }
     }
 
@@ -204,13 +204,13 @@ class ResponseHandler {
         if(questions[response.answers.length].required)
             return Promise.resolve('This question can\'t be skipped!');
 
-        var msg = await message.channel.send([
+        var m = await message.channel.send([
             'Are you sure you want to skip this question? ',
             "You can't go back to answer it!"
         ].join(""));
-        ['✅','❌'].forEach(r => msg.react(r));
+        ['✅','❌'].forEach(r => m.react(r));
 
-        var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
+        var confirm = await this.bot.utils.getConfirmation(this.bot, m, user);
         if(confirm.msg) return Promise.resolve(confirm.msg);
 
         response.answers.push('*(answer skipped)*');
@@ -376,6 +376,7 @@ class ResponseHandler {
 
         var response = await this.bot.stores.openResponses.get(message.channel.id);
         if(!response) return;
+        console.log(response.message_id)
 
         var questions = response.questions?.[0] ? response.questions : response.form.questions;
         if(!questions?.[0]) {
@@ -385,12 +386,14 @@ class ResponseHandler {
         var question = questions[response.answers.length];
         var config = await this.bot.stores.configs.get(response.server_id);
 
+        var msg;
         if(this.menus.has(message.channel.id)) {
         	if(!response.selection?.includes('OTHER')) return;
         	if(!question) return;
 
         	var prompt = await message.channel.messages.fetch(response.message_id);
         	var embed = prompt.embeds[0];
+            console.log(embed);
 
         	if(message.content.toLowerCase() == 'cancel') {
 				embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
@@ -406,13 +409,13 @@ class ResponseHandler {
         	await prompt.edit({embeds: [embed]});
         	this.menus.delete(message.channel.id);
 
-			var msg;
         	if(question.type == 'mc') {
         		response.answers.push(message.content);
         		msg = await this.sendQuestion(response, message);
         	}
+            console.log(msg?.id, response.message_id);
         	await this.bot.stores.openResponses.update(message.channel.id, {
-        		message_id: msg?.id || response.message_id,
+        		message_id: msg?.id ?? response.message_id,
         		selection: response.selection,
 				answers: response.answers
         	});
@@ -467,11 +470,10 @@ class ResponseHandler {
 
         if(res2.menu) this.menus.add(message.channel.id);
 
-        var msg;
-        if(res2.send) var msg = await this.sendQuestion(response, message);
+        if(res2.send) msg = await this.sendQuestion(response, message);
 
         await this.bot.stores.openResponses.update(message.channel.id, {
-            message_id: msg?.id || message.id,
+            message_id: msg?.id ?? response.message_id,
             answers: response.answers,
             selection: response.selection
         });

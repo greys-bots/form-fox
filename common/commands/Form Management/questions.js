@@ -96,7 +96,7 @@ module.exports.subcommands.add = {
 			'Remember that the question will bump down any others that were ',
 			'in its place or after it!\n',
 			'(Use `last` to put it at the end of the other questions!)'
-		]);
+		].join(""));
 		resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 		if(!resp) return 'ERR! Timed out!';
 		if(resp.content.toLowerCase() != 'last') position = parseInt(resp.content.toLowerCase());
@@ -106,6 +106,7 @@ module.exports.subcommands.add = {
 		try {
 			await bot.stores.forms.update(msg.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
+			console.log(e)
 			return 'ERR! '+e;
 		}
 
