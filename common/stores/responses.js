@@ -207,7 +207,6 @@ class ResponseStore extends Collection {
 				if(!responses?.[0]) return res();
 				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
 				for(var response of responses) {
-					await this.bot.stores.responsePosts.deleteByResponse(server, response.hid);
 					super.delete(`${server}-${response.hid}`);
 				}
 			} catch(e) {

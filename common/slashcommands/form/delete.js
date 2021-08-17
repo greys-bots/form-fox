@@ -15,6 +15,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] - Delete a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

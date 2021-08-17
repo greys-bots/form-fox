@@ -17,6 +17,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[response_id] - See the status of a response",
+		"[response_id] [guild_id] - See the status of a response from a specific guild"
+	],
 	async execute(ctx) {
 		var id = ctx.options.getString('response_id').toLowerCase().trim();
 		var gid = ctx.options.getString('guild_id', false);

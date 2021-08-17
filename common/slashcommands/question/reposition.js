@@ -23,6 +23,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [question] [position] - Change the position of a question"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

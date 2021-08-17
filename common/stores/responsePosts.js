@@ -156,7 +156,6 @@ class ResponsePostStore extends Collection {
                     WHERE server_id = $1
                     AND response = $2
                 `, [server, hid]);
-                super.delete(`${server}-${channel}-${message}`)
             } catch(e) {
                 console.log(e);
                 return rej(e.message);

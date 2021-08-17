@@ -17,6 +17,13 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[value] - Set the default value for all forms",
+		"[value] [form_id] - Set the value for a form"
+	],
+	extra: "The info embed is a list of questions sent when a user applies to a form. "+
+		   "By default this setting is TRUE, so it sends the embed. " +
+		   "Set it to false to turn it off",
 	async execute(ctx) {
 		var val = ctx.options.getBoolean('value');
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();

@@ -17,6 +17,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [channel] - Post a form embed in a channel"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var chan = ctx.options.getChannel('channel');

@@ -44,6 +44,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [question] [type] [required] - Add a new question to a form",
+		"[form_id] [question] [type] [required] [position] - Add a new question to a form and set its position"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

@@ -19,6 +19,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] - View and optionally reset a form's emoji",
+		"[form_id] [emoji] - Set a form's emoji"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var e = ctx.options.get('emoji')?.value;

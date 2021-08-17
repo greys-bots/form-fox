@@ -19,6 +19,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [name] - Set a form's name"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var n = ctx.options.get('name')?.value;

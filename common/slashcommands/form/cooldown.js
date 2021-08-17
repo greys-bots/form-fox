@@ -19,6 +19,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] - View and optionally clear a form's cooldown",
+		"[form_id] [cooldown] - Set a form's cooldown"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var c = ctx.options.get('cooldown')?.value;

@@ -13,6 +13,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] - Runs a menu to copy a form"
+	],
 	async execute(ctx) {
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, farg);

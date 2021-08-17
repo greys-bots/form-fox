@@ -9,7 +9,7 @@ module.exports = {
 		if(cfg?.prefix) pmsg += `, and my prefix for this server is \`${cfg.prefix}\``
 		return ({
 			title: '**About**',
-			description: "Eee! I'm Fox! I help people set up forms and responses here on Discord!\nMy prefix is `ff!`",
+			description: "Eee! I'm Fox! I help people set up forms and responses here on Discord!\n" + pmsg,
 			fields:[
 				{name: "Creators", value: "[greysdawn](https://github.com/greysdawn) | (GS)#6969"},
 				{name: "Invite", value: `[Clicky!](${bot.invite})`,inline: true},

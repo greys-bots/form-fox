@@ -17,6 +17,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[channel] - Set the default response channel for all forms",
+		"[channel] [form_id] - Set the response channel for a form"
+	],
 	async execute(ctx) {
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		var chan = ctx.options.getChannel('channel');

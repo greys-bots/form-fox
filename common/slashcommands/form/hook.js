@@ -20,6 +20,9 @@ opts.push({
 			required: true
 		}]
 	},
+	usage: [
+		"[form_id] - View hooks on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -62,6 +65,9 @@ opts.push({
 			}
 		]
 	},
+	usage: [
+		"[form_id] [url] - Delete all other hooks and set a new one on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -108,6 +114,9 @@ opts.push({
 			}
 		]
 	},
+	usage: [
+		"[form_id] [url] - Add a new hook to a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -153,6 +162,9 @@ opts.push({
 			},
 		]
 	},
+	usage: [
+		"[form_id] [hook_id] - Delete a hook on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -182,6 +194,9 @@ opts.push({
 			}
 		]
 	},
+	usage: [
+		"[form_id] - Delete all hooks on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

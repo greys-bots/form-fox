@@ -64,8 +64,8 @@ class InteractionHandler {
 					type: data.type ?? 1
 				})
 			} else {
-				slashCommands.set(command.name, command);
-				slashData.set(command.name, data)
+				slashCommands.set(command.data.name, command);
+				slashData.set(command.data.name, data)
 			}
 		}
 
@@ -132,7 +132,9 @@ class InteractionHandler {
 
 		if(!res) return;
 
-		var type = ctx.replied ? 'followUp' : 'reply'; // ew gross but it probably works
+		var type;
+		if(ctx.deferred) type = 'editReply';
+		else type = ctx.replied ? 'followUp' : 'reply'; // ew gross but it probably works
 		switch(typeof res) {
 			case 'string':
 				return await ctx[type]({content: res, ephemeral: cmd.ephemeral ?? false})

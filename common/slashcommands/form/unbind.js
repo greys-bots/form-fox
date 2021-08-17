@@ -23,6 +23,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [msg_id] - Unbind a form react from a message in the same channel",
+		"[form_id] [msg_id] [channel] - Unbind a form react from a message in another channel"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

@@ -17,6 +17,11 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[value] - Set the default value for all forms",
+		"[value] [form_id] - Set the value for a form"
+	],
+	extra: "Set this to FALSE to stop the bot from removing users' reacts on form posts",
 	async execute(ctx) {
 		var val = ctx.options.getBoolean('value');
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();

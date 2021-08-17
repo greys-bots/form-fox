@@ -19,6 +19,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [description] - Change a form's description"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var d = ctx.options.get('description')?.value;

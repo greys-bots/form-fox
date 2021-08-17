@@ -19,6 +19,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] - View and optionally clear a form's message",
+		"[form_id] [message] - Set a form's message"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var m = ctx.options.get('message')?.value;

@@ -21,6 +21,9 @@ opts.push({
 			required: true
 		}]
 	},
+	usage: [
+		"[form_id] - View roles on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
@@ -56,6 +59,9 @@ opts.push({
 			}
 		]
 	},
+	usage: [
+		"[form_id] [roles] - Set the roles on a form"
+	],
 	async execute(ctx) {
 		var roles = ctx.options.get('roles').value;
 		roles = roles.match(/(\d)+/g);
@@ -94,6 +100,9 @@ opts.push({
 			}
 		]
 	},
+	usage: [
+		"[form_id] [role] - Add a role to a form"
+	],
 	async execute(ctx) {
 		var role = ctx.options.getRole('role');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
@@ -128,6 +137,9 @@ opts.push({
 			}
 		]
 	},
+	usage: [
+		"[form_id] [role] - Remove a role from a form"
+	],
 	async execute(ctx) {
 		var role = ctx.options.getRole('role');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
@@ -154,6 +166,9 @@ opts.push({
 			required: true
 		}]
 	},
+	usage: [
+		"[form_id] - Remove all roles from a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

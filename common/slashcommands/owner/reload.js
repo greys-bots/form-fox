@@ -19,6 +19,10 @@ module.exports = {
 			required: true
 		}]
 	},
+	usage: [
+		"[value: bot] - Crash and restart the bot",
+		"[value: slash_commands] - Reload all slash commands"
+	],
 	async execute(ctx) {
 		var arg = ctx.options.get('value').value.trim();
 		
@@ -28,7 +32,7 @@ module.exports = {
 				process.exit(0);
 				return;
 			case 'scmds':
-				await ctx.reply('Reloading...');
+				await ctx.deferReply();
 				await ctx.client.handlers.interaction.load(
 					__dirname + '/..'
 				);

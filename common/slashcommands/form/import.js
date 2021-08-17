@@ -12,6 +12,9 @@ module.exports = {
 			required: true
 		}]
 	},
+	usage: [
+		"[url] - Import forms using the file provided"
+	],
 	async execute(ctx) {
 		var url = ctx.options.get('url').value.trim();
 		var data;

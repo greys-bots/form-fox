@@ -11,6 +11,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"- View all forms",
+		"[form_id] - View a specific form"
+	],
 	execute: async (ctx) => {
 		var arg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		if(!arg) {

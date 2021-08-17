@@ -11,6 +11,9 @@ module.exports = {
 			required: true
 		}]
 	},
+	usage: [
+		"[form_id] - View all questions on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

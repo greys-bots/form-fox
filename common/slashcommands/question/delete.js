@@ -19,6 +19,9 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [question] - Delete a question on a form"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;

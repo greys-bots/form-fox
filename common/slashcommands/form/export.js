@@ -9,6 +9,10 @@ module.exports = {
 			required: false
 		}]
 	},
+	usage: [
+		"- Export all forms",
+		"[forms] - Export specific forms"
+	],
 	async execute(ctx) {
 		var ids = ctx.options.get('forms')?.value.toLowercase().trim().split(" ");
 

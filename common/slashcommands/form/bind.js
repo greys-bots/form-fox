@@ -23,6 +23,10 @@ module.exports = {
 			}
 		]
 	},
+	usage: [
+		"[form_id] [msg_id] - Bind a form react to a message in the same channel",
+		"[form_id] [msg_id] [channel] - Bind a form react to a message in another channel"
+	],
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
