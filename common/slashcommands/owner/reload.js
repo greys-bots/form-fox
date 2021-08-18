@@ -39,6 +39,5 @@ module.exports = {
 				return 'Reloaded!'
 				break;
 		}
-	},
-	ownerOnly: true
+	}
 }

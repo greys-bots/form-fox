@@ -42,8 +42,8 @@ module.exports = {
 			var ug = ctx.client.slashCommands.map(m => m).filter(m => !m.options);
 			for(var m of mods) {
 				var e = {
-					title: (m.name ?? m.data.name).toUpperCase(),
-					description: m.description
+					title: (m.data.name).toUpperCase(),
+					description: m.data.description
 				}
 
 				cmds = m.options.map(o => o);

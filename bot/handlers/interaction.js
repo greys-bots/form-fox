@@ -19,6 +19,7 @@ class InteractionHandler {
 	async load(path) {
 		var slashCommands = new Collection();
 		var slashData = new Collection();
+		var devOnly = new Collection();
 
 		var files = this.bot.utils.recursivelyReadDirectory(path);
 
@@ -49,20 +50,36 @@ class InteractionHandler {
 						type: 1
 					};
 					g2 = {
-						...mod,
+						...mod.data,
 						options: [],
 						type: 1
 					};
 
-					slashCommands.set(mod.name, group);
-					slashData.set(mod.name, g2);
+					slashCommands.set(mod.data.name, group);
+					if(mod.dev) devOnly.set(mod.data.name, g2);
+					else slashData.set(mod.data.name, g2);
 				}
+				
+				command.permissions = command.permissions ?? group.permissions;
+				command.guildOnly = command.guildOnly ?? group.guildOnly;
+				if(command.options) command.options = command.options.map(o => {
+					o.permissions = o.permissions ?? command.permissions
+					return o;
+				})
 
 				group.options.push(command)
-				g2.options.push({
-					...data,
-					type: data.type ?? 1
-				})
+				if(mod.dev) {
+					var dg = devOnly.get(mod.data.name);
+					dg.options.push({
+						...data,
+						type: data.type ?? 1
+					});
+				} else {
+					g2.options.push({
+						...data,
+						type: data.type ?? 1
+					})
+				}
 			} else {
 				slashCommands.set(command.data.name, command);
 				slashData.set(command.data.name, data)
@@ -75,7 +92,14 @@ class InteractionHandler {
 			if(!this.bot.application?.owner) await this.bot.application?.fetch();
 
 			var cmds = slashData.map(d => d);
-			await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
+			var dcmds = devOnly.map(d => d);
+			if(process.env.COMMAND_GUILD == process.env.DEV_GUILD) {
+				cmds = cmds.concat(dcmds);
+				await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
+			} else {
+				await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
+				await this.bot.application.commands.set(dcmds, process.env.DEV_GUILD);
+			}
 			return;
 		} catch(e) {
 			console.log(e);
@@ -224,8 +248,8 @@ class InteractionHandler {
 	checkPerms(cmd, ctx) {
 		if(cmd.ownerOnly && ctx.user.id !== process.env.OWNER)
 			return false;
-		if(ctx.guildOnly && !ctx.member) return false; // pre-emptive in case of dm slash cmds
-		if(!cmd.perms || !cmd.perms[0]) return true;
+		if(cmd.guildOnly && !ctx.member) return false; // pre-emptive in case of dm slash cmds
+		if(!cmd.permissions || !cmd.permissions[0]) return true;
 		return ctx.member.permissions.has(cmd.permissions);
 	}
 

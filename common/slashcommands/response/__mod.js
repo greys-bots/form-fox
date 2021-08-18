@@ -1,4 +1,8 @@
 module.exports = {
-	name: 'response',
-	description: "Commands for handling responses"
+	data: {
+		name: 'response',
+		description: "Commands for handling responses"
+	},
+	guildOnly: true,
+	permissions: ['MANAGE_MESSAGES']
 }

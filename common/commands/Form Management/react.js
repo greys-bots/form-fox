@@ -65,6 +65,6 @@ module.exports = {
 		}
 	},
 	guildOnly: true,
-	permissions: ['MANAGE_GUILD'],
+	permissions: ['MANAGE_MESSAGES'],
 	alias: ['reactremove', 'reaction', 'reacts', 'reactions', 'rr']
 }

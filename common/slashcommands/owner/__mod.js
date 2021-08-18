@@ -1,4 +1,8 @@
 module.exports = {
-	name: 'owner',
-	description: 'Owner-only commands'
+	data: {
+		name: 'owner',
+		description: 'Owner-only commands'
+	},
+	ownerOnly: true,
+	dev: true
 }

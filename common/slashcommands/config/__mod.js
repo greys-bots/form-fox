@@ -1,4 +1,8 @@
 module.exports = {
-	name: 'config',
-	description: "Commands for configuring options"
+	data: {
+		name: 'config',
+		description: "Commands for configuring options"
+	},
+	guildOnly: true,
+	permissions: ['MANAGE_MESSAGES']
 }

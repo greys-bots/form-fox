@@ -64,6 +64,6 @@ module.exports = {
 		}
 	},
 	guildOnly: true,
-	permissions: ['MANAGE_GUILD'],
+	permissions: ['MANAGE_MESSAGES'],
 	alias: ['infoembed', 'embed']
 }

@@ -45,5 +45,6 @@ module.exports = {
 			color
 		}]}
 	},
-	ephemeral: true
+	ephemeral: true,
+	permissions: []
 }
