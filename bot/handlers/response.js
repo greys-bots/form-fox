@@ -35,6 +35,63 @@ class ResponseHandler {
         })
 	}
 
+    async startResponse(ctx) {
+        var {user, form, cfg} = ctx;
+
+        if(!form.channel_id && !cfg?.response_channel)
+            return 'No response channel set for that form! Ask the mods to set one!';
+
+        if(!form.questions?.[0]) return "That form has no questions! Ask the mods to add some first!"; 
+
+        try {
+            var existing = await this.bot.stores.openResponses.get(user.dmChannel?.id);
+            if(existing) return 'Please finish your current form before starting a new one!';
+
+            if(form.cooldown && form.cooldown > 0) {
+                var past = (await this.bot.stores.responses.getByUser(form.server_id, user.id))?.pop();
+                if(past && past.status == 'denied') {
+                    var diff = this.bot.utils.dayDiff(new Date(), past.received.getTime() + (form.cooldown * 24 * 60 * 60 * 1000));
+                    if(diff > 0) return `Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`;
+                }
+            }
+            
+            if(cfg?.embed || form.embed) {
+                await user.send({embeds: [{
+                    title: form.name,
+                    description: form.description,
+                    fields: form.questions.map((q,i) => {
+                        return {
+                            name: `Question ${i+1}${form.required?.includes(i+1) ? " (required)" : ""}`,
+                            value: q.value
+                        }
+                    }),
+                    color: parseInt(form.color || 'ee8833', 16)
+                }]})
+            }
+            
+            var question = await this.handleQuestion(form, 0);
+            var message = await user.send({embeds: [{
+                title: form.name,
+                description: form.description,
+                fields: question.message,
+                color: parseInt(form.color || 'ee8833', 16),
+                footer: question.footer
+            }]});
+            
+            question.reacts.forEach(r => message.react(r));
+            await this.bot.stores.openResponses.create(form.server_id, message.channel.id, message.id, {
+                user_id: user.id,
+                form: form.hid,
+                questions: JSON.stringify(form.questions)
+            })
+        } catch(e) {
+            console.log(e);
+            return 'ERR! Couldn\'t start response process: '+(e.message || e);
+        }
+
+        return 'Application started! Check your DMs!';
+    }
+
 	async sendQuestion(response, message) {
     	var questions = response.questions?.[0] ? response.questions : response.form.questions;
 

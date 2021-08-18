@@ -354,59 +354,6 @@ class FormPostStore extends Collection {
 		})
 	}
 
-	async openResponse(ctx) {
-		var {post, user, config: cfg, message: msg} = ctx;
-
-		try {
-			var existing = await this.bot.stores.openResponses.get(user.dmChannel?.id);
-			if(existing) return await user.send('Please finish your current form before starting a new one!');
-
-			if(post.form.cooldown && post.form.cooldown > 0) {
-				var past = (await this.bot.stores.responses.getByUser(msg.channel.guild.id, user.id))?.pop();
-				if(past && past.status == 'denied') {
-					var diff = this.bot.utils.dayDiff(new Date(), past.received.getTime() + (post.form.cooldown * 24 * 60 * 60 * 1000));
-					if(diff > 0) return await user.send(`Cooldown not up yet! You must wait ${diff} day${diff == 1 ? '' : 's'} to apply again`)
-				}
-			}
-			
-			if(cfg?.embed || post.form.embed) {
-				await user.send({embeds: [{
-					title: post.form.name,
-					description: post.form.description,
-					fields: post.form.questions.map((q,i) => {
-						return {
-							name: `Question ${i+1}${post.form.required?.includes(i+1) ? " (required)" : ""}`,
-							value: q.value
-						}
-					}),
-					color: parseInt(post.form.color || 'ee8833', 16)
-				}]})
-			}
-
-			var question = await this.bot.handlers.response.handleQuestion(post.form, 0);
-			var message = await user.send({embeds: [{
-				title: post.form.name,
-				description: post.form.description,
-				fields: question.message,
-				color: parseInt(post.form.color || 'ee8833', 16),
-				footer: question.footer
-			}]});
-
-			question.reacts.forEach(r => message.react(r));
-			return await this.bot.stores.openResponses.create(msg.channel.guild.id, message.channel.id, message.id, {
-				user_id: user.id,
-				form: post.form.hid,
-				questions: JSON.stringify(post.form.questions)
-			})
-		} catch(e) {
-			console.log(e);
-			if(e.message) {
-				var channel = msg.channel.guild.channels.resolve(post.form.channel_id || cfg.response_channel);
-				return await channel.send('Err while starting response process: '+e.message);
-			} else return await user.send('ERR! Couldn\'t start response process: '+e);
-		}
-	}
-
 	async handleReactions(reaction, user) {
 		if(this.bot.user.id == user.id) return;
 		if(user.bot) return;
@@ -425,15 +372,13 @@ class FormPostStore extends Collection {
 		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
 		if(!post.form.open) return;
 
-		if(!post.form.channel_id && !cfg?.response_channel)
-			return await user.send('No response channel set for that form! Ask the mods to set one first!');
-
-		await this.openResponse({
+		var resp = await this.bot.handlers.response.startResponse({
 			user,
-			post,
-			config: cfg,
-			message: msg
+			form: post.form,
+			cfg
 		})
+
+		if(!resp.includes('started')) return await user.send(resp);
 	}
 
 	async handleInteractions(intr) {
@@ -453,14 +398,13 @@ class FormPostStore extends Collection {
 		if(!post.form.channel_id && !cfg?.response_channel)
 			return await user.send('No response channel set for that form! Ask the mods to set one first!');
 
-		await this.openResponse({
+		var resp = await this.bot.handlers.response.startResponse({
 			user,
-			post,
-			config: cfg,
-			message: msg
+			form: post.form,
+			cfg
 		})
 
-		await intr.reply({content: 'Form started! Check your DMs!', ephemeral: true})
+		await intr.reply({content: resp, ephemeral: true});
 	}
 }
 

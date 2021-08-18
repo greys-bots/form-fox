@@ -86,7 +86,8 @@ module.exports = {
 				title: data.name,
 				description: data.description,
 				fields: data.questions.map((q, n) => { return {name: `Question ${n+1}${q.required ? ' (required)' : ''}`, value: q.value} }),
-			}]});				color: parseInt('ee8833', 16)
+				color: parseInt('ee8833', 16)
+			}]});
 
 
 			i++;
