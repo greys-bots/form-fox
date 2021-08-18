@@ -85,6 +85,10 @@ module.exports = async (msg, bot)=>{
 			};
 			["⬅️", "➡️", "⏹️"].forEach(r => message.react(r));
 		}
-	} else if(typeof result == "object") await msg.channel.send({embeds: [result.embed ?? result]});
+	} else if(typeof result == "object") {
+		if(result.embed || result.title)
+			await msg.channel.send({embeds: [result.embed ?? result]});
+		else await msg.channel.send(result);
+	}
 	else await msg.channel.send(result);
 }

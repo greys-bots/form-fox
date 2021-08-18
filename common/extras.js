@@ -37,14 +37,15 @@ const qTypes = {
 			return {choices, other};
 		},
 		handleReactAdd: async (msg, response, question, react) => {
+			console.log(question)
 			var index = numbers.indexOf(react.emoji.name);
 			var embed = msg.embeds[0];
     		if(question.choices[index - 1]) {
     			response.answers.push(question.choices[index - 1]);
     			return {response, send: true};
-    		} else if(react.emoji.name == "🅾️" && question.other) {
+    		} else if(react.emoji.name == "🅾" && question.other) {
     			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await msg.edit({embed});
+        		await msg.edit({embeds: [embed]});
 
         		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
 				if(!response.selection) response.selection = [];
@@ -66,14 +67,14 @@ const qTypes = {
     			var embed = msg.embeds[0];
 
 				embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await msg.edit({embed});
+        		await msg.edit({embeds: [embed]});
 
         		await message.channel.send('Please enter a value below! (or type `cancel` to cancel)')
         		if(!response.selection) response.selection = [];
                 response.selection.push('OTHER')
                 return {response, menu: true};
 			} else {
-    			message.channel.send('Invalid choice! Please select something else');
+    			await message.channel.send('Invalid choice! Please select something else');
     			return undefined;
     		}
 		}
@@ -119,6 +120,7 @@ const qTypes = {
 			return {choices, other};
 		},
 		handleReactAdd: async (msg, response, question, react) => {
+			console.log(question)
 			var index = numbers.indexOf(react.emoji.name);
     		var embed = msg.embeds[0];
     		if(question.choices[index - 1]) {
@@ -126,13 +128,13 @@ const qTypes = {
     				return undefined;
     				
     			embed.fields[index].value = question.choices[index - 1] + " ✅";
-        		await msg.edit({embed});
+        		await msg.edit({embeds: [embed]});
         		if(!response.selection) response.selection = [];
         		response.selection.push(question.choices[index - 1]);
         		return {response, send: false};
     		} else if(react.emoji.name == "🅾" && question.other) {
     			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await msg.edit({embed});
+        		await msg.edit({embeds: [embed]});
 
         		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
 				if(!response.selection) response.selection = [];
@@ -142,7 +144,7 @@ const qTypes = {
     			response.answers.push(response.selection.join("\n"));
     			return {response, send: true};
     		} else {
-    			msg.channel.send('Invalid choice! Please select something else');
+    			await msg.channel.send('Invalid choice! Please select something else');
     			return undefined;
     		}
 		},
@@ -151,7 +153,7 @@ const qTypes = {
     		if(question.choices[index - 1]) {
     			var embed = msg.embeds[0];
     			embed.fields[index].value = question.choices[index - 1];
-    			await msg.edit({embed});
+    			await msg.edit({embeds: [embed]});
     			if(response.selection) response.selection = response.selection.filter(x => x !== question.choices[index - 1]);
     			return {response};
     		} else if(react.emoji.name == "🅾️") {
@@ -159,7 +161,7 @@ const qTypes = {
 
     			var embed = msg.embeds[0];
     			embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
-    			await msg.edit({embed});
+    			await msg.edit({embeds: [embed]});
 
     			return {response};
     		} else return undefined;
@@ -168,6 +170,8 @@ const qTypes = {
 			var index = parseInt(message.content);
     		var msg = await message.channel.messages.fetch(response.message_id);
     		var embed = msg.embeds[0];
+    		console.log(msg);
+    		console.log(embed);
 				
     		if(question.choices[index - 1]) {
     			if(response.selection?.includes(question.choices[index - 1])) {
@@ -179,16 +183,16 @@ const qTypes = {
         			response.selection.push(question.choices[index - 1]);
     			}
 
-				await msg.edit({embed});
+				await msg.edit({embeds: [embed]});
 				return {response};
     		} else if(['other', 'o'].includes(message.content.toLowerCase()) && question.other) {
     			if(response.selection?.find(x => !question.choices.includes(x))) {
     				response.selection = response.selection.filter(x => question.choices.includes(x));
     				embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
-    				await msg.edit({embed});
+    				await msg.edit({embeds: [embed]});
     			}
     			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await msg.edit({embed});
+        		await msg.edit({embeds: [embed]});
 
         		await message.channel.send('Please enter a value below! (or type `cancel` to cancel)')
         		if(!response.selection) response.selection = [];
@@ -199,7 +203,7 @@ const qTypes = {
     			response.answers.push(response.selection.join("\n"));
     			return {response, send: true};
     		} else {
-    			msg.channel.send('Invalid choice! Please select something else');
+    			await msg.channel.send('Invalid choice! Please select something else');
     			return undefined;
     		}
 		}
