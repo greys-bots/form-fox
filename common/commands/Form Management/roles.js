@@ -14,10 +14,9 @@ module.exports = {
 				var embeds = []
 
 				for(var form of forms) {
-					var roles = msg.channel.guild.roles.cache.filter(r => form.roles.includes(r.id));
 					embeds.push({embed: {
 						title: `Roles for form ${form.name} (${form.hid})`,
-						description: roles.map(r => r.mention).join('\n') || '*(none set)*',
+						description: form.roles.map(r => `<@&${r}>`).join('\n') || '*(none set)*',
 						color: parseInt('ee8833', 16)
 					}})
 				}
@@ -32,14 +31,13 @@ module.exports = {
 				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(!form) return 'Form not found!';
 
-				var roles = msg.channel.guild.roles.cache.filter(r => form.roles.includes(r.id));
 				await msg.channel.send({embeds: [{
 					title: `Roles for form ${form.name} (${form.hid})`,
-					description: roles.map(r => r.mention).join('\n') || '*(none set)*',
+					description: form.roles.map(r => `<@&${r}>`).join('\n') || '*(none set)*',
 					color: parseInt('ee8833', 16)
 				}]})
 
-				if(roles[0]) {
+				if(form.roles[0]) {
 					var message = await msg.channel.send('Would you like to clear these roles?');
 					REACTS.forEach(r => message.react(r));
 					
