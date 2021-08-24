@@ -63,18 +63,15 @@ opts.push({
 		"[form_id] [roles] - Set the roles on a form"
 	],
 	async execute(ctx) {
-		var roles = ctx.options.get('roles').value;
-		roles = roles.match(/(\d)+/g);
+		var roles = ctx.options.resolved.roles;
+		console.log(roles);
+		if(!roles?.size) return "Please provide valid roles!";
 		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
-		var groles = await ctx.guild.roles.fetch();
-		roles = roles.filter(x => groles.has(x));
-		if(!roles) return "Please provide valid roles!";
-
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles});
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: roles.map(r => r.id)});
 		
 		return 'Form updated!';
 	},
@@ -93,25 +90,26 @@ opts.push({
 				type: 3,
 				required: true
 			}, {
-				name: 'role',
-				description: "The role to add",
-				type: 8,
+				name: 'roles',
+				description: "The roles to add",
+				type: 3,
 				required: true
 			}
 		]
 	},
 	usage: [
-		"[form_id] [role] - Add a role to a form"
+		"[form_id] [roles] - Add roles to a form"
 	],
 	async execute(ctx) {
-		var role = ctx.options.getRole('role');
+		var roles = ctx.options.resolved.roles;
+		if(!roles?.size) return "Please provide at least one valid role!";
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
 		if(!form.roles) form.roles = [];
-		if(form.roles.includes(role.id)) return "Role already added!";
-		form.roles.push(role.id);
+		roles = roles.map(r => r.id).filter(r => !form.roles.includes(r));
+		form.roles = form.roles.concat(roles);
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: form.roles});
 		return "Form updated!";
@@ -121,7 +119,7 @@ opts.push({
 opts.push({
 	data: {
 		name: 'remove',
-		description: 'Remove a role from a form',
+		description: 'Remove roles from a form',
 		type: 1,
 		options: [
 			{
@@ -130,24 +128,27 @@ opts.push({
 				type: 3,
 				required: true
 			}, {
-				name: 'role',
-				description: "The role to remove",
-				type: 8,
+				name: 'roles',
+				description: "The roles to remove",
+				type: 3,
 				required: true
 			}
 		]
 	},
 	usage: [
-		"[form_id] [role] - Remove a role from a form"
+		"[form_id] [roles] - Remove roles from a form"
 	],
 	async execute(ctx) {
-		var role = ctx.options.getRole('role');
+		var roles = ctx.options.resolved.roles;
+		if(!roles?.size) return "Please provide at least one valid role!";
+		roles = roles.map(r => r.id);
+		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles to remove!";
-		form.roles = form.roles.filter(r => r !== role.id);
+		form.roles = form.roles.filter(r => !roles.includes(r));
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: form.roles});
 		return "Form updated!";
