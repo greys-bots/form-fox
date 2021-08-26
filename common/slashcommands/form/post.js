@@ -46,7 +46,7 @@ module.exports = {
 					components: [{
 						type: 2,
 						label: 'Apply',
-						emoji: form.emoji,
+						emoji: form.emoji || "📝",
 						style: 1,
 						custom_id: `${form.hid}-apply`
 					}]
