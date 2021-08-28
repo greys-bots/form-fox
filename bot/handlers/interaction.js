@@ -23,7 +23,7 @@ class InteractionHandler {
 
 		var files = this.bot.utils.recursivelyReadDirectory(path);
 
-		for(f of files) {
+		for(var f of files) {
 			var path_frags = f.replace(path, "").split(/(?:\\|\/)/);
 			var mods = path_frags.slice(1, -1);
 			var file = path_frags[path_frags.length - 1];

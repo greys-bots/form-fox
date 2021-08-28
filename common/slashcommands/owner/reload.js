@@ -14,6 +14,10 @@ module.exports = {
 				{
 					name: 'slash_commands',
 					value: 'scmds'
+				},
+				{
+					name: 'commands',
+					value: 'cmds'
 				}
 			],
 			required: true
@@ -21,7 +25,8 @@ module.exports = {
 	},
 	usage: [
 		"[value: bot] - Crash and restart the bot",
-		"[value: slash_commands] - Reload all slash commands"
+		"[value: slash_commands] - Reload all slash commands",
+		"[value: commands] - Reload all text commands"
 	],
 	async execute(ctx) {
 		var arg = ctx.options.get('value').value.trim();
@@ -35,6 +40,13 @@ module.exports = {
 				await ctx.deferReply();
 				await ctx.client.handlers.interaction.load(
 					__dirname + '/..'
+				);
+				return 'Reloaded!'
+				break;
+			case 'cmds':
+				await ctx.deferReply();
+				await ctx.client.handlers.command.load(
+					__dirname + '/../../commands'
 				);
 				return 'Reloaded!'
 				break;
