@@ -1,0 +1,22 @@
+{
+  "name": "form-fox",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/greys-bots/form-fox.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "pg": "^8.3.0",
+    "tinycolor2": "^1.4.1"
+  }
+}
