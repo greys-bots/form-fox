@@ -322,9 +322,12 @@ class FormStore extends Collection {
 			if(resp) r = await this.bot.stores.responses.getByForms(server, ids);
 			
 			for(var form of forms) {
+				// remove server-specific data
 				delete form.id;
 				delete form.server_id;
 				delete form.channel_id;
+				delete form.roles;
+				
 				if(resp && r) form.responses = r[form.hid] ?? [];
 				else form.responses = [];
 			}
@@ -338,12 +341,21 @@ class FormStore extends Collection {
 			try {
 				var forms = await this.getAll(server);
 				var updated = 0, created = 0, failed = [];
-				for(var form of data) {
-					var verify = this.verify(form);
-					if(verify.ok) {
-						failed.push(`${form.name || form.hid || "(invalid form)"} - ${verify.reason}`);
+				for(var f of data) {
+					var verify = this.verify(f);
+					if(!verify.ok) {
+						failed.push(`${f.name || f.hid || "(invalid form)"} - ${verify.reason}`);
 						continue;
 					}
+
+					var {
+						id,
+						server_id,
+						channel_id,
+						roles,
+						responses,
+						...form
+					} = f;
 					if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
 						await this.update(server, form.hid, form);
 						updated++;
