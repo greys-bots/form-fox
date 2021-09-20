@@ -29,5 +29,6 @@ module.exports = {
 		else return;
 	},
 	permissions: [],
-	guildOnly: true
+	guildOnly: true,
+	ephemeral: true
 }

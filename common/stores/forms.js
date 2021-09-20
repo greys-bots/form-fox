@@ -306,7 +306,7 @@ class FormStore extends Collection {
 		})
 	}
 
-	async export(server, ids) {
+	async export(server, ids, resp = false) {
 		return new Promise(async (res, rej) => {
 			try {
 				var forms = await this.getAll(server);
@@ -315,15 +315,21 @@ class FormStore extends Collection {
 				return rej(e.message);
 			}
 
-			if(!forms?.[0]) return res();
-			if(ids?.[0]) forms = forms.filter(f => ids.includes(f.hid));
+			var r;
+			if(!forms?.length) return res();
+			if(ids?.length) forms = forms.filter(f => ids.includes(f.hid));
+			if(!forms?.length) return res();
+			if(resp) r = await this.bot.stores.responses.getByForms(server, ids);
 			
-			res(forms.map(f => {
-				delete f.id;
-				delete f.server_id;
-				delete f.channel_id;
-				return f;
-			}));
+			for(var form of forms) {
+				delete form.id;
+				delete form.server_id;
+				delete form.channel_id;
+				if(resp && r) form.responses = r[form.hid] ?? [];
+				else form.responses = [];
+			}
+			
+			res(forms);
 		})
 	}
 

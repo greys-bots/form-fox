@@ -141,6 +141,54 @@ class ResponseStore extends Collection {
 		})
 	}
 
+	async getByForms(server, ids) {
+		try {
+			var data;
+			if(ids) {
+				data = await this.db.query(`
+					SELECT * FROM responses
+					WHERE server_id = $1
+					AND form = ANY($2)
+				`, [server, ids]);
+			} else {
+				data = await this.db.query(`
+					SELECT * FROM responses
+					WHERE server_id = $1
+				`, [server]);
+			}
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+
+		if(!data?.rows?.length) return undefined;
+		
+		var d = {};
+		for(var r of data.rows) {
+			var {
+				form: f,
+				id,
+				server_id,
+				questions,
+				answers,
+				...rest
+			} = r;
+			if(!d[f]) d[f] = [];
+			
+			var ans = [];
+			for(var i = 0; i < questions.length; i++) {
+				ans.push({
+					question: questions[i],
+					answer: answers[i]
+				})
+			}
+			rest.answers = ans;
+			d[f].push(rest)
+		}
+
+		return d;
+	}
+
 	async update(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
