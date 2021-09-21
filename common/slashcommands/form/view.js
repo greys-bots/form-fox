@@ -32,7 +32,7 @@ module.exports = {
 						{name: "Message", value: f.message || "*(not set)*"},
 						{name: "Channel", value: f.channel_id ? `<#${f.channel_id}>` : '*(not set)*'},
 						{name: "Response count", value: responses?.length.toString() || "0"},
-						{name: "Roles", value: f.roles?.[0]? f.roles.map(r => `<@&${r}>`).join("\n") : "*(not set)*"}
+						{name: "Roles", value: f.roles?.[0]? f.roles.map(r => `<@&${r.id}>`).join("\n") : "*(not set)*"}
 					],
 					color: parseInt(!f.open ? 'aa5555' : f.color || '55aa55', 16)
 				})

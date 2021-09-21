@@ -33,7 +33,7 @@ opts.push({
 
 		return {embeds: [{
 			title: `${form.name} - Roles`,
-			description: form.roles.map(r => `<@&${r}>`).join("\n")
+			description: form.roles.map(r => `<@&${r.id}>`).join("\n")
 		}]}
 	},
 	ephemeral: true
@@ -64,14 +64,13 @@ opts.push({
 	],
 	async execute(ctx) {
 		var roles = ctx.options.resolved.roles;
-		console.log(roles);
 		if(!roles?.size) return "Please provide valid roles!";
 		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: roles.map(r => r.id)});
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(roles.map(r => ({id: r.id, events: ['ACCEPT']})))});
 		
 		return 'Form updated!';
 	},
@@ -89,7 +88,8 @@ opts.push({
 				description: "The form's ID",
 				type: 3,
 				required: true
-			}, {
+			},
+			{
 				name: 'roles',
 				description: "The roles to add",
 				type: 3,
@@ -108,10 +108,10 @@ opts.push({
 		if(!form) return 'Form not found!';
 
 		if(!form.roles) form.roles = [];
-		roles = roles.map(r => r.id).filter(r => !form.roles.includes(r));
+		roles = roles.filter(r => !form.roles.find(x => x.id == r)).map(r => ({id: r.id, events: ['ACCEPT']}));
 		form.roles = form.roles.concat(roles);
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: form.roles});
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
 		return "Form updated!";
 	}
 })
@@ -148,9 +148,9 @@ opts.push({
 		if(!form) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles to remove!";
-		form.roles = form.roles.filter(r => !roles.includes(r));
+		form.roles = form.roles.filter(r => !roles.includes(r.id));
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: form.roles});
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
 		return "Form updated!";
 	}
 })
@@ -190,7 +190,7 @@ opts.push({
 		if(conf.msg) {
 			msg = conf.msg;
 		} else {
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: []});
+			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify([])});
 			msg = 'Roles cleared!';
 		}
 

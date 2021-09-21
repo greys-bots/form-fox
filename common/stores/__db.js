@@ -23,7 +23,7 @@ module.exports = async (bot) => {
 			description TEXT,
 			questions 	JSONB,
 			channel_id 	TEXT,
-			roles 		TEXT[],
+			roles 		JSONB,
 			message 	TEXT,
 			color 		TEXT,
 			open 		BOOLEAN,

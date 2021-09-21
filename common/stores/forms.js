@@ -30,7 +30,7 @@ class FormStore extends Collection {
 				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
-				 data.channel_id, data.roles || [],
+				 data.channel_id, JSON.stringify(data.roles || []),
 				 data.message, data.color, data.open || true,
 				 data.cooldown, data.emoji, data.reacts, data.embed]);
 			} catch(e) {
@@ -63,7 +63,7 @@ class FormStore extends Collection {
 				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 				[server, hid, data.name, data.description,
 				 JSON.stringify(data.questions || []),
-				 data.channel_id, data.roles || [],
+				 data.channel_id, JSON.stringify(data.roles || []),
 				 data.message, data.color, data.open || true,
 				 data.cooldown, data.emoji, data.reacts ?? true, data.embed ?? true]);
 			} catch(e) {

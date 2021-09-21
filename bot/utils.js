@@ -185,7 +185,11 @@ module.exports = {
 		await resp.update({
 			components: [{
 				type: 1,
-				components: components.map(c => {c.disabled = true; return c})
+				components: components.map(c => ({
+					...c,
+					disabled: true,
+					options: choices.map(ch => ({...ch, default: resp.values.includes(ch.value)}))
+				}))
 			}]
 		});
 
