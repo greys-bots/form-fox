@@ -433,7 +433,6 @@ class ResponseHandler {
 
         var response = await this.bot.stores.openResponses.get(message.channel.id);
         if(!response) return;
-        console.log(response.message_id)
 
         var questions = response.questions?.[0] ? response.questions : response.form.questions;
         if(!questions?.[0]) {
@@ -450,7 +449,6 @@ class ResponseHandler {
 
         	var prompt = await message.channel.messages.fetch(response.message_id);
         	var embed = prompt.embeds[0];
-            console.log(embed);
 
         	if(message.content.toLowerCase() == 'cancel') {
 				embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
@@ -470,7 +468,6 @@ class ResponseHandler {
         		response.answers.push(message.content);
         		msg = await this.sendQuestion(response, message);
         	}
-            console.log(msg?.id, response.message_id);
         	await this.bot.stores.openResponses.update(message.channel.id, {
         		message_id: msg?.id ?? response.message_id,
         		selection: response.selection,

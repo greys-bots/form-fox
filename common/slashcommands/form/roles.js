@@ -30,7 +30,7 @@ opts.push({
 		if(!form) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles for that form!";
-
+		
 		return {embeds: [{
 			title: `${form.name} - Roles`,
 			description: form.roles.map(r => `<@&${r.id}>`).join("\n")
@@ -108,7 +108,7 @@ opts.push({
 		if(!form) return 'Form not found!';
 
 		if(!form.roles) form.roles = [];
-		roles = roles.filter(r => !form.roles.find(x => x.id == r)).map(r => ({id: r.id, events: ['ACCEPT']}));
+		roles = roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: ['ACCEPT']}));
 		form.roles = form.roles.concat(roles);
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});

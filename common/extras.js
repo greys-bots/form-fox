@@ -37,7 +37,6 @@ const qTypes = {
 			return {choices, other};
 		},
 		handleReactAdd: async (msg, response, question, react) => {
-			console.log(question)
 			var index = numbers.indexOf(react.emoji.name);
 			var embed = msg.embeds[0];
     		if(question.choices[index - 1]) {
@@ -120,7 +119,6 @@ const qTypes = {
 			return {choices, other};
 		},
 		handleReactAdd: async (msg, response, question, react) => {
-			console.log(question)
 			var index = numbers.indexOf(react.emoji.name);
     		var embed = msg.embeds[0];
     		if(question.choices[index - 1]) {
@@ -170,8 +168,6 @@ const qTypes = {
 			var index = parseInt(message.content);
     		var msg = await message.channel.messages.fetch(response.message_id);
     		var embed = msg.embeds[0];
-    		console.log(msg);
-    		console.log(embed);
 				
     		if(question.choices[index - 1]) {
     			if(response.selection?.includes(question.choices[index - 1])) {

@@ -218,6 +218,18 @@ class ResponsePostStore extends Collection {
                         color: parseInt('aa5555', 16),
                         timestamp: new Date().toISOString()
                     }]})
+
+                    // if(post.response.form.roles?.[0]) {
+                        // var member = msg.channel.guild.members.resolve(user.id);
+                        // try {
+                        	// var roles = post.response.form.roles
+                        		// .filter(x => x.action == "DENY")
+                        		// .map(r => r.id);
+                            // if(roles.length) await member.roles.add(roles);
+                        // } catch(e) {
+                            // msg.channel.send('Err while adding roles: '+e.message);
+                        // }
+                    // }
                     this.bot.emit('DENY', post.response);
                 } catch(e) {
                     console.log(e);
@@ -261,14 +273,17 @@ class ResponsePostStore extends Collection {
                         timestamp: new Date().toISOString()
                     }]});
 
-                    if(post.response.form.roles?.[0]) {
-                        var member = msg.channel.guild.members.resolve(user.id);
-                        try {
-                            await member.roles.add(post.response.form.roles);
-                        } catch(e) {
-                            msg.channel.send('Err while adding roles: '+e.message);
-                        }
-                    }
+                    // if(post.response.form.roles?.[0]) {
+                        // var member = msg.channel.guild.members.resolve(user.id);
+                        // try {
+                        	// var roles = post.response.form.roles
+                        		// .filter(x => x.action == "ACCEPT")
+                        		// .map(r => r.id);
+                            // if(roles.length) await member.roles.add(roles);
+                        // } catch(e) {
+                            // msg.channel.send('Err while adding roles: '+e.message);
+                        // }
+                    // }
                     this.bot.emit('ACCEPT', post.response);
                 } catch(e) {
                     console.log(e);

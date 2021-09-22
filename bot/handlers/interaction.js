@@ -1,4 +1,8 @@
 const { Collection } = require('discord.js');
+const { REST } = require('@discordjs/rest');
+const { Routes } = require('discord-api-types/v9');
+
+const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 
 class InteractionHandler {
 	menus = new Collection();
@@ -9,6 +13,12 @@ class InteractionHandler {
 		bot.on('interactionCreate', (interaction) => {
 			this.handle(interaction);
 		})
+
+		// bot.on('raw', data => {
+			// if(data.d?.type == 4) {
+				// this.handleAuto(data.d)
+			// }
+		// });
 
 		bot.once('ready', async () => {
 			await this.load(__dirname + '/../../common/slashcommands');
@@ -95,10 +105,27 @@ class InteractionHandler {
 			var dcmds = devOnly.map(d => d);
 			if(process.env.COMMAND_GUILD == process.env.DEV_GUILD) {
 				cmds = cmds.concat(dcmds);
-				await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
+				await rest.put(
+					Routes.applicationGuildCommands(this.bot.application.id, process.env.COMMAND_GUILD),
+					{ body: cmds },
+				);
 			} else {
-				await this.bot.application.commands.set(cmds, process.env.COMMAND_GUILD);
-				await this.bot.application.commands.set(dcmds, process.env.DEV_GUILD);
+				if(process.env.COMMAND_GUILD) {
+					await rest.put(
+						Routes.applicationCommands(this.bot.application.id),
+						{ body: cmds },
+					);
+				} else {
+					await rest.put(
+						Routes.applicationCommands(this.bot.application.id),
+						{ body: cmds },
+					);
+				}
+	
+				await rest.put(
+					Routes.applicationCommands(this.bot.application.id, process.env.DEV_GUILD),
+					{ body: dcmds },
+				);
 			}
 			return;
 		} catch(e) {
@@ -131,6 +158,32 @@ class InteractionHandler {
 
 		return cmd;
 	}
+
+	// tmp before lib update
+	// parseAuto(ctx) {
+		// var { data } = ctx;
+		// var ret = data;;
+		// var cmd = this.bot.slashCommands.get(data.name);
+		// if(!cmd) return {data: ret};
+		// ret = data.options;
+		// 
+		// var opt;
+		// if(ret[0]?.type == 2) {
+			// opt = ret[0];
+			// cmd = cmd.options.find(o => o.data.name == opt.name);
+			// ret = opt.options;
+			// if(!cmd) return {data: ret};
+		// }
+		// 
+		// if(ret[0]?.type == 1) {
+			// opt = ret[0];
+			// cmd = cmd.options.find(o => o.data.name == opt.name);
+			// ret = opt.options;
+			// if(!cmd) return {data: ret};
+		// }
+		//
+		// return {cmd, data: ret};
+	// }
 
 	async handleCommand(ctx) {
 		var cmd = this.parse(ctx);
@@ -235,6 +288,26 @@ class InteractionHandler {
 		var menu = this.menus.get(message.id);
 		this.paginate(menu, ctx);
 	}
+
+	// tmp before lib update
+	// async handleAuto(ctx) {
+		// var {cmd, data} = this.parseAuto(ctx);
+		// if(!cmd) return;
+		// 
+		// var result = await cmd.autocomplete({
+			// ...ctx,
+			// options: data,
+			// client: this.bot,
+			// guild: await this.bot.guilds.fetch(ctx.guild_id)
+		// });
+// 
+		// this.bot.api.interactions(ctx.id, ctx.token).callback.post({
+			// data: {
+				// type: 8,
+				// data: { choices: result }
+			// }
+		// })
+	// }
 
 	async handleSelect(ctx) {
 		var {message} = ctx;
