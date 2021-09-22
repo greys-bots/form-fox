@@ -292,7 +292,7 @@ module.exports = {
 	confirmReacts,
 	confirmVals: [['y', 'yes', '✅'], ['n', 'no', '❌']],
 	confirmBtns: [['yes', 'clear'], ['no', 'cancel']],
-	events: ['submit', 'accept', 'deny'],
+	events: ['apply', 'submit', 'accept', 'deny'],
 
 	clearBtns: [
 		{

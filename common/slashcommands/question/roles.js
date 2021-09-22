@@ -121,6 +121,7 @@ opts.push({
 		"[form] [question] [role] - Open a menu to see the available choices and attach a role to one",
 		"[form] [question] [role] [choice] - Skip the menu and attach a role to a specific chocie"
 	],
+	extra: "Roles are added when the response is accepted",
 	async execute(ctx) {
 		var f = ctx.options.getString('form')?.toLowerCase().trim();
 		var q = ctx.options.getInteger('question');

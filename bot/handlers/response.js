@@ -89,6 +89,11 @@ class ResponseHandler {
             return 'ERR! Couldn\'t start response process: '+(e.message || e);
         }
 
+        this.bot.emit('APPLY', {
+            server_id: form.server_id,
+            user_id: user.id,
+            form: form
+        })
         return 'Application started! Check your DMs!';
     }
 

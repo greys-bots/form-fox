@@ -1,5 +1,4 @@
-const { clearBtns } = require(__dirname + '/../../extras');
-
+const { events: EVENTS, clearBtns } = require(__dirname + '/../../extras');
 
 module.exports = {data: {
 	name: 'roles',
@@ -56,6 +55,16 @@ opts.push({
 				description: 'The roles you want. Use mentions here',
 				type: 3,
 				required: true
+			},
+			{
+				name: 'event',
+				description: "The event the roles should be added on",
+				type: 3,
+				required: true,
+				choices: EVENTS.map(e => ({
+					name: e,
+					value: e.toUpperCase()
+				}))
 			}
 		]
 	},
@@ -65,12 +74,15 @@ opts.push({
 	async execute(ctx) {
 		var roles = ctx.options.resolved.roles;
 		if(!roles?.size) return "Please provide valid roles!";
+		var event = ctx.options.getString('event');
 		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(roles.map(r => ({id: r.id, events: ['ACCEPT']})))});
+		roles = roles.map(r => ({id: r.id, events: [event]}));
+
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(roles)});
 		
 		return 'Form updated!';
 	},
@@ -94,6 +106,16 @@ opts.push({
 				description: "The roles to add",
 				type: 3,
 				required: true
+			},
+			{
+				name: 'event',
+				description: "The event the roles should be added on",
+				type: 3,
+				required: true,
+				choices: EVENTS.map(e => ({
+					name: e,
+					value: e.toUpperCase()
+				}))
 			}
 		]
 	},
@@ -103,12 +125,13 @@ opts.push({
 	async execute(ctx) {
 		var roles = ctx.options.resolved.roles;
 		if(!roles?.size) return "Please provide at least one valid role!";
+		var event = ctx.options.getString('event');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
 		if(!form.roles) form.roles = [];
-		roles = roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: ['ACCEPT']}));
+		roles = roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: [event]}));
 		form.roles = form.roles.concat(roles);
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
