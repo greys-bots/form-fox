@@ -112,7 +112,7 @@ class InteractionHandler {
 			} else {
 				if(process.env.COMMAND_GUILD) {
 					await rest.put(
-						Routes.applicationCommands(this.bot.application.id),
+						Routes.applicationGuildCommands(this.bot.application.id, process.env.COMMAND_GUILD),
 						{ body: cmds },
 					);
 				} else {
@@ -123,7 +123,7 @@ class InteractionHandler {
 				}
 	
 				await rest.put(
-					Routes.applicationCommands(this.bot.application.id, process.env.DEV_GUILD),
+					Routes.applicationGuildCommands(this.bot.application.id, process.env.DEV_GUILD),
 					{ body: dcmds },
 				);
 			}
