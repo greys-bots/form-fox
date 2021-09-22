@@ -16,7 +16,7 @@ module.exports = {
 				for(var form of forms) {
 					embeds.push({embed: {
 						title: `Roles for form ${form.name} (${form.hid})`,
-						description: form.roles.map(r => `<@&${r}>`).join('\n') || '*(none set)*',
+						description: form.roles.map(r => `<@&${r.id}>`).join('\n') || '*(none set)*',
 						color: parseInt('ee8833', 16)
 					}})
 				}
@@ -33,7 +33,7 @@ module.exports = {
 
 				await msg.channel.send({embeds: [{
 					title: `Roles for form ${form.name} (${form.hid})`,
-					description: form.roles.map(r => `<@&${r}>`).join('\n') || '*(none set)*',
+					description: form.roles.map(r => `<@&${r.id}>`).join('\n') || '*(none set)*',
 					color: parseInt('ee8833', 16)
 				}]})
 
@@ -45,7 +45,7 @@ module.exports = {
 					if(confirm.msg) return confirm.msg;
 
 					try {
-						await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: []});
+						await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: JSON.stringify([])});
 					} catch(e) {
 						return 'ERR! '+e;
 					}
@@ -66,8 +66,9 @@ module.exports = {
 				}).filter(x => x);
 				if(!roles[0]) return 'No valid roles given!';
 
+				roles = roles.map(r => ({id: r, events: ['ACCEPT']}));
 				try {
-					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: roles});
+					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles});
 				} catch(e) {
 					return 'ERR! '+e;
 				}
