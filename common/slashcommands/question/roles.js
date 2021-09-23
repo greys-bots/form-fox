@@ -160,13 +160,7 @@ opts.push({
 				description: "The role to detach from the question",
 				type: 8,
 				required: true
-			},
-			{
-				name: 'choice',
-				description: "The choice number to detach a role from",
-				type: 4,
-				required: false
-			}			
+			}
 		]
 	},
 	usage: [
