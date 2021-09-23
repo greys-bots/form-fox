@@ -1,3 +1,37 @@
+const TACTIONS = [
+	{
+		label: 'answer contains...',
+		value: 'contains'
+	},
+	{
+		label: 'answer is equal to...',
+		value: 'equals'
+	}
+]
+
+const NACTIONS = [
+	{
+		label: 'answer is less than...',
+		value: 'lt'
+	},
+	{
+		label: 'answer is greater than...',
+		value: 'gt'
+	},
+	{
+		label: 'answer is less than or equal to...',
+		value: 'lte'
+	},
+	{
+		label: 'answer is greater than or equal to...',
+		value: 'gte'
+	},
+	{
+		label: 'answer is equal to...',
+		value: 'eq'
+	}
+]
+
 const qTypes = {
 	'mc': {
 		description: 'allows the user to choose one option from multiple choices',
@@ -76,6 +110,56 @@ const qTypes = {
     			await message.channel.send('Invalid choice! Please select something else');
     			return undefined;
     		}
+		},
+		async roleSetup(question, role) {
+			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
+				return {label: e.slice(0, 100), value: `${i}`}
+			}), "What choice do you want to attach this to?", {
+				min_values: 1, max_values: 1,
+				placeholder: 'Select choice'
+			})
+			if(typeof choice == 'string') return choice;
+
+			var c = parseInt(choice[0]);
+			choice = question.choices[c];
+
+			if(!question.roles) question.roles = [];
+			if(!question.roles.find(rl => rl.id == role.id)) question.roles.push({choice, id: role.id});
+
+			return question;
+		},
+		async roleRemove({ctx, question, role}) {
+			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
+				return {label: e.slice(0, 100), value: `${i}`}
+			}), "What choice do you want to detach this from?", {
+				min_values: 1, max_values: 1,
+				placeholder: 'Select choice'
+			})
+			if(typeof choice == 'string') return choice;
+
+			c = parseInt(choice[0]);
+			choice = question.choices[c];
+
+			question.roles = question.roles.filter(rl => rl.choice !== choice || rl.id !== role.id);
+			return question;
+		},
+		async handleRoles(question, answers) {
+			var roles = [];
+			for(var r of question.roles) {
+				if(answers[i].split('\n').includes(r.choice))
+					roles.push(r.id);
+			}
+
+			return roles;
+		},
+		showRoles(q) {
+			return q.choices.map((c, i) => {
+				var roles = q.roles.filter(r => r.choice == c);
+				return {
+					name: c,
+					value: roles.length ? roles.map(r => `<@&${r.id}>`).join(" ") : "(none)"
+				}
+			})
 		}
 	},
 	'cb': {
@@ -202,6 +286,57 @@ const qTypes = {
     			await msg.channel.send('Invalid choice! Please select something else');
     			return undefined;
     		}
+		},
+		async roleSetup({ctx, question, role}) {
+			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
+				return {label: e.slice(0, 100), value: `${i}`}
+			}), "What choice do you want to attach this to?", {
+				min_values: 1, max_values: 1,
+				placeholder: 'Select choice'
+			})
+			if(typeof choice == 'string') return choice;
+
+			var c = parseInt(choice[0]);
+			choice = question.choices[c];
+
+			if(!question.roles) question.roles = [];
+			if(!question.roles.find(rl => rl.id == role.id))
+				question.roles.push({choice, id: role.id});
+
+			return question;
+		},
+		async roleRemove({ctx, question, role}) {
+			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
+				return {label: e.slice(0, 100), value: `${i}`}
+			}), "What choice do you want to detach this from?", {
+				min_values: 1, max_values: 1,
+				placeholder: 'Select choice'
+			})
+			if(typeof choice == 'string') return choice;
+
+			c = parseInt(choice[0]);
+			choice = question.choices[c];
+
+			question.roles = question.roles.filter(rl => rl.choice !== choice || rl.id !== role.id);
+			return question;
+		},
+		handleRoles(question, answers, index) {
+			var roles = [];
+			for(var r of question.roles) {
+				if(answers[index].split('\n').includes(r.choice))
+					roles.push(r.id);
+			}
+
+			return roles;
+		},
+		showRoles(q) {
+			return q.choices.map((c, i) => {
+				var roles = q.roles.filter(r => r.choice == c);
+				return {
+					name: c,
+					value: roles.length ? roles.map(r => `<@&${r.id}>`).join(" ") : "(none)"
+				}
+			})
 		}
 	},
 	'text': {
@@ -212,6 +347,61 @@ const qTypes = {
 			if(message.attachments.size > 0)
 				response.answers[response.answers.length - 1] += "\n\n**Attachments:**\n" + message.attachments.map(a => a.url).join("\n");
 			return {response, send: true};
+		},
+		async roleSetup({ctx, question, role}) {
+			if(question.roles?.find(rl => rl.id == role.id))
+				return "Role already attached to question!";
+				
+			var action = await ctx.client.utils.awaitSelection(ctx, TACTIONS.map((e, i) => {
+				return e;
+			}), "How do you want to compare the answer?", {
+				min_values: 1, max_values: 1,
+				placeholder: 'Select comparison'
+			})
+			if(typeof choice == 'string') return choice;
+
+			await ctx.followUp("Enter the value you want to compare the answer to");
+			var val = await ctx.client.utils.awaitMessage(ctx.client, ctx, ctx.user, 60000);
+			if(typeof val == 'string') return val;
+			val = val.content;
+
+			if(!question.roles) question.roles = [];
+			question.roles.push({
+				id: role.id,
+				action: action[0],
+				value: val
+			})
+
+			return question;
+		},
+		async roleRemove({ctx, question, role}) {
+			question.roles = question.roles.filter(r => r.id !== role.id);
+			return question;
+		},
+		handleRoles(question, answers, index) {
+			var roles = [];
+			for(var r of question.roles) {
+				switch(r.action) {
+					case 'contains':
+						if(answers[index].toLowerCase().includes(r.value.toLowerCase()))
+							roles.push(r.id);
+						break;
+					case 'equals':
+						if(answers[index].toLowerCase() == r.value.toLowerCase())
+							roles.push(r.id);
+						break;
+				}
+			}
+
+			return roles;
+		},
+		showRoles(q) {
+			return q.roles.map(r => {
+				return {
+					name: `${r.action} | ${r.value.slice(0, 50)}`,
+					value: `<@&${r.id}>`
+				}
+			})
 		}
 	},
 	'num': {
@@ -224,6 +414,77 @@ const qTypes = {
 
 			response.answers.push(message.content);
 			return {response, send: true};
+		},
+		async roleSetup({ctx, question, role}) {
+			if(question.roles?.find(rl => rl.id == role.id))
+				return "Role already attached to question!";
+				
+			var action = await ctx.client.utils.awaitSelection(ctx, NACTIONS.map((e, i) => {
+				return e;
+			}), "How do you want to compare the answer?", {
+				min_values: 1, max_values: 1,
+				placeholder: 'Select comparison'
+			})
+			if(typeof choice == 'string') return choice;
+
+			await ctx.followUp("Enter the value you want to compare the answer to");
+			var val = await ctx.client.utils.awaitMessage(ctx.client, ctx, ctx.user, 60000);
+			if(typeof val == 'string') return val;
+			val = parseInt(val.content);
+			if(isNaN(val)) return "Valid number needed!";
+
+			if(!question.roles) question.roles = [];
+			question.roles.push({
+				id: role.id,
+				action: action[0],
+				value: val
+			})
+
+			return question;
+		},
+		async roleRemove({ctx, question, role}) {
+			question.roles = question.roles.filter(r => r.id !== role.id);
+			return question;
+		},
+		handleRoles(question, answers, index) {
+			var roles = [];
+			var int = parseInt(answers[index]);
+			if(isNaN(int)) return roles;
+			
+			for(var r of question.roles) {
+				switch(r.action) {
+					case 'lt':
+						if(int < r.value)
+							roles.push(r.id);
+						break;
+					case 'lte':
+						if(int <= r.value)
+							roles.push(r.id);
+						break;
+					case 'gt':
+						if(int > r.value)
+							roles.push(r.id);
+						break;
+					case 'gte':
+						if(int >= r.value)
+							roles.push(r.id);
+						break;
+					case 'eq':
+						if(int == r.value)
+							roles.push(r.id);
+						break;
+				}
+			}
+
+			return roles;
+		},
+		showRoles(q) {
+			return q.roles.map(r => {
+				return {
+					name: `${r.action} | ${r.value}`,
+					value: `<@&${r.id}>`
+				}
+			})
 		}
 	},
 	'dt': {
@@ -273,6 +534,7 @@ const qTypes = {
 	},
 	// {type: 'fm', description: 'requires the user to enter text following a specific format', alias: ['format', 'formatted', 'fm', 'custom']}
 }
+
 const options = [
 	{val: 'name', desc: 'copy name for this form', alias: ['n', 'name']},
 	{val: 'description', desc: 'copy description for this form', alias: ['d', 'desc', 'description']},
@@ -287,6 +549,8 @@ const confirmReacts = ['✅','❌'];
 
 module.exports = {
 	qTypes,
+	TACTIONS,
+	NACTIONS,
 	options,
 	numbers,
 	confirmReacts,

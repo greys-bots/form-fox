@@ -1,4 +1,4 @@
-const { clearBtns } = require('../../extras');
+const { clearBtns, qTypes: TYPES } = require('../../extras');
 
 module.exports = {
 	data: {
@@ -40,14 +40,13 @@ opts.push({
 
 		var form = await ctx.client.stores.forms.get(ctx.guild.id, f);
 		if(!form) return 'Form not found!';
-
+		
 		if(q === 0) q = 1;
 		if(q > form.questions.length) q = form.questions.length;
-		console.log(form.questions[3].roles);
-
+		
 		var questions = form.questions;
 		if(q !== null) questions = [form.questions[q - 1]];
-		questions = questions.filter(qu => qu?.choices?.length);
+		questions = questions.filter(qu => qu?.roles?.length);
 		if(!questions.length) return "No valid questions supplied!";
 
 		var embeds = [];
@@ -67,13 +66,7 @@ opts.push({
 			embeds.push({
 				title: "Roles on form "+form.hid,
 				description: "Question: "+qu.value,
-				fields: qu.choices.map((c, i) => {
-					var roles = qu.roles.filter(r => r.choice == c);
-					return {
-						name: c,
-						value: roles.length ? roles.map(r => `<@&${r.id}>`).join(" ") : "(none)"
-					}
-				})
+				fields: TYPES[qu.type].showRoles(qu)
 			})
 		}
 
@@ -108,13 +101,7 @@ opts.push({
 				description: "The role to attach to the question",
 				type: 8,
 				required: true
-			},
-			{
-				name: 'choice',
-				description: "The choice number to attach a role to",
-				type: 4,
-				required: false
-			}			
+			}
 		]
 	},
 	usage: [
@@ -134,29 +121,15 @@ opts.push({
 		if(q === 0) q = 1;
 		if(q > form.questions.length) q = form.questions.length;
 		var question = form.questions[q - 1];
-		if(!question.choices?.length)
-			return "Invalid question! You can only attach roles to multiple choice and checkbox questions";
+		if(!TYPES[question.type].roleSetup)
+			return "Invalid question! You can only attach roles to certain question types";
 
-		var choice;
-		if(c == null) {
-			choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
-				return {label: e.slice(0, 100), value: `${i}`}
-			}), "What choice do you want to attach this to?", {
-				min_values: 1, max_values: 1,
-				placeholder: 'Select choice'
-			})
-			if(typeof choice == 'string') return choice;
-
-			c = parseInt(choice[0]);
-			choice = question.choices[c];
-		} else {
-			if(c == 0) c = 1;
-			else if(c > question.choices.length) c = question.choices.length;
-			choice = question.choices[c - 1];
-		}
-
-		if(!question.roles) question.roles = [];
-		if(!question.roles.find(rl => rl.id == r.id)) question.roles.push({choice, id: r.id});
+		question = await TYPES[question.type].roleSetup({
+			ctx,
+			question,
+			role: r
+		});
+		if(typeof question == 'string') return question;
 		form.questions[q - 1] = question;
 
 		await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {questions: form.questions});
@@ -212,30 +185,16 @@ opts.push({
 		if(q === 0) q = 1;
 		if(q > form.questions.length) q = form.questions.length;
 		var question = form.questions[q - 1];
-		if(!question.choices?.length)
-			return "Invalid question! You can only attach roles to multiple choice and checkbox questions";
+		if(!TYPES[question.type].roleSetup)
+			return "Invalid question! You can only attach roles to certain question types";
 		if(!question.roles?.length) return "Nothing attached to that question!";
 
-		var choice;
-		if(c == null) {
-			choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
-				return {label: e.slice(0, 100), value: `${i}`}
-			}), "What choice do you want to detach this from?", {
-				min_values: 1, max_values: 1,
-				placeholder: 'Select choice'
-			})
-			if(typeof choice == 'string') return choice;
-
-			c = parseInt(choice[0]);
-			choice = question.choices[c];
-		} else {
-			if(c == 0) c = 1;
-			else if(c > question.choices.length) c = question.choices.length;
-			choice = question.choices[c - 1];
-		}
-
-		if(choice) question.roles = question.roles.filter(rl => rl.choice !== choice || rl.id !== r.id);
-		else question.roles = question.roles.filter(rl => rl.id !== r.id);
+		question = await TYPES[question.type].roleRemove({
+			ctx,
+			question,
+			role: r
+		})
+		if(typeof question == 'string') return question;
 		form.questions[q - 1] = question;
 
 		await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {questions: form.questions});

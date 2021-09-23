@@ -1,4 +1,7 @@
-const EVENTS = require(__dirname + '/../../common/extras.js').events;
+const {
+	events: EVENTS,
+	qTypes: TYPES
+} = require(__dirname + '/../../common/extras.js');
 
 class RoleHandler {
 	constructor(bot) {
@@ -28,10 +31,8 @@ class RoleHandler {
 				var q = form.questions[i];
 				if(!q.roles?.length) continue;
 
-				for(var r of q.roles) {
-					if(ans[i].split('\n').includes(r.choice))
-						roles.push(r.id);
-				}
+				var rls = TYPES[q.type].handleRoles(q, ans, i);
+				roles = roles.concat(rls);
 			}
 		}
 

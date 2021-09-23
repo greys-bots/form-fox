@@ -125,6 +125,7 @@ module.exports = {
 			const timeout = setTimeout(async () => {
 				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
+				bot.removeListener('interactionCreate', intListener)
 				res({confirmed: false, msg: 'ERR! Timed out!'})
 			}, 30000);
 
@@ -133,15 +134,21 @@ module.exports = {
 			bot.on('interactionCreate', intListener)
 		})
 	},
-	awaitMessage: async (bot, msg, user) => {
+	awaitMessage: async (bot, msg, user, time) => {
 		return new Promise(res => {
 			function msgListener(message) {
 				if(message.channel.id != msg.channel.id ||
 				   message.author.id != user.id) return;
 
 				bot.removeListener('messageCreate', msgListener);
+				clearTimeout(timeout);
 				return res(message)
 			}
+
+			const timeout = setTimeout(async () => {
+				bot.removeListener('messageCreate', msgListener);
+				res('ERR! Timed out!')
+			}, time ?? 30000);
 
 			bot.on('messageCreate', msgListener);
 		})
