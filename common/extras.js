@@ -143,10 +143,10 @@ const qTypes = {
 			question.roles = question.roles.filter(rl => rl.choice !== choice || rl.id !== role.id);
 			return question;
 		},
-		async handleRoles(question, answers) {
+		handleRoles(question, answers, index) {
 			var roles = [];
 			for(var r of question.roles) {
-				if(answers[i].split('\n').includes(r.choice))
+				if(answers[index].split('\n').includes(r.choice))
 					roles.push(r.id);
 			}
 
