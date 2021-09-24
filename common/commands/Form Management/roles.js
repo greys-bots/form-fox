@@ -68,7 +68,7 @@ module.exports = {
 
 				roles = roles.map(r => ({id: r, events: ['ACCEPT']}));
 				try {
-					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles});
+					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: JSON.stringify(roles)});
 				} catch(e) {
 					return 'ERR! '+e;
 				}
