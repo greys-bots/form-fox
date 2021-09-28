@@ -7,7 +7,8 @@ module.exports = {
 				name: 'channel',
 				description: 'The channel to set',
 				type: 7,
-				required: true
+				required: true,
+				channel_types: [0, 5, 10, 11, 12]
 			},
 			{
 				name: 'form_id',

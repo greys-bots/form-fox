@@ -13,7 +13,8 @@ module.exports = {
 				name: 'channel',
 				description: 'The channel to post in',
 				type: 7,
-				required: true
+				required: true,
+				channel_types: [0, 5, 10, 11, 12]
 			}
 		]
 	},

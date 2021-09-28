@@ -19,7 +19,8 @@ module.exports = {
 				name: 'channel',
 				description: "The channel the message belongs to. Defaults to the command channel",
 				type: 7,
-				required: false
+				required: false,
+				channel_types: [0, 5, 10, 11, 12]
 			}
 		]
 	},

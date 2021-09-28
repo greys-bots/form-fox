@@ -18,7 +18,7 @@
     "axios": "^0.21.0",
     "cookie-parser": "^1.4.5",
     "discord-api-types": "^0.21.0",
-    "discord.js": "^13.1.0-dev.1628683680.75b48d8",
+    "discord.js": "^13.2.0-dev.1632830601.3b14883",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
