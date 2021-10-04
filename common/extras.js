@@ -223,6 +223,10 @@ const qTypes = {
                 response.selection.push('OTHER')
                 return {response, send: false, menu: true};
     		} else if(react.emoji.name == '✏️') {
+    			if(!response.selection?.length) {
+    				await msg.channel.send("Please select something!");
+    				return {response, send: false};
+    			}
     			response.answers.push(response.selection.join("\n"));
     			return {response, send: true};
     		} else {

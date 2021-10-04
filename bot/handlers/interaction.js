@@ -14,12 +14,6 @@ class InteractionHandler {
 			this.handle(interaction);
 		})
 
-		// bot.on('raw', data => {
-			// if(data.d?.type == 4) {
-				// this.handleAuto(data.d)
-			// }
-		// });
-
 		bot.once('ready', async () => {
 			await this.load(__dirname + '/../../common/slashcommands');
 			console.log('slash commands loaded!')
@@ -295,17 +289,17 @@ class InteractionHandler {
 		// if(!cmd) return;
 		// 
 		// var result = await cmd.autocomplete({
-			// ...ctx,
-			// options: data,
-			// client: this.bot,
-			// guild: await this.bot.guilds.fetch(ctx.guild_id)
+		// 	...ctx,
+		// 	options: data,
+		// 	client: this.bot,
+		// 	guild: await this.bot.guilds.fetch(ctx.guild_id)
 		// });
-// 
+		 
 		// this.bot.api.interactions(ctx.id, ctx.token).callback.post({
-			// data: {
-				// type: 8,
-				// data: { choices: result }
-			// }
+		// 	data: {
+		// 		type: 8,
+		// 		data: { choices: result }
+		// 	}
 		// })
 	// }
 

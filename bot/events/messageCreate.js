@@ -31,26 +31,6 @@ module.exports = async (msg, bot)=>{
 		bot.writeLog(log.join('\r\n'));
 		return await msg.channel.send("Command not found!");
 	}
-
-	// if(msg.channel.guild) {
-		// var usages = {whitelist: [], blacklist: []};
-		// usages = await bot.stores.usages.get(msg.channel.guild.id);
-	// }
-
-	// if(usages && !msg.member.permissions.has('MANAGE_MESSAGES')) {
-	// 	switch(usages.type) {
-	// 		case 1:
-	// 			if(!usages.whitelist.includes(msg.author.id) &&
-	// 			   !usages.whitelist.find(x => msg.member.roles.cache.has(x)))
-	// 				return await msg.channel.send("You have not been whitelisted to use this bot!");
-	// 			break;
-	// 		case 2:
-	// 			if(usages.blacklist.includes(msg.author.id) ||
-	// 			   usages.blacklist.find(x => msg.member.roles.cache.has(x)))
-	// 				return await msg.channel.send("You have been blacklisted from using this bot!");
-	// 			break;
-	// 	}
-	// }
 	
 	try {
 		var result = await bot.handlers.command.handle({command, args, msg, config});
