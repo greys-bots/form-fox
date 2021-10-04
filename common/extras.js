@@ -284,6 +284,10 @@ const qTypes = {
                 
 				return {response, menu: true}
     		} else if(message.content.toLowerCase() == "select") {
+    			if(!response.selection?.length) {
+    				await msg.channel.send("Please select something!");
+    				return {response, send: false};
+    			}
     			response.answers.push(response.selection.join("\n"));
     			return {response, send: true};
     		} else {
