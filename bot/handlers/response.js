@@ -471,6 +471,7 @@ class ResponseHandler {
 
         	if(question.type == 'mc') {
         		response.answers.push(message.content);
+        		response.selection = [];
         		msg = await this.sendQuestion(response, message);
         	}
         	await this.bot.stores.openResponses.update(message.channel.id, {

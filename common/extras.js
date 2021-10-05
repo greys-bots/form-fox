@@ -228,6 +228,7 @@ const qTypes = {
     				return {response, send: false};
     			}
     			response.answers.push(response.selection.join("\n"));
+    			response.selection = [];
     			return {response, send: true};
     		} else {
     			await msg.channel.send('Invalid choice! Please select something else');
@@ -289,6 +290,7 @@ const qTypes = {
     				return {response, send: false};
     			}
     			response.answers.push(response.selection.join("\n"));
+       			response.selection = [];
     			return {response, send: true};
     		} else {
     			await msg.channel.send('Invalid choice! Please select something else');
