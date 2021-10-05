@@ -111,7 +111,7 @@ const qTypes = {
     			return undefined;
     		}
 		},
-		async roleSetup(question, role) {
+		async roleSetup({ctx, question, role}) {
 			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
 				return {label: e.slice(0, 100), value: `${i}`}
 			}), "What choice do you want to attach this to?", {
