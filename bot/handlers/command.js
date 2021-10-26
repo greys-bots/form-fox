@@ -57,9 +57,9 @@ class CommandHandler {
 	}
 
 	async parse(str) {
-		var args = str.split(" ");
+		var args = str.trim().split(" ");
 
-		if(!args[0]) return undefined;
+		if(!args[0]) return {};
 	
 		var command = this.bot.commands.get(this.bot.aliases.get(args[0].toLowerCase()));
 		if(!command) return {command, args};

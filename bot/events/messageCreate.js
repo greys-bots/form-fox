@@ -9,7 +9,7 @@ const WELCOMES = [
 module.exports = async (msg, bot)=>{
 	if(msg.author.bot) return;
 	var config = await bot.stores.configs.get(msg.channel.guild?.id);
-	var prefix = config?.prefix ? config.prefix : bot.prefix;
+	var prefix = (config?.prefix ? config.prefix : bot.prefix).toLowerCase();
 	if(!msg.content.toLowerCase().startsWith(prefix)) {
 		var thanks = msg.content.match(/^(thanks? ?(you|u)?|ty),? ?(form )?fox/i);
 		if(thanks) return await msg.channel.send(WELCOMES[Math.floor(Math.random() * WELCOMES.length)]);
@@ -24,7 +24,9 @@ module.exports = async (msg, bot)=>{
 		`--------------------`
 	];
 
-	let {command, args} = await bot.handlers.command.parse(msg.content.replace(prefix, ""));
+	var content = msg.content.slice(prefix.length);
+	console.log(content)
+	let {command, args} = await bot.handlers.command.parse(content);
 	if(!command) {
 		log.push('- Command not found -');
 		console.log(log.join('\r\n'));
