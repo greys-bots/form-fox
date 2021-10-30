@@ -17,7 +17,8 @@ opts.push({
 			name: 'form_id',
 			description: "The form's ID",
 			type: 3,
-			required: true
+			required: true,
+			autocomplete: true
 		}]
 	},
 	usage: [
@@ -35,6 +36,23 @@ opts.push({
 			description: form.roles.map(r => `<@&${r.id}>`).join("\n")
 		}]}
 	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
+	},
 	ephemeral: true
 })
 
@@ -48,7 +66,8 @@ opts.push({
 				name: 'form_id',
 				description: "The form's ID",
 				type: 3,
-				required: true
+				required: true,
+				autocomplete: true
 			},
 			{
 				name: 'roles',
@@ -86,6 +105,23 @@ opts.push({
 		
 		return 'Form updated!';
 	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
+	},
 	guildOnly: true
 })
 
@@ -99,7 +135,8 @@ opts.push({
 				name: 'form_id',
 				description: "The form's ID",
 				type: 3,
-				required: true
+				required: true,
+				autocomplete: true
 			},
 			{
 				name: 'roles',
@@ -136,7 +173,24 @@ opts.push({
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
 		return "Form updated!";
-	}
+	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
+	},
 })
 
 opts.push({
@@ -149,7 +203,8 @@ opts.push({
 				name: 'form_id',
 				description: "The form's ID",
 				type: 3,
-				required: true
+				required: true,
+				autocomplete: true
 			}, {
 				name: 'roles',
 				description: "The roles to remove",
@@ -175,7 +230,25 @@ opts.push({
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
 		return "Form updated!";
-	}
+	},
+	
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
+	},
 })
 
 opts.push({
@@ -187,7 +260,8 @@ opts.push({
 			name: 'form_id',
 			description: "The form's ID",
 			type: 3,
-			required: true
+			required: true,
+			autocomplete: true
 		}]
 	},
 	usage: [
@@ -241,5 +315,23 @@ opts.push({
 			})
 		}
 		return;
-	}
+	},
+	
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
+	},
 })

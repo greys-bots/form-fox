@@ -8,7 +8,8 @@ module.exports = {
 			name: 'form_id',
 			description: "The form's ID",
 			type: 3,
-			required: true
+			required: true,
+			autocomplete: true
 		}]
 	},
 	usage: [
@@ -33,6 +34,23 @@ module.exports = {
 		})
 
 		return embeds.map(e => e.embed);
+	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
 	},
 	ephemeral: true,
 	guildOnly: true,

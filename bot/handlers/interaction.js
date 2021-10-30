@@ -129,6 +129,7 @@ class InteractionHandler {
 	}
 
 	async handle(ctx) {
+		if(ctx.isAutocomplete()) this.handleAuto(ctx);
 		if(ctx.isCommand() || ctx.isContextMenu()) this.handleCommand(ctx);
 		if(ctx.isButton()) this.handleButtons(ctx);
 		if(ctx.isSelectMenu()) this.handleSelect(ctx);
@@ -152,32 +153,6 @@ class InteractionHandler {
 
 		return cmd;
 	}
-
-	// tmp before lib update
-	// parseAuto(ctx) {
-		// var { data } = ctx;
-		// var ret = data;;
-		// var cmd = this.bot.slashCommands.get(data.name);
-		// if(!cmd) return {data: ret};
-		// ret = data.options;
-		// 
-		// var opt;
-		// if(ret[0]?.type == 2) {
-			// opt = ret[0];
-			// cmd = cmd.options.find(o => o.data.name == opt.name);
-			// ret = opt.options;
-			// if(!cmd) return {data: ret};
-		// }
-		// 
-		// if(ret[0]?.type == 1) {
-			// opt = ret[0];
-			// cmd = cmd.options.find(o => o.data.name == opt.name);
-			// ret = opt.options;
-			// if(!cmd) return {data: ret};
-		// }
-		//
-		// return {cmd, data: ret};
-	// }
 
 	async handleCommand(ctx) {
 		var cmd = this.parse(ctx);
@@ -283,25 +258,13 @@ class InteractionHandler {
 		this.paginate(menu, ctx);
 	}
 
-	// tmp before lib update
-	// async handleAuto(ctx) {
-		// var {cmd, data} = this.parseAuto(ctx);
-		// if(!cmd) return;
-		// 
-		// var result = await cmd.autocomplete({
-		// 	...ctx,
-		// 	options: data,
-		// 	client: this.bot,
-		// 	guild: await this.bot.guilds.fetch(ctx.guild_id)
-		// });
-		 
-		// this.bot.api.interactions(ctx.id, ctx.token).callback.post({
-		// 	data: {
-		// 		type: 8,
-		// 		data: { choices: result }
-		// 	}
-		// })
-	// }
+	async handleAuto(ctx) {
+		var cmd = this.parse(ctx);
+		if(!cmd) return;
+
+		var result = await cmd.auto(ctx);
+		return await ctx.respond(result ?? []);
+	}
 
 	async handleSelect(ctx) {
 		var {message} = ctx;

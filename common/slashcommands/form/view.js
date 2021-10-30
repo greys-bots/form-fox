@@ -7,7 +7,8 @@ module.exports = {
 				name: "form_id",
 				description: "The form's ID",
 				type: 3,
-				required: false
+				required: false,
+				autocomplete: true
 			}
 		]
 	},
@@ -15,7 +16,7 @@ module.exports = {
 		"- View all forms",
 		"[form_id] - View a specific form"
 	],
-	execute: async (ctx) => {
+	async execute(ctx) {
 		var arg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		if(!arg) {
 			var forms = await ctx.client.stores.forms.getAll(ctx.guildId);
@@ -44,7 +45,7 @@ module.exports = {
 
 		var form = await ctx.client.stores.forms.get(ctx.guildId, arg);
 		if(!form) return 'Form not found!';
-
+		
 		var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, form.hid);
 		return {embeds: [{
 			title: `${form.name} (${form.hid}) ` +
@@ -54,10 +55,27 @@ module.exports = {
 				{name: "Message", value: form.message || "*(not set)*"},
 				{name: "Channel", value: form.channel_id ? `<#${form.channel_id}>` : '*(not set)*'},
 				{name: "Response count", value: responses?.length.toString() || "0"},
-				{name: "Roles", value: form.roles?.[0]? form.roles.map(r => `<@&${r}>`).join("\n") : "*(not set)*"}
+				{name: "Roles", value: form.roles?.[0] ? form.roles.map(r => `<@&${r.id}>`).join("\n") : "*(not set)*"}
 			],
 			color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16)
 		}]}
+	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
 	},
 	ephemeral: true
 }

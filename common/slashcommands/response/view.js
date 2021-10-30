@@ -13,7 +13,8 @@ module.exports = {
 				name: 'form_id',
 				description: "The form's ID",
 				type: 3,
-				required: false
+				required: false,
+				autocomplete: true
 			},
 			{
 				name: 'status_filter',
@@ -98,6 +99,23 @@ module.exports = {
 				embeds[i].title += ` (${i +1}/${embeds.length})`;
 
 		return embeds;
+	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
 	},
 	ephemeral: true
 }

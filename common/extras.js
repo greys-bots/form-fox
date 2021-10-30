@@ -599,5 +599,14 @@ module.exports = {
 			custom_id: 'no',
 			emoji: { name: '❌'}
 		}
-	]
+	],
+	requiredPerms: [
+		'ADD_REACTIONS',
+		'MANAGE_MESSAGES',
+		'EMBED_LINKS',
+		'ATTACH_FILES',
+		'READ_MESSAGE_HISTORY',
+		'VIEW_CHANNEL',
+		'SEND_MESSAGES'
+	],
 }
