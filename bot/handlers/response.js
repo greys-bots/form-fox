@@ -150,16 +150,12 @@ class ResponseHandler {
                 "You're not done with this form yet!",
                 "Would you like to skip the rest of the questions?"
             ].join("\n"));
-        } else {
-            var msg = await message.channel.send([
-                "Are you sure you're ready to submit this form?"
-            ].join('\n'));
+
+            ['✅','❌'].forEach(r => msg.react(r));
+
+	        var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
+	        if(confirm.msg) return Promise.resolve(confirm.msg);
         }
-
-        ['✅','❌'].forEach(r => msg.react(r));
-
-        var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
-        if(confirm.msg) return Promise.resolve(confirm.msg);
 
         await prompt.edit({embeds: [{
             title: response.form.name,
