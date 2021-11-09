@@ -174,6 +174,9 @@ class ResponsePostStore extends Collection {
         else msg = reaction.message;
         if(!msg.channel.guild) return;
 
+        var mem = await msg.guild.members.fetch(user.id);
+        if(!mem.permissions.has('MANAGE_MESSAGES')) return;
+
         var post = await this.get(msg.channel.guild.id, msg.channel.id, msg.id);
         if(!post) return;
 

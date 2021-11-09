@@ -54,11 +54,11 @@ module.exports = {
 			?.find(p => p.form.emoji == form.emoji);
 		if(post) return 'Form with that emoji already bound to that message!';
 
-		msg.react(form.emoji || '📝');
 		await ctx.client.stores.formPosts.create(ctx.guildId, channel.id, msg.id, {
 			form: form.hid,
 			bound: true
 		});
+		msg.react(form.emoji || '📝');
 
 		return 'Bound!'
 	},

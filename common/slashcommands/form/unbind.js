@@ -51,7 +51,7 @@ module.exports = {
 		if(!post) return "That form isn't bound to that post!";
 
 		var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(form.emoji || '📝'));
-		react.remove();
+		if(react) react.remove();
 
 		await ctx.client.stores.formPosts.delete(ctx.guildId, channel.id, msg.id);
 		return 'Unbound!'

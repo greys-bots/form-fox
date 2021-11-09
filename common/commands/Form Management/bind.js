@@ -18,11 +18,11 @@ module.exports = {
 				   ?.find(p => p.form.emoji == form.emoji);
 			if(post) return 'Form with that emoji already bound to that message!';
 
-			message.react(form.emoji || '📝');
 			await bot.stores.formPosts.create(msg.channel.guild.id, channel.id, message.id, {
 				form: form.hid,
 				bound: true
 			});
+			message.react(form.emoji || '📝');
 		} catch(e) {
 			return 'ERR! '+(e.message || e);
 		}

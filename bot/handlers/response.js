@@ -175,7 +175,7 @@ class ResponseHandler {
             description: [
                 `Form name: ${response.form.name}`,
                 `Form ID: ${response.form.hid}`,
-                `User: ${user}`
+                `User: ${user.username}#${user.discriminator} (${user})`
             ].join('\n'),
             color: parseInt('ccaa00', 16),
             fields: [],
@@ -219,10 +219,10 @@ class ResponseHandler {
         }
 
         await this.bot.stores.openResponses.delete(response.channel_id);
-        return Promise.resolve([
-            'Response sent! Response ID: '+code,
-            'Use this code to make sure your response has been received'
-        ].join('\n'))
+        return (
+            'Response sent! Response ID: '+code +
+            '\nUse this code to make sure your response has been received'
+        )
     }
 
     async cancelResponse(response, message, user, config) {

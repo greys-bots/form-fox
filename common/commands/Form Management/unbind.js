@@ -15,7 +15,7 @@ module.exports = {
 			if(!post) return 'Form not bound to that message!';
 			var react = message.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(form.emoji || '📝'));
 
-			react.remove();
+			if(react) react.remove();
 			await bot.stores.formPosts.delete(msg.channel.guild.id, channel.id, message.id);
 		} catch(e) {
 			return 'ERR! '+(e.message || e);
