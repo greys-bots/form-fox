@@ -117,12 +117,7 @@ class ResponseHandler {
         	var content = {content: "How's this look?", embeds: [{
                 title: response.form.name,
                 description: response.form.description,
-                fields: questions.map((q, i) => {
-                    return {
-                        name: q.value,
-                        value: response.answers[i] || '*(answer skipped!)*'
-                    }
-                }),
+                fields: [],
                 color: parseInt(response.form.color || 'ee8833', 16),
                 footer: {text: [
                     'react with ✅ to finish; ',
@@ -130,6 +125,23 @@ class ResponseHandler {
                     'respective keywords: submit, cancel'
                 ].join(' ')}
             }]};
+
+            for(var i = 0; i < questions.length; i++) {
+           		if(response.answers[i]?.length < 1024) {
+           			content.embeds[0].fields.push({
+                        name: questions[i].value,
+                        value: response.answers[i] || '*(answer skipped!)*'
+                    })
+           		} else {
+           			var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
+           			for(var j = 0; j < chunks.length; j++ ) {
+           				content.embeds[0].fields.push({
+	                        name: questions[i].value + (j > 0 ? ' (cont.)' : ''),
+	                        value: chunks[j]
+	                    })
+           			}
+           		}
+            }
 
             var msg = await message.channel.send(content);
             ['✅','❌'].forEach(r => msg.react(r));
@@ -157,18 +169,35 @@ class ResponseHandler {
 	        if(confirm.msg) return Promise.resolve(confirm.msg);
         }
 
-        await prompt.edit({embeds: [{
+        var fields = [];
+
+        var content = {embeds: [{
             title: response.form.name,
             description: response.form.description,
-            fields: questions.map((q, i) => {
-                return {
-                    name: q.value,
-                    value: response.answers[i] || '*(answer skipped!)*'
-                }
-            }),
+            fields: [],
             color: parseInt(response.form.color || 'ee8833', 16),
             footer: {text: 'Awaiting acceptance/denial...'}
-        }]});
+        }]}
+
+        for(var i = 0; i < questions.length; i++) {
+       		if(response.answers[i]?.length < 1024) {
+       			fields.push({
+                    name: questions[i].value,
+                    value: response.answers[i] || '*(answer skipped!)*'
+                })
+       		} else {
+       			var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
+       			for(var j = 0; j < chunks.length; j++ ) {
+       				fields.push({
+	                     name: questions[i].value + (j > 0 ? ' (cont.)' : ''),
+	                     value: chunks[j]
+	                 })
+       			}
+       		}
+        }
+
+		content.embeds[0].fields = fields;
+        await prompt.edit(content);
 
         var respembed =  {
             title: "Response received!",
@@ -178,17 +207,10 @@ class ResponseHandler {
                 `User: ${user.username}#${user.discriminator} (${user})`
             ].join('\n'),
             color: parseInt('ccaa00', 16),
-            fields: [],
+            fields,
             timestamp: new Date().toISOString(),
             footer: {text: 'Awaiting acceptance/denial...'}
         };
-
-        for(var i = 0; i < questions.length; i++) {
-            respembed.fields.push({
-                name: questions[i].value,
-                value: response.answers[i] || "*(answer skipped!)*"
-            })
-        }
 
         try {
             var code = this.bot.utils.genCode(this.bot.chars);
