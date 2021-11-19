@@ -14,7 +14,8 @@ module.exports = {
 				name: 'form_id',
 				description: "ID of a form to change",
 				type: 3,
-				required: false
+				required: false,
+				autocomplete: true
 			}
 		]
 	},
@@ -35,9 +36,27 @@ module.exports = {
 		}
 
 		var cfg = await ctx.client.stores.configs.get(ctx.guildId);
-		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {channel: channel.id});
-		else await ctx.client.stores.configs.update(ctx.guildId, {channel: channel.id});
+		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {response_channel: chan.id});
+		else await ctx.client.stores.configs.update(ctx.guildId, {response_channel: chan.id});
 		
 		return "Config updated!";
-	}
+	},
+	async auto(ctx) {
+		var foc = ctx.options.getFocused();
+		if(!foc) return;
+		foc = foc.toLowerCase()
+
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return [];
+
+		return forms.filter(f =>
+			f.hid.includes(foc) ||
+			f.name.toLowerCase().includes(foc) ||
+			f.description.toLowerCase().includes(foc)
+		).map(f => ({
+			name: f.name,
+			value: f.hid
+		}))
+	},
+	guildOnly: true
 }

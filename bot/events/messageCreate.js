@@ -25,7 +25,6 @@ module.exports = async (msg, bot)=>{
 	];
 
 	var content = msg.content.slice(prefix.length);
-	console.log(content)
 	let {command, args} = await bot.handlers.command.parse(content);
 	if(!command) {
 		log.push('- Command not found -');

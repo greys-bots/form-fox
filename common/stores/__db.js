@@ -16,21 +16,22 @@ module.exports = async (bot) => {
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (
-			id 			SERIAL PRIMARY KEY,
-			server_id	TEXT,
-			hid 		TEXT UNIQUE,
-			name 		TEXT,
-			description TEXT,
-			questions 	JSONB,
-			channel_id 	TEXT,
-			roles 		JSONB,
-			message 	TEXT,
-			color 		TEXT,
-			open 		BOOLEAN,
-			cooldown 	INTEGER,
-			emoji 		TEXT,
-			reacts 		BOOLEAN,
-			embed 		BOOLEAN
+			id 				SERIAL PRIMARY KEY,
+			server_id		TEXT,
+			hid 			TEXT UNIQUE,
+			name 			TEXT,
+			description 	TEXT,
+			questions 		JSONB,
+			channel_id 		TEXT,
+			roles 			JSONB,
+			message 		TEXT,
+			color 			TEXT,
+			open 			BOOLEAN,
+			cooldown 		INTEGER,
+			emoji 			TEXT,
+			reacts 			BOOLEAN,
+			embed 			BOOLEAN,
+			apply_channel 	TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS extras (
@@ -105,7 +106,15 @@ module.exports = async (bot) => {
 		for(var i = version + 1; i < files.length; i++) {
 			if(!files[i]) continue;
 			var migration = require(`${__dirname}/migrations/${files[i]}`);
-			await migration(bot, db);
+			try {
+				await migration(bot, db);
+			} catch(e) {
+				console.log(e);
+				process.exit(1);
+			}
+
+			if(version == -1) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
+			else await db.query(`UPDATE extras SET val = $1 WHERE key = 'version'`, [i]);
 		}
 	}
 

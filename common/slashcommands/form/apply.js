@@ -18,6 +18,9 @@ module.exports = {
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
 
+		if(form.apply_channel && form.apply_channel != ctx.channel.id)
+			return `This isn't the right channel for that form! Please apply in <#${form.apply_channel}>`;
+
 		var cfg = await ctx.client.stores.configs.get(ctx.guildId);
 
 		var resp = await ctx.client.handlers.response.startResponse({

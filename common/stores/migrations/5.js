@@ -17,8 +17,5 @@ module.exports = async (bot, db) => {
 		await db.query(`UPDATE forms SET roles = $3 WHERE server_id = $1 AND hid = $2`, [d.server_id, d.hid, JSON.stringify(roles)])
 	}
 
-	if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 5)`);
-	else await db.query(`UPDATE extras SET val = 5 WHERE key = 'version'`);
-
-	return Promise.resolve();
+	return;
 }

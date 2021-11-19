@@ -1,15 +1,11 @@
 // converts questions from array to json
 
 module.exports = async (bot, db) => {
-	var version = (await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val;
 	var columns = await db.query(`
 		select column_name from information_schema.columns
 		where table_name = 'forms'`);
-	if(columns.rows?.[0] && !columns.rows.find(x => x.column_name == 'required')) {
-		if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
-		else await db.query(`UPDATE extras SET val = 0 WHERE key = 'version'`);
-		return Promise.resolve();
-	}
+	if(columns.rows?.[0] && !columns.rows.find(x => x.column_name == 'required'))
+		return;
 
 	var forms = await db.query(`SELECT * FROM forms`);
 	var responses = (await db.query(`SELECT * FROM responses`)).rows;
@@ -62,11 +58,7 @@ module.exports = async (bot, db) => {
 		SELECT pg_catalog.setval(pg_get_serial_sequence('open_responses', 'id'), MAX(id)) FROM open_responses;
 	`);
 
-	if(!forms.rows?.[0]) {
-		if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
-		else await db.query(`UPDATE extras SET val = 0 WHERE key = 'version'`);
-		return Promise.resolve();
-	}
+	if(!forms.rows?.[0]) return;
 
 	for(var form of forms.rows) {
 		var required = form.required;
@@ -79,9 +71,5 @@ module.exports = async (bot, db) => {
 		await db.query(`UPDATE open_responses SET questions = $1 WHERE form = $2`, [JSON.stringify(questions), form.hid]);
 	}
 
-	if(!version) await db.query(`INSERT INTO extras (key, val) VALUES ('version', 0)`);
-	else await db.query(`UPDATE extras SET val = 0 WHERE key = 'version'`);
-	await db.query(`COMMIT`);
-
-	return Promise.resolve();
+	return;
 }
