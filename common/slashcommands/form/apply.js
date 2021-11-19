@@ -14,7 +14,7 @@ module.exports = {
 		"[form_id] - Start a new form response"
 	],
 	async execute(ctx) {
-		var id = ctx.options.get('form_id').value.toLowerCase().trim();
+		var id = ctx.options.getString('form_id')?.toLowerCase().trim();
 		var form;
 		if(!id) {
 			form = await ctx.client.stores.forms.getByApplyChannel(ctx.guild.id, ctx.channel.id);
