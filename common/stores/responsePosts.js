@@ -30,9 +30,10 @@ class ResponsePostStore extends Collection {
                     server_id,
                     channel_id,
                     message_id,
-                    response
-                ) VALUES ($1,$2,$3,$4)`,
-                [server, channel, message, data.response]);
+                    response,
+                    page
+                ) VALUES ($1,$2,$3,$4,$5)`,
+                [server, channel, message, data.response, data.page ?? 1]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -49,9 +50,10 @@ class ResponsePostStore extends Collection {
                     server_id,
                     channel_id,
                     message_id,
-                    response
-                ) VALUES ($1,$2,$3,$4)`,
-                [server, channel, message, data.response]);
+                    response,
+                    page
+                ) VALUES ($1,$2,$3,$4,$5)`,
+                [server, channel, message, data.response, data.page ?? 1]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);

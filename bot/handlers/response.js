@@ -145,7 +145,7 @@ class ResponseHandler {
         for(let i=0; i<response.questions.length; i++) {
             var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
             console.log(chunks);
-            if((chunks.length + current.fields.length) < 20) {
+            if((chunks.length + current.fields.length) < 10) {
                 for(var j = 0; j < chunks.length; j++) {
                     current.fields.push({
                         name: `${questions[i].value} ${j > 0 ? '(cont.)' : ''}`,
@@ -155,7 +155,7 @@ class ResponseHandler {
             console.log(current.fields);
             } else {
                 var n = 0;
-                while(current.fields.length < 20) {
+                while(current.fields.length < 10) {
                     current.fields.push({
                         name: `${questions[i].value} ${n > 0 ? '(cont.)' : ''}`,
                         value: chunks[n]
