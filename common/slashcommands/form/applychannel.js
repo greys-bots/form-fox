@@ -83,6 +83,9 @@ module.exports = {
 			return;
 		}
 
+		var exists = await ctx.client.stores.forms.getByApplyChannel(ctx.guild.id, channel.id);
+		if(exists) return 'Another form already has that channel set!';
+
 		await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {apply_channel: channel.id});
 		return 'Form updated!';
 	},
