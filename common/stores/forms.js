@@ -153,6 +153,21 @@ class FormStore extends Collection {
 		})
 	}
 
+	async getByApplyChannel(server, channel) {
+		return new Promise(async (res, rej) => {
+			try {
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND apply_channel = $2`,
+					[server, channel]);
+			} catch(e) {
+				console.log(e);
+				return rej(e.message);
+			}
+
+			if(data.rows?.[0]) res(data.rows[0]);
+			else res(undefined);
+		})
+	}
+
 	async update(server, hid, data = {}) {
 		return new Promise(async (res, rej) => {
 			if(data.questions) data.questions = JSON.stringify(data.questions);
