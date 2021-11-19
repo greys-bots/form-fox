@@ -1,7 +1,7 @@
 const {
-	confirmVals:STRINGS,
-	confirmReacts:REACTS,
-	numbers:NUMBERS,
+	// confirmVals:STRINGS,
+	// confirmReacts:REACTS,
+	// numbers:NUMBERS,
 	qTypes: TYPES
 } = require('../../common/extras');
 
@@ -114,7 +114,7 @@ class ResponseHandler {
             
             return msg;
         } else {
-        	var content = {content: "How's this look?", embeds: [{
+        	var template = {
                 title: response.form.name,
                 description: response.form.description,
                 fields: [],
@@ -124,30 +124,61 @@ class ResponseHandler {
                     'react with ❌ to cancel. ',
                     'respective keywords: submit, cancel'
                 ].join(' ')}
-            }]};
+            };
 
-            for(var i = 0; i < questions.length; i++) {
-           		if(response.answers[i]?.length < 1024) {
-           			content.embeds[0].fields.push({
-                        name: questions[i].value,
-                        value: response.answers[i] || '*(answer skipped!)*'
-                    })
-           		} else {
-           			var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
-           			for(var j = 0; j < chunks.length; j++ ) {
-           				content.embeds[0].fields.push({
-	                        name: questions[i].value + (j > 0 ? ' (cont.)' : ''),
-	                        value: chunks[j]
-	                    })
-           			}
-           		}
-            }
+            var embeds = this.buildResponseEmbeds(response, template);
 
-            var msg = await message.channel.send(content);
+            var msg = await message.channel.send({content: "How's this look?", embeds});
             ['✅','❌'].forEach(r => msg.react(r));
 
             return msg;
         }
+    }
+
+    buildResponseEmbeds(response, template) {
+        var questions = response.questions?.[0] ? response.questions : response.form.questions;
+        var embeds = [];
+
+        var current = Object.assign({}, template);
+        if(!current.fields) current.fields = [];
+
+        for(let i=0; i<response.questions.length; i++) {
+            var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
+            console.log(chunks);
+            if((chunks.length + current.fields.length) < 20) {
+                for(var j = 0; j < chunks.length; j++) {
+                    current.fields.push({
+                        name: `${questions[i].value} ${j > 0 ? '(cont.)' : ''}`,
+                        value: chunks[j]
+                    })
+                }
+            console.log(current.fields);
+            } else {
+                var n = 0;
+                while(current.fields.length < 20) {
+                    current.fields.push({
+                        name: `${questions[i].value} ${n > 0 ? '(cont.)' : ''}`,
+                        value: chunks[n]
+                    })
+
+                    n++;
+                }
+
+                embeds.push(current);
+                current = Object.assign({}, template);
+                current.fields = chunks.slice(n).map(c => ({
+                    name: `${questions[i].value} ${n > 0 ? '(cont.)' : ''}`,
+                    value: c
+                }))
+            }
+        }
+        embeds.push(current);
+
+        if(embeds.length > 1) for(var i = 0; i < embeds.length; i++)
+            embeds[i].title += ` (page ${i+1}/${embeds.length})`;
+
+        console.log(embeds);
+        return embeds;
     }
 
     async sendResponse(response, message, user, config) {
@@ -169,51 +200,24 @@ class ResponseHandler {
 	        if(confirm.msg) return Promise.resolve(confirm.msg);
         }
 
-        var fields = [];
-
-        var content = {embeds: [{
-            title: response.form.name,
-            description: response.form.description,
-            fields: [],
-            color: parseInt(response.form.color || 'ee8833', 16),
-            footer: {text: 'Awaiting acceptance/denial...'}
-        }]}
-
-        for(var i = 0; i < questions.length; i++) {
-       		if(response.answers[i]?.length < 1024) {
-       			fields.push({
-                    name: questions[i].value,
-                    value: response.answers[i] || '*(answer skipped!)*'
-                })
-       		} else {
-       			var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
-       			for(var j = 0; j < chunks.length; j++ ) {
-       				fields.push({
-	                     name: questions[i].value + (j > 0 ? ' (cont.)' : ''),
-	                     value: chunks[j]
-	                 })
-       			}
-       		}
-        }
-
-		content.embeds[0].fields = fields;
-        await prompt.edit(content);
-
-        var respembed =  {
-            title: "Response received!",
+        var code = this.bot.utils.genCode(this.bot.chars);
+        var template = {
+            title: "Response",
             description: [
                 `Form name: ${response.form.name}`,
                 `Form ID: ${response.form.hid}`,
-                `User: ${user.username}#${user.discriminator} (${user})`
+                `User: ${user.username}#${user.discriminator} (${user})`,
+                `Response ID: ${code}`
             ].join('\n'),
             color: parseInt('ccaa00', 16),
-            fields,
+            fields: [],
             timestamp: new Date().toISOString(),
             footer: {text: 'Awaiting acceptance/denial...'}
-        };
+        }
+        var embeds = this.buildResponseEmbeds(response, template);
+        await prompt.edit(embeds[0])
 
         try {
-            var code = this.bot.utils.genCode(this.bot.chars);
             var created = await this.bot.stores.responses.create(response.server_id, code, {
                 user_id: user.id,
                 form: response.form.hid,
@@ -223,16 +227,18 @@ class ResponseHandler {
                 status: 'pending'
             });
             this.bot.emit('SUBMIT', created);
-            respembed.description += `\nResponse ID: ${code}`;
             var guild = this.bot.guilds.resolve(response.server_id);
             if(!guild) return Promise.reject("ERR! Guild not found! Aborting!");
             var chan_id = response.form.channel_id || config?.response_channel;
             var channel = guild.channels.resolve(chan_id);
             if(!channel) return Promise.reject("ERR! Guild response channel missing! Aborting!");
-            var rmsg = await channel.send({embeds: [respembed]});
+            var rmsg = await channel.send({embeds: [embeds[0]]});
             ['✅','❌'].forEach(r => rmsg.react(r));
+            if(embeds.length > 1) ['⬅️', '➡️'].forEach(r => rmsg.react(r));
+
             await this.bot.stores.responsePosts.create(rmsg.channel.guild.id, channel.id, rmsg.id, {
-                response: code
+                response: code,
+                page: 1
             })
             await this.bot.stores.forms.updateCount(rmsg.channel.guild.id, response.form.hid);
         } catch(e) {
@@ -247,7 +253,7 @@ class ResponseHandler {
         )
     }
 
-    async cancelResponse(response, message, user, config) {
+    async cancelResponse(response, message, user) {
         var prompt = await message.channel.messages.fetch(response.message_id);
 
         var msg = await message.channel.send([
@@ -277,7 +283,7 @@ class ResponseHandler {
         return Promise.resolve('Response cancelled!');
     }
 
-    async skipQuestion(response, message, user, config) {
+    async skipQuestion(response, message, user) {
     	var questions = response.questions?.[0] ? response.questions : response.form.questions;
     	if(questions.length < response.answers.length + 1) return Promise.resolve();
 
@@ -369,7 +375,7 @@ class ResponseHandler {
                     await msg.channel.send(e.message || e);
                 }
                 this.menus.delete(msg.channel.id);
-                await msg.channel.send(res);
+                if(res) await msg.channel.send(res);
                 return;
             case '❌':
                 this.menus.add(msg.channel.id);
@@ -379,7 +385,7 @@ class ResponseHandler {
                     await msg.channel.send(e.message || e);
                 }
                 this.menus.delete(msg.channel.id);
-                await msg.channel.send(res);
+                if(res) await msg.channel.send(res);
                 return;
             case '➡️':
                 this.menus.add(msg.channel.id);
@@ -511,7 +517,6 @@ class ResponseHandler {
                 this.menus.delete(message.channel.id);
                 if(res) await message.channel.send(res);
                 return;
-                break;
             case 'cancel':
                 this.menus.add(message.channel.id);
                 try {
@@ -522,7 +527,6 @@ class ResponseHandler {
                 this.menus.delete(message.channel.id);
                 if(res) await message.channel.send(res);
                 return;
-                break;
             case 'skip':
                 this.menus.add(message.channel.id);
                 try {
@@ -534,7 +538,6 @@ class ResponseHandler {
                 this.menus.splice(message.channel.id);
                 if(res) await message.channel.send(res);
                 return;
-                break;
         }
 
         if(questions.length < response.answers.length + 1) return;
