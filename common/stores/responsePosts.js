@@ -193,7 +193,7 @@ class ResponsePostStore extends Collection {
                 `User: ${u2.username}#${u2.discriminator} (${u2})`,
                 `Response ID: ${post.response.hid}`
             ].join('\n'),
-            color: parseInt('ccaa00', 16),
+            color: parseInt('ccaa55', 16),
             fields: [],
             timestamp: post.response.received,
             footer: {text: 'Awaiting acceptance/denial...'}
@@ -287,7 +287,6 @@ class ResponsePostStore extends Collection {
                 }
                 break;
             case '⬅️':
-                console.log(post.page);
                 if(post.page == 1) post.page = embeds.length;
                 else post.page -= 1;
 
@@ -296,7 +295,6 @@ class ResponsePostStore extends Collection {
                 await this.update(msg.guild.id, msg.channel.id, msg.id, {page: post.page});
                 break;
             case '➡️':
-                console.log(post.page);
                 if(post.page == embeds.length) post.page = 1;
                 else post.page += 1;
 
