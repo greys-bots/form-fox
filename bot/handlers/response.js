@@ -214,7 +214,7 @@ class ResponseHandler {
 
         try {
             var code = this.bot.utils.genCode(this.bot.chars);
-            var created = await this.bot.stores.responses.create(response.server_id, code, {
+            var created = await this.bot.stores.responses.create(response.server_id, {
                 user_id: user.id,
                 form: response.form.hid,
                 questions: JSON.stringify(response.form.questions),
@@ -223,7 +223,7 @@ class ResponseHandler {
                 status: 'pending'
             });
             this.bot.emit('SUBMIT', created);
-            respembed.description += `\nResponse ID: ${code}`;
+            respembed.description += `\nResponse ID: ${created.hid}`;
             var guild = this.bot.guilds.resolve(response.server_id);
             if(!guild) return Promise.reject("ERR! Guild not found! Aborting!");
             var chan_id = response.form.channel_id || config?.response_channel;
@@ -232,7 +232,7 @@ class ResponseHandler {
             var rmsg = await channel.send({embeds: [respembed]});
             ['✅','❌'].forEach(r => rmsg.react(r));
             await this.bot.stores.responsePosts.create(rmsg.channel.guild.id, channel.id, rmsg.id, {
-                response: code
+                response: created.hid
             })
             await this.bot.stores.forms.updateCount(rmsg.channel.guild.id, response.form.hid);
         } catch(e) {
@@ -242,7 +242,7 @@ class ResponseHandler {
 
         await this.bot.stores.openResponses.delete(response.channel_id);
         return (
-            'Response sent! Response ID: '+code +
+            'Response sent! Response ID: '+created.hid +
             '\nUse this code to make sure your response has been received'
         )
     }

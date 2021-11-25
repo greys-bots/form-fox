@@ -9,10 +9,10 @@ class FormStore extends Collection {
 		this.bot = bot;
 	};
 
-	async create(server, hid, data = {}) {
+	async create(server, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO forms (
+				var form = await this.db.query(`INSERT INTO forms (
 					server_id,
 					hid,
 					name,
@@ -28,8 +28,9 @@ class FormStore extends Collection {
 					reacts,
 					embed,
 					apply_channel
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-				[server, hid, data.name, data.description,
+				) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+				RETURNING *`,
+				[server, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, JSON.stringify(data.roles || []),
 				 data.message, data.color, data.open || true,
@@ -38,8 +39,8 @@ class FormStore extends Collection {
 				console.log(e);
 		 		return rej(e.message);
 			}
-			
-			res(await this.get(server, hid));
+
+			res(await this.get(server, form.rows[0].hid));
 		})
 	}
 

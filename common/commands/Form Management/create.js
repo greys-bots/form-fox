@@ -97,14 +97,14 @@ module.exports = {
 
 		var code = bot.utils.genCode(bot.chars);
 		try {
-			await bot.stores.forms.create(msg.channel.guild.id, code, data);
+			var fm = await bot.stores.forms.create(msg.channel.guild.id, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		return [
-			`Form created! ID: ${code}`,
-			`Use \`${bot.prefix}channel ${code}\` to change what channel this form's responses go to!`,
+			`Form created! ID: ${fm.hid}`,
+			`Use \`${bot.prefix}channel ${fm.hid}\` to change what channel this form's responses go to!`,
 			`See \`${bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	},

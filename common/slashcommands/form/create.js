@@ -24,15 +24,14 @@ module.exports = {
 		var name = ctx.options.getString('name').trim();
 		var description = ctx.options.getString('description').trim();
 
-		var code = ctx.client.utils.genCode(ctx.client.chars);
-		await ctx.client.stores.forms.create(ctx.guildId, code, {
+		var form = await ctx.client.stores.forms.create(ctx.guildId, {
 			name,
 			description,
 			questions: []
 		});
 
 		return (
-			`Form created! ID: ${code}` +
+			`Form created! ID: ${form.hid}` +
 			"\nUse `/question add` to start adding questions to this form" +
 			"\nUse `/config channel` to set the response channel for this form" +
 			"\nUse `/help form` for some customization options!"

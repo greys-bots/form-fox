@@ -8,10 +8,10 @@ class ResponseStore extends Collection {
 		this.bot = bot;
 	};
 
-	async create(server, hid, data = {}) {
+	async create(server, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
-				await this.db.query(`INSERT INTO responses (
+				var resp = await this.db.query(`INSERT INTO responses (
 					server_id,
 					hid,
 					user_id,
@@ -20,15 +20,16 @@ class ResponseStore extends Collection {
 					answers,
 					status,
 					received
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-				[server, hid, data.user_id, data.form, data.questions || [],
+				) VALUES ($1,find_unique('responses'),$2,$3,$4,$5,$6,$7)
+				RETURNING *`,
+				[server, data.user_id, data.form, data.questions || [],
 				data.answers || [], data.status || 'pending', data.received || new Date()]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
 			}
 			
-			res(await this.get(server, hid));
+			res(await this.get(server, resp.rows[0].hid));
 		})
 	}
 
