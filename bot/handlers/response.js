@@ -348,6 +348,7 @@ class ResponseHandler {
     async handleReactions(reaction, user) {
         if(this.bot.user.id == user.id) return;
         if(user.bot) return;
+        if(user.partial) user = await user.fetch(true);
 
         var msg;
         if(reaction.message.partial) msg = await reaction.message.fetch();
