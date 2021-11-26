@@ -538,10 +538,10 @@ class ResponseHandler {
                 try {
                     var res = await this.skipQuestion(response, message, message.author, config);
                 } catch(e) {
-                    this.menus.splice(message.channel.id);
+                    this.menus.delete(message.channel.id);
                     await message.channel.send(e.message || e);
                 }
-                this.menus.splice(message.channel.id);
+                this.menus.delete(message.channel.id);
                 if(res) await message.channel.send(res);
                 return;
                 break;
