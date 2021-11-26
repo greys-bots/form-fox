@@ -186,19 +186,19 @@ class ResponseHandler {
 
         for(var i = 0; i < questions.length; i++) {
        		if(!response.answers[i]?.length) {
-				content.embeds[0].fields.push({
+				fields.push({
 					name: questions[i].value,
 					value: '*(answer skipped!)*'
 				})
 			} else if(response.answers[i].length < 1024) {
-				content.embeds[0].fields.push({
+				fields.push({
 					name: questions[i].value,
 					value: response.answers[i]
 				})
 			} else {
 				var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
 				for(var j = 0; j < chunks.length; j++ ) {
-					content.embeds[0].fields.push({
+					fields.push({
 						name: questions[i].value + (j > 0 ? ' (cont.)' : ''),
 						value: chunks[j]
 					})
