@@ -155,11 +155,9 @@ class ResponseHandler {
 			}
 
 			var lines = response.answers[i].split("\n");
-			console.log(lines);
 			var val = "";
 			var n = 0;
 			for(var j = 0; j < lines.length; j++) {
-				console.log(val);
 				if(!lines[j].length) { val += "\n"; continue; } // handle empty lines
 
 				// if line is too big for the current val...
@@ -168,7 +166,6 @@ class ResponseHandler {
 					if(!val.length) {
 						// split it up
 						var chunks = lines[j].match(/(.|[\r\n]){1,1024}/gm);
-						console.log(chunks)
 						for(var k = 0; k < chunks.length; k++) {
 							if(chunks[k].length > 1023) {
 								fields.push({
@@ -449,7 +446,6 @@ class ResponseHandler {
 			}
 
 			var embeds = this.bot.handlers.response.buildResponseEmbeds(response, template);
-			console.log(embeds);
 			switch(reaction.emoji.name) {
 				case '⬅️':
 				if(response.page == 1) response.page = embeds.length;
