@@ -20,33 +20,7 @@ class OpenResponseStore extends Collection {
         this.db = db;
         this.bot = bot;
     };
-
-    // async init() {
-        // this.bot.on('messageReactionAdd', async (...args) => {
-            // try {
-                // this.handleReactions(...args);
-            // } catch(e) {
-                // console.log(e.message || e);
-            // }
-        // })
-// 
-		// this.bot.on('messageReactionRemove', async (...args) => {
-            // try {
-                // this.handleReactionRemove(...args);
-            // } catch(e) {
-                // console.log(e.message || e);
-            // }
-        // })
-// 
-        // this.bot.on('message', async (...args) => {
-            // try {
-                // this.handleMessage(...args);
-            // } catch(e) {
-                // console.log(e.message || e);
-            // }
-        // })
-    // }
-
+    
     async create(server, channel, message, data = {}) {
         return new Promise(async (res, rej) => {
             try {

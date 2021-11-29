@@ -30,9 +30,10 @@ class ResponsePostStore extends Collection {
                     server_id,
                     channel_id,
                     message_id,
-                    response
-                ) VALUES ($1,$2,$3,$4)`,
-                [server, channel, message, data.response]);
+                    response,
+                    page
+                ) VALUES ($1,$2,$3,$4,$5)`,
+                [server, channel, message, data.response, data.page ?? 1]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -49,9 +50,10 @@ class ResponsePostStore extends Collection {
                     server_id,
                     channel_id,
                     message_id,
-                    response
-                ) VALUES ($1,$2,$3,$4)`,
-                [server, channel, message, data.response]);
+                    response,
+                    page
+                ) VALUES ($1,$2,$3,$4,$5)`,
+                [server, channel, message, data.response, data.page ?? 1]);
             } catch(e) {
                 console.log(e);
                 return rej(e.message);
@@ -180,6 +182,25 @@ class ResponsePostStore extends Collection {
         var post = await this.get(msg.channel.guild.id, msg.channel.id, msg.id);
         if(!post) return;
 
+        var u2 = await this.bot.users.fetch(post.response.user_id);
+        if(!u2) return await msg.channel.send('ERR! Couldn\'t fetch that response\'s user!');
+
+        var template = {
+            title: "Response",
+            description: [
+                `Form name: ${post.response.form.name}`,
+                `Form ID: ${post.response.form.hid}`,
+                `User: ${u2.username}#${u2.discriminator} (${u2})`,
+                `Response ID: ${post.response.hid}`
+            ].join('\n'),
+            color: parseInt('ccaa55', 16),
+            fields: [],
+            timestamp: post.response.received,
+            footer: {text: 'Awaiting acceptance/denial...'}
+        }
+
+        var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
+
         switch(reaction.emoji.name) {
             case '❌':
                 var reason;
@@ -206,10 +227,7 @@ class ResponsePostStore extends Collection {
                     await msg.edit({embeds: [embed]});
                     await msg.reactions.removeAll();
 
-                    var user = await this.bot.users.fetch(post.response.user_id);
-                    if(!user) return await msg.channel.send('ERR! Response denied, but couldn\'t fetch the user!');
-
-                    await user.send({embeds: [{
+                    await u2.send({embeds: [{
                         title: 'Response denied!',
                         description: [
                             `Server: ${msg.channel.guild.name} (${msg.channel.guild.id})`,
@@ -222,17 +240,6 @@ class ResponsePostStore extends Collection {
                         timestamp: new Date().toISOString()
                     }]})
 
-                    // if(post.response.form.roles?.[0]) {
-                        // var member = msg.channel.guild.members.resolve(user.id);
-                        // try {
-                        	// var roles = post.response.form.roles
-                        		// .filter(x => x.action == "DENY")
-                        		// .map(r => r.id);
-                            // if(roles.length) await member.roles.add(roles);
-                        // } catch(e) {
-                            // msg.channel.send('Err while adding roles: '+e.message);
-                        // }
-                    // }
                     this.bot.emit('DENY', post.response);
                 } catch(e) {
                     console.log(e);
@@ -253,9 +260,6 @@ class ResponsePostStore extends Collection {
                     await msg.edit({embeds: [embed]});
                     await msg.reactions.removeAll();
 
-                    var user = await this.bot.users.fetch(post.response.user_id);
-                    if(!user) return await msg.channel.send('ERR! Response accepted, but couldn\'t fetch the user!');
-
                     var welc = post.response.form.message;
                     if(welc) {
                         for(var key of Object.keys(VARIABLES)) {
@@ -263,7 +267,7 @@ class ResponsePostStore extends Collection {
                         }
                     }
 
-                    await user.send({embeds: [{
+                    await u2.send({embeds: [{
                         title: 'Response accepted!',
                         description: welc,
                         fields: [
@@ -276,22 +280,27 @@ class ResponsePostStore extends Collection {
                         timestamp: new Date().toISOString()
                     }]});
 
-                    // if(post.response.form.roles?.[0]) {
-                        // var member = msg.channel.guild.members.resolve(user.id);
-                        // try {
-                        	// var roles = post.response.form.roles
-                        		// .filter(x => x.action == "ACCEPT")
-                        		// .map(r => r.id);
-                            // if(roles.length) await member.roles.add(roles);
-                        // } catch(e) {
-                            // msg.channel.send('Err while adding roles: '+e.message);
-                        // }
-                    // }
                     this.bot.emit('ACCEPT', post.response);
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);
                 }
+                break;
+            case '⬅️':
+                if(post.page == 1) post.page = embeds.length;
+                else post.page -= 1;
+
+                await msg.edit({embeds: [embeds[post.page - 1]]});
+                await reaction.users.remove(user)
+                await this.update(msg.guild.id, msg.channel.id, msg.id, {page: post.page});
+                break;
+            case '➡️':
+                if(post.page == embeds.length) post.page = 1;
+                else post.page += 1;
+
+                await msg.edit({embeds: [embeds[post.page - 1]]});
+                await reaction.users.remove(user)
+                await this.update(msg.guild.id, msg.channel.id, msg.id, {page: post.page});
                 break;
             default:
                 return;

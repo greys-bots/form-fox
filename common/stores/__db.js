@@ -67,7 +67,8 @@ module.exports = async (bot) => {
 			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
 			questions   JSONB,
 			answers 	TEXT[],
-			selection   TEXT[]
+			selection   TEXT[],
+			page 		INTEGER
 		);
 
 		CREATE TABLE IF NOT EXISTS responses (
@@ -87,7 +88,8 @@ module.exports = async (bot) => {
 			server_id 	TEXT,
 			channel_id 	TEXT,
 			message_id 	TEXT,
-			response 	TEXT REFERENCES responses(hid) ON DELETE CASCADE
+			response 	TEXT REFERENCES responses(hid) ON DELETE CASCADE,
+			page 		INTEGER
 		);
 
 		CREATE OR REPLACE FUNCTION gen_hid() RETURNS TEXT AS
