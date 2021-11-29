@@ -235,25 +235,8 @@ class ResponseHandler {
 			if(confirm.msg) return Promise.resolve(confirm.msg);
 		}
 
-		var code = this.bot.utils.genCode(this.bot.chars);
-		var template = {
-			title: "Response",
-			description: [
-				`Form name: ${response.form.name}`,
-				`Form ID: ${response.form.hid}`,
-				`User: ${user.username}#${user.discriminator} (${user})`,
-				`Response ID: ${code}`
-			].join('\n'),
-			color: parseInt('ccaa55', 16),
-			fields: [],
-			timestamp: new Date().toISOString(),
-			footer: {text: 'Awaiting acceptance/denial...'}
-		}
-		var embeds = this.buildResponseEmbeds(response, template);
-		await prompt.edit(embeds[0])
-
 		try {
-			var created = await this.bot.stores.responses.create(response.server_id, code, {
+			var created = await this.bot.stores.responses.create(response.server_id, {
 				user_id: user.id,
 				form: response.form.hid,
 				questions: JSON.stringify(response.form.questions),
@@ -262,6 +245,21 @@ class ResponseHandler {
 				status: 'pending'
 			});
 			this.bot.emit('SUBMIT', created);
+			var template = {
+				title: "Response",
+				description: [
+					`Form name: ${response.form.name}`,
+					`Form ID: ${response.form.hid}`,
+					`User: ${user.username}#${user.discriminator} (${user})`,
+					`Response ID: ${created.hid}`
+				].join('\n'),
+				color: parseInt('ccaa55', 16),
+				fields: [],
+				timestamp: new Date().toISOString(),
+				footer: {text: 'Awaiting acceptance/denial...'}
+			}
+			var embeds = this.buildResponseEmbeds(response, template);
+			await prompt.edit(embeds[0])
 			var guild = this.bot.guilds.resolve(response.server_id);
 			if(!guild) return Promise.reject("ERR! Guild not found! Aborting!");
 			var chan_id = response.form.channel_id || config?.response_channel;
@@ -272,7 +270,7 @@ class ResponseHandler {
 			if(embeds.length > 1) ['⬅️', '➡️'].forEach(r => rmsg.react(r));
 
 			await this.bot.stores.responsePosts.create(rmsg.channel.guild.id, channel.id, rmsg.id, {
-				response: code,
+				response: created.hid,
 				page: 1
 			})
 			await this.bot.stores.forms.updateCount(rmsg.channel.guild.id, response.form.hid);
@@ -283,7 +281,7 @@ class ResponseHandler {
 
 		await this.bot.stores.openResponses.delete(response.channel_id);
 		return (
-			'Response sent! Response ID: '+code +
+			'Response sent! Response ID: '+created.hid +
 			'\nUse this code to make sure your response has been received'
 		)
 	}
