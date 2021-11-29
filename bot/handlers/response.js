@@ -379,8 +379,14 @@ class ResponseHandler {
 		if(user.bot) return;
 
 		var msg;
-		if(reaction.message.partial) msg = await reaction.message.fetch();
-		else msg = reaction.message;
+		if(reaction.message.partial) {
+			try {
+				msg = await reaction.message.fetch();
+			} catch(e) {
+				if(e.message.includes('Unknown')) return;
+				else return Promise.reject(e);
+			}
+		} else msg = reaction.message;
 
 		if(this.menus.has(msg.channel.id)) {
 			return;

@@ -2,8 +2,14 @@ module.exports = async (reaction, user, bot)=> {
 	if(bot.user.id == user.id) return;
 
 	var msg;
-	if(reaction.message.partial) msg = await reaction.message.fetch();
-	else msg = reaction.message;
+	if(reaction.message.partial) {
+		try {
+			msg = await reaction.message.fetch();
+		} catch(e) {
+			if(e.message.includes('Unknown')) return;
+			else return Promise.reject(e);
+		}
+	} else msg = reaction.message;
 
 	var config;
 	if(msg.channel.guild) config = await bot.stores.configs.get(msg.channel.guild.id);
