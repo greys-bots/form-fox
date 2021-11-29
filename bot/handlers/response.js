@@ -137,44 +137,81 @@ class ResponseHandler {
 		}
 	}
 
+	// TODO: optimize this better. maybe store page data (fields) in
+	// 		 the store for the response instead of rebuilding on every react
 	buildResponseEmbeds(response, template) {
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		var embeds = [];
 
-		var current = Object.assign({}, template);
-		if(!current.fields) current.fields = [];
+		var fields = [];
 
 		for(let i=0; i<response.questions.length; i++) {
-			var chunks = response.answers[i].match(/(.|[\r\n]){1,1024}/gm);
-			if((chunks.length + current.fields.length) < 10) {
-				for(var j = 0; j < chunks.length; j++) {
-					current.fields.push({
-						name: `${questions[i].value} ${j > 0 ? '(cont.)' : ''}`,
-						value: chunks[j]
-					})
-				}
-			} else {
-				var n = 0;
-				while(current.fields.length < 10) {
-					current.fields.push({
-						name: `${questions[i].value} ${n > 0 ? '(cont.)' : ''}`,
-						value: chunks[n]
-					})
+			if(!response.answers[i]?.length) {
+				fields.push({
+					name: questions[i].value,
+					value: '*(answer skipped)*'
+				})
+				continue;
+			}
 
-					n++;
+			var lines = response.answers[i].split("\n");
+			console.log(lines);
+			var val = "";
+			var n = 0;
+			for(var j = 0; j < lines.length; j++) {
+				console.log(val);
+				if(!lines[j].length) { val += "\n"; continue; } // handle empty lines
+
+				// if line is too big for the current val...
+				if(val.length + (lines[j].length + 1) > 1023) {
+					// if there isn't a val and the line is just too long...
+					if(!val.length) {
+						// split it up
+						var chunks = lines[j].match(/(.|[\r\n]){1,1024}/gm);
+						console.log(chunks)
+						for(var k = 0; k < chunks.length; k++) {
+							if(chunks[k].length > 1023) {
+								fields.push({
+									name: `${questions[i].value} ${k > 0 ? '(cont.)' : ''}`,
+									value: chunks[k]
+								})
+								n++;
+							} else {
+								val = chunks[k] + "\n";
+							}
+						}
+					} else {
+						// otherwise just push the current val
+						// and make the new val the current line
+						fields.push({
+							name: questions[i].value + (n > 0 ? ' (cont.)' : ''),
+							value: val
+						});
+						val = lines[j] + "\n";
+						n++;
+					}
+
+					continue;
 				}
 
-				embeds.push(current);
-				if(i < response.questions.length - 1) {
-					current = Object.assign({}, template);
-					current.fields = chunks.slice(n).map(c => ({
-						name: `${questions[i].value} ${n > 0 ? '(cont.)' : ''}`,
-						value: c
-					}))
-				} else current = {};
+				val += lines[j] + "\n";
+			}
+
+			// still a value at the end? push it
+			if(val.length) {
+				fields.push({
+					name: questions[i].value + (n > 0 ? ' (cont.)' : ''),
+					value: val
+				})
 			}
 		}
-		if(current.fields?.length) embeds.push(current);
+
+		// slice up fields into proper embeds
+		for(var i = 0; i < fields.length; i += 10) {
+			var tmp = Object.assign({}, template);
+			tmp.fields = fields.slice(i, i + 10);
+			embeds.push(tmp);
+		}
 
 		if(embeds.length > 1) for(var i = 0; i < embeds.length; i++)
 			embeds[i].title += ` (page ${i+1}/${embeds.length})`;
