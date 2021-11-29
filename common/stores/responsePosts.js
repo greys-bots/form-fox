@@ -182,6 +182,19 @@ class ResponsePostStore extends Collection {
         var post = await this.get(msg.channel.guild.id, msg.channel.id, msg.id);
         if(!post) return;
 
+        if(!post.response?.user_id) {
+        	await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
+
+        	return msg.channel.send(
+        		"Unfortunately, something went wrong and this " +
+        		"response is unrecoverable. " +
+        		"It cannot be accepted or denied\n" +
+        		"Please have the user send in a new response, " +
+        		"or manually handle this one\n" +
+        		"We're very sorry for the inconvenience\n- (GS)"
+        	)
+        }
+
         var u2 = await this.bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send('ERR! Couldn\'t fetch that response\'s user!');
 
