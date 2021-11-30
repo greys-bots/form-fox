@@ -92,7 +92,7 @@ class CommandHandler {
 		try {
 			var res = await command.execute(this.bot, msg, args);
 		} catch(e) {
-			return Promise.reject(e.message);
+			return Promise.reject(e);
 		}
 
 		if(command.cooldown) {

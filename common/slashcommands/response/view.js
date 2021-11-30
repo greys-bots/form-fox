@@ -63,7 +63,6 @@ module.exports = {
 
 		var embeds = [];
 		for(var r of responses) {
-			var qs = r.questions?.[0] ? r.questions : r.form.questions;
 			var color;
 			switch(r.status) {
 				case 'accepted':
@@ -76,27 +75,35 @@ module.exports = {
 					color = parseInt('ccaa55', 16)
 			}
 
-			embeds.push({
+			var template = {
 				title: `Response ${r.hid}`,
 				description:
 					`Form name: ${r.form.name}\n` +
 					`Form ID: ${r.form.hid}\n` +
 					`User: <@${r.user_id}>`,
-				fields: qs.map((q, i) => {
-					return {
-						name: q.value,
-						value: r.answers[i] ?? "*(answer skipped)*"
-					}
-				}),
+				fields: [],
 				color,
 				footer: {text: `Response status: ${r.status}`},
 				timestamp: new Date(r.received).toISOString()
-			})
+			}
+
+			var tmp = ctx.client.handlers.response.buildResponseEmbeds(r, template);
+			if(tmp.length > 1)  {
+				for(var i = 0; i < tmp.length; i++) {
+					if(i == 0) {
+						tmp[i].title = `Response ${r.hid}`;
+					} else {
+						tmp[i].title = `Response ${r.hid} (cont.)`;
+					}
+				}
+			}
+
+			embeds = embeds.concat(tmp);
 		}
 
 		if(embeds.length > 1)
 			for(var i = 0; i < embeds.length; i++)
-				embeds[i].title += ` (${i +1}/${embeds.length})`;
+				embeds[i].title += ` (page ${i +1}/${embeds.length})`;
 
 		return embeds;
 	},

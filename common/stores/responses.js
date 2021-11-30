@@ -33,7 +33,7 @@ class ResponseStore extends Collection {
 		})
 	}
 
-	async index(server, hid, data = {}) {
+	async index(server, data = {}) {
 		return new Promise(async (res, rej) => {
 			try {
 				await this.db.query(`INSERT INTO responses (
@@ -46,7 +46,7 @@ class ResponseStore extends Collection {
 					status,
 					received
 				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-				[server, hid, data.user_id, data.form, data.questions || [],
+				[server, data.hid, data.user_id, data.form, data.questions || [],
 				data.answers || [], data.status || 'pending', data.received || new Date()]);
 			} catch(e) {
 				console.log(e);

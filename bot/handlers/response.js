@@ -203,13 +203,20 @@ class ResponseHandler {
 			}
 		}
 
-		// slice up fields into proper embeds
-		for(var i = 0; i < fields.length; i += 10) {
-			var tmp = Object.assign({}, template);
-			tmp.fields = fields.slice(i, i + 10);
-			embeds.push(tmp);
+		if(fields.length <= 20) {
+			embeds.push({
+				...template,
+				fields
+			})
+		} else {
+			// slice up fields into proper embeds
+			for(var i = 0; i < fields.length; i += 10) {
+				var tmp = Object.assign({}, template);
+				tmp.fields = fields.slice(i, i + 10);
+				embeds.push(tmp);
+			}
 		}
-
+			
 		if(embeds.length > 1) for(var i = 0; i < embeds.length; i++)
 			embeds[i].title += ` (page ${i+1}/${embeds.length})`;
 

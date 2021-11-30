@@ -29,33 +29,48 @@ module.exports = {
 		if(!responses[0]) return 'No responses match that critera!';
 
 		var embeds = [];
-
-		for(var response of responses) {
-			var user = await bot.users.fetch(response.user_id);
+		for(var r of responses) {
 			var color;
-			var questions = response.questions?.[0] ? response.questions : response.form.questions;
-			if(response.status == 'accepted') color = parseInt('55aa55', 16);
-			else if(response.status == 'denied') color = parseInt('aa5555', 16);
-			else color = parseInt('ccaa55', 16);
-			embeds.push({embed: {
-				title: `Response ${response.hid}`,
-				description: [
-					`Form name: ${response.form.name}`,
-					`Form ID: ${response.form.hid}`,
-					`User: ${user}`
-				].join('\n'),
-				fields: questions.map((q, i) => {
-					return {name: q.value, value: response.answers[i] || '*(answer skipped!)*'}
-				}),
+			switch(r.status) {
+				case 'accepted':
+					color = parseInt('55aa55', 16);
+					break;
+				case 'denied':
+					color = parseInt('aa5555', 16);
+					break;
+				default:
+					color = parseInt('ccaa55', 16)
+			}
+
+			var template = {
+				title: `Response ${r.hid}`,
+				description:
+					`Form name: ${r.form.name}\n` +
+					`Form ID: ${r.form.hid}\n` +
+					`User: <@${r.user_id}>`,
+				fields: [],
 				color,
-				footer: {text: `Response status: ${response.status}`},
-				timestamp: new Date(response.received).toISOString()
-			}})
+				footer: {text: `Response status: ${r.status}`},
+				timestamp: new Date(r.received).toISOString()
+			}
+
+			var tmp = bot.handlers.response.buildResponseEmbeds(r, template);
+			if(tmp.length > 1)  {
+				for(var i = 0; i < tmp.length; i++) {
+					if(i == 0) {
+						tmp[i].title = `Response ${r.hid}`;
+					} else {
+						tmp[i].title = `Response ${r.hid} (cont.)`;
+					}
+				}
+			}
+
+			embeds = embeds.concat(tmp);
 		}
 
 		if(embeds.length > 1)
 			for(var i = 0; i < embeds.length; i++)
-				embeds[i].embed.title += ` (${i+1}/${embeds.length})`;
+				embeds[i].title += ` (${i+1}/${embeds.length})`;
 
 		return embeds;
 	},
