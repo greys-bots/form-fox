@@ -132,7 +132,7 @@ const qTypes = {
     			return {response, send: true};
     		} else if(inter.customId == "other" && question.other) {
     			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await inter.update({embeds: [embed]});
+        		await inter.message.edit({embeds: [embed]});
 
         		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
 				if(!response.selection) response.selection = [];
@@ -354,13 +354,13 @@ const qTypes = {
     			} else {
 	    			embed.fields[index].value = question.choices[index - 1] + " ✅";
     			}
-    			await inter.update({embeds: [embed]});
+    			await inter.message.edit({embeds: [embed]});
         		if(!response.selection) response.selection = [];
         		response.selection.push(question.choices[index - 1]);
         		return {response, send: false};
     		} else if(inter.customId == "other" && question.other) {
     			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await inter.update({embeds: [embed]});
+        		await inter.message.edit({embeds: [embed]});
 
         		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
 				if(!response.selection) response.selection = [];
