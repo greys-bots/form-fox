@@ -1,6 +1,7 @@
 const { Collection } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
+const { pageBtns: PAGE } = require('../../common/extras');
 
 const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
 
@@ -197,32 +198,7 @@ class InteractionHandler {
 						components: [
 							{
 								type: 1,
-								components: [
-									{
-										type: 2,
-										label: "First",
-										style: 1,
-										custom_id: 'first'
-									},
-									{
-										type: 2,
-										label: 'Previous',
-										style: 1,
-										custom_id: 'prev'
-									},
-									{
-										type: 2,
-										label: 'Next',
-										style: 1,
-										custom_id: 'next'
-									},
-									{
-										type: 2,
-										label: 'Last',
-										style: 1,
-										custom_id: 'last'
-									}
-								]
+								components: PAGE
 							}
 						]
 					}

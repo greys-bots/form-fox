@@ -1,4 +1,7 @@
 const {Collection} = require("discord.js");
+const {
+    pageBtns: PGBTNS
+} = require('../extras');
 
 const VARIABLES = {
     '$USER': `user`,
@@ -17,6 +20,14 @@ class ResponsePostStore extends Collection {
         this.bot.on('messageReactionAdd', async (...args) => {
             try {
                 this.handleReactions(...args);
+            } catch(e) {
+                console.log(e.message || e);
+            }
+        })
+
+        this.bot.on('interactionCreate', async (...args) => {
+            try {
+                this.handleInteractions(...args);
             } catch(e) {
                 console.log(e.message || e);
             }
@@ -196,7 +207,7 @@ class ResponsePostStore extends Collection {
         }
 
         var u2 = await this.bot.users.fetch(post.response.user_id);
-        if(!u2) return await msg.channel.send('ERR! Couldn\'t fetch that response\'s user!');
+        if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
 
         var template = {
             title: "Response",
@@ -233,11 +244,15 @@ class ResponsePostStore extends Collection {
                 embed.color = parseInt('aa5555', 16);
                 embed.footer = {text: 'Response denied!'};
                 embed.timestamp = new Date().toISOString();
+                embed.author = {
+                    name: `${user.username}#${user.discriminator}`,
+                    iconURL: user.avatarURL()
+                }
 
                 try {
                     await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'denied'});
-                    await msg.edit({embeds: [embed]});
+                    await message.edit({embeds: [embed], components: []});
                     await msg.reactions.removeAll();
 
                     await u2.send({embeds: [{
@@ -266,11 +281,15 @@ class ResponsePostStore extends Collection {
                 embed.color = parseInt('55aa55', 16);
                 embed.footer = {text: 'Response accepted!'};
                 embed.timestamp = new Date().toISOString();
+                embed.author = {
+                    name: `${user.username}#${user.discriminator}`,
+                    iconURL: user.avatarURL()
+                }
 
                 try {
                     await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
-                    await msg.edit({embeds: [embed]});
+                    await message.edit({embeds: [embed], components: []});
                     await msg.reactions.removeAll();
 
                     var welc = post.response.form.message;
@@ -318,6 +337,153 @@ class ResponsePostStore extends Collection {
             default:
                 return;
                 break;
+        }
+    }
+
+    async handleInteractions(ctx) {
+        if(!ctx.isButton()) return;
+        if(!ctx.guild) return;
+
+        var post = await this.get(ctx.channel.guild.id, ctx.channel.id, ctx.message.id);
+        if(!post) return;
+
+        var {message, user} = ctx;
+        await ctx.deferUpdate();
+
+        var u2 = await this.bot.users.fetch(post.response.user_id);
+        if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
+
+        switch(ctx.customId) {
+            case 'deny':
+                var reason;
+                await message.channel.send([
+                    'Would you like to give a denial reason?\n',
+                    'Type `skip` to skip adding one, or ',
+                    '`cancel` to cancel the denial!'
+                ].join(''));
+                var resp = await message.channel.awaitMessages({filter: m => m.author.id == user.id, time: 2 * 60 * 1000, max: 1});
+                if(!resp?.first()) return await message.channel.send('Err! Timed out!');
+                resp = resp.first().content;
+                if(resp.toLowerCase() == 'cancel') return await message.channel.send('Action cancelled!');
+                if(resp.toLowerCase() == 'skip') reason = '*(no reason given)*';
+                else reason = resp;
+
+                var embed = message.embeds[0];
+                embed.color = parseInt('aa5555', 16);
+                embed.footer = {text: 'Response denied!'};
+                embed.timestamp = new Date().toISOString();
+                embed.author = {
+                    name: `${user.username}#${user.discriminator}`,
+                    iconURL: user.avatarURL()
+                }
+
+                try {
+                    await this.delete(message.channel.guild.id, message.channel.id, message.id);
+                    post.response = await this.bot.stores.responses.update(message.channel.guild.id, post.response.hid, {status: 'denied'});
+                    await message.edit({embeds: [embed], components: []});
+                    await message.reactions.removeAll();
+
+                    await u2.send({embeds: [{
+                        title: 'Response denied!',
+                        description: [
+                            `Server: ${message.channel.guild.name} (${message.channel.guild.id})`,
+                            `Form name: ${post.response.form.name}`,
+                            `Form ID: ${post.response.form.hid}`,
+                            `Response ID: ${post.response.hid}`
+                        ].join("\n"),
+                        fields: [{name: 'Reason', value: reason}],
+                        color: parseInt('aa5555', 16),
+                        timestamp: new Date().toISOString()
+                    }]})
+
+                    this.bot.emit('DENY', post.response);
+                } catch(e) {
+                    console.log(e);
+                    return await message.channel.send('ERR! Response denied, but couldn\'t message the user!');
+                }
+
+                return await message.channel.send('Response denied!');
+                break;
+            case 'accept':
+                var embed = message.embeds[0];
+                embed.color = parseInt('55aa55', 16);
+                embed.footer = {text: 'Response accepted!'};
+                embed.timestamp = new Date().toISOString();
+                embed.author = {
+                    name: `${user.username}#${user.discriminator}`,
+                    iconURL: user.avatarURL()
+                }
+
+                try {
+                    await this.delete(message.channel.guild.id, message.channel.id, message.id);
+                    post.response = await this.bot.stores.responses.update(message.channel.guild.id, post.response.hid, {status: 'accepted'});
+                    await message.edit({embeds: [embed], components: []});
+                    await message.reactions.removeAll();
+
+                    var welc = post.response.form.message;
+                    if(welc) {
+                        for(var key of Object.keys(VARIABLES)) {
+                            welc = welc.replace(key, eval(VARIABLES[key]));
+                        }
+                    }
+
+                    await u2.send({embeds: [{
+                        title: 'Response accepted!',
+                        description: welc,
+                        fields: [
+                            {name: 'Server', value: `${message.channel.guild.name} (${message.channel.guild.id})`},
+                            {name: 'Form name', value: `${post.response.form.name}`},
+                            {name: 'Form ID', value: `${post.response.form.hid}`},
+                            {name: 'Response ID', value: `${post.response.hid}`}
+                        ],
+                        color: parseInt('55aa55', 16),
+                        timestamp: new Date().toISOString()
+                    }]});
+
+                    this.bot.emit('ACCEPT', post.response);
+                } catch(e) {
+                    console.log(e);
+                    return await message.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);
+                }
+                break;
+        }
+
+        if(PGBTNS.find(pg => pg.custom_id == ctx.customId)) {
+            var template = {
+                title: "Response",
+                description: [
+                    `Form name: ${post.response.form.name}`,
+                    `Form ID: ${post.response.form.hid}`,
+                    `User: ${u2.username}#${u2.discriminator} (${u2})`,
+                    `Response ID: ${post.response.hid}`
+                ].join('\n'),
+                color: parseInt('ccaa55', 16),
+                fields: [],
+                timestamp: post.response.received,
+                footer: {text: 'Awaiting acceptance/denial...'}
+            }
+
+            var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
+            switch(ctx.customId) {
+                case 'first':
+                    post.page = 1;
+                    break;
+                case 'prev':
+                    if(post.page == 1) post.page = embeds.length;
+                    else post.page -= 1;
+                    break;
+                case 'next':
+                    if(post.page == embeds.length) post.page = 1;
+                    else post.page += 1;
+                    break;
+                case 'last':
+                    post.page = embeds.length;
+                    break;
+            }
+
+            await message.edit({embeds: [embeds[post.page - 1]]});
+            await this.update(ctx.guild.id, ctx.channel.id, ctx.message.id, {page: post.page});
+            return;
         }
     }
 }

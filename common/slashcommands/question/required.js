@@ -35,7 +35,7 @@ module.exports = {
 		if(form.questions.length == 1) return "Can't delete the last question on a form!";
 
 		var p = ctx.options.getInteger('question');
-		var value = ctx.options.getString('value');
+		var value = ctx.options.getBoolean('value');
 		if(p != null) {
 			var q = form.questions[p - 1];
 			if(!q) return "No question with that number!";
@@ -64,11 +64,11 @@ module.exports = {
 		}
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>

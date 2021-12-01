@@ -20,6 +20,7 @@ module.exports = {
 		]
 	},
 	usage: [
+		"[form_id] [channel] - Sets the apply channel for the given form"
 	],
 	async execute(ctx) {
 		var channel = ctx.options.getChannel('channel');
@@ -90,11 +91,11 @@ module.exports = {
 		return 'Form updated!';
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>

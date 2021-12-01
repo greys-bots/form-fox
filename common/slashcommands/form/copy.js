@@ -56,11 +56,11 @@ module.exports = {
 		return;
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>
@@ -72,4 +72,6 @@ module.exports = {
 			value: f.hid
 		}))
 	},
+	perms: ['MANAGE_MESSAGES'],
+	guildOnly: true
 }

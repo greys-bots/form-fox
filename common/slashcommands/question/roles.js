@@ -77,11 +77,11 @@ opts.push({
 		return embeds;
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>
@@ -155,11 +155,11 @@ opts.push({
 		return "Question updated!";
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>
@@ -232,11 +232,11 @@ opts.push({
 		return "Question updated!";
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>
@@ -338,11 +338,11 @@ opts.push({
 		}
 	},
 	async auto(ctx) {
+		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
-		if(!foc) return;
+		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
 
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
 		if(!forms?.length) return [];
 
 		return forms.filter(f =>

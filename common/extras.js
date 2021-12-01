@@ -52,6 +52,19 @@ const qTypes = {
 			if(current.other) r.push('🅾');
 			return r;
 		},
+		buttons: (current) => {
+			var nms = [...numbers.slice(1, current.choices.length + 1)];
+			var r = nms.map((n, i) => {
+				return {
+					... qButtons.nTemp,
+					label: `Choice ${i + 1}`,
+					custom_id: i+1,
+					emoji: n
+				}
+			})
+			if(current.other) r.push(qButtons.other);
+			return r;
+		},
 		setup: async (bot, msg, message) => {
 			await message.edit(`Please enter up to 10 options to choose from, separated by new lines.`);
 			var resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 5 * 60 * 1000})).first();
@@ -111,6 +124,26 @@ const qTypes = {
     			return undefined;
     		}
 		},
+		handleInteraction: async (msg, response, question, inter) => {
+			var index = inter.customId;
+			var embed = msg.embeds[0];
+    		if(question.choices[index - 1]) {
+    			response.answers.push(question.choices[index - 1]);
+    			return {response, send: true};
+    		} else if(inter.customId == "other" && question.other) {
+    			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
+        		await inter.update({embeds: [embed]});
+
+        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
+				if(!response.selection) response.selection = [];
+                response.selection.push('OTHER')
+
+                return {response, menu: true, send: false}
+    		} else {
+    			await inter.followUp('Invalid choice! Please select something else');
+    			return undefined;
+    		}
+		},
 		async roleSetup({ctx, question, role}) {
 			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
 				return {label: e.slice(0, 100), value: `${i}`}
@@ -153,7 +186,7 @@ const qTypes = {
 			return roles;
 		},
 		showRoles(q) {
-			return q.choices.map((c, i) => {
+			return q.choices.map((c) => {
 				var roles = q.roles.filter(r => r.choice == c);
 				return {
 					name: c,
@@ -183,6 +216,20 @@ const qTypes = {
 				...r,
     			'✏️'
     		];
+		},
+		buttons: (current) => {
+			var nms = [...numbers.slice(1, current.choices.length + 1)];
+			var r = nms.map((n, i) => {
+				return {
+					... qButtons.nTemp,
+					label: `Choice ${i + 1}`,
+					custom_id: i+1,
+					emoji: n
+				}
+			})
+			if(current.other) r.push(qButtons.other);
+			r.push(qButtons.select);
+			return r;
 		},
 		setup: async (bot, msg, message) => {
 			await message.edit(`Please enter up to 10 options to choose from, separated by new lines.`);
@@ -297,6 +344,41 @@ const qTypes = {
     			return undefined;
     		}
 		},
+		handleInteraction: async (msg, response, question, inter) => {
+			var index = inter.customId;
+    		var embed = msg.embeds[0];
+    		if(question.choices[index - 1]) {
+    			if(response.selection?.includes(question.choices[index - 1])) {
+    				embed.fields[index].value = question.choices[index - 1];
+    				response.selection = response.selection.filter(x => x != question.choices[index - 1]);
+    			} else {
+	    			embed.fields[index].value = question.choices[index - 1] + " ✅";
+    			}
+    			await inter.update({embeds: [embed]});
+        		if(!response.selection) response.selection = [];
+        		response.selection.push(question.choices[index - 1]);
+        		return {response, send: false};
+    		} else if(inter.customId == "other" && question.other) {
+    			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
+        		await inter.update({embeds: [embed]});
+
+        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
+				if(!response.selection) response.selection = [];
+                response.selection.push('OTHER')
+                return {response, send: false, menu: true};
+    		} else if(inter.custom_id == 'select') {
+    			if(!response.selection?.length) {
+    				await inter.followUp("Please select something!");
+    				return {response, send: false};
+    			}
+    			response.answers.push(response.selection.join("\n"));
+    			response.selection = [];
+    			return {response, send: true};
+    		} else {
+    			await inter.followUp('Invalid choice! Please select something else');
+    			return undefined;
+    		}
+		},
 		async roleSetup({ctx, question, role}) {
 			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
 				return {label: e.slice(0, 100), value: `${i}`}
@@ -340,7 +422,7 @@ const qTypes = {
 			return roles;
 		},
 		showRoles(q) {
-			return q.choices.map((c, i) => {
+			return q.choices.map((c) => {
 				var roles = q.roles.filter(r => r.choice == c);
 				return {
 					name: c,
@@ -352,7 +434,7 @@ const qTypes = {
 	'text': {
 		description: 'allows the user to freely type an answer',
 		alias: ['text', 'free'],
-		handleMessage: async (message, response, question) => {
+		handleMessage: async (message, response) => {
 			response.answers.push(message.content);
 			if(message.attachments.size > 0)
 				response.answers[response.answers.length - 1] += "\n\n**Attachments:**\n" + message.attachments.map(a => a.url).join("\n");
@@ -362,7 +444,7 @@ const qTypes = {
 			if(question.roles?.find(rl => rl.id == role.id))
 				return "Role already attached to question!";
 				
-			var action = await ctx.client.utils.awaitSelection(ctx, TACTIONS.map((e, i) => {
+			var action = await ctx.client.utils.awaitSelection(ctx, TACTIONS.map((e) => {
 				return e;
 			}), "How do you want to compare the answer?", {
 				min_values: 1, max_values: 1,
@@ -384,7 +466,7 @@ const qTypes = {
 
 			return question;
 		},
-		async roleRemove({ctx, question, role}) {
+		async roleRemove({question, role}) {
 			question.roles = question.roles.filter(r => r.id !== role.id);
 			return question;
 		},
@@ -418,7 +500,7 @@ const qTypes = {
 		description: 'requires the user to enter only numbers',
 		text: "valid number required.",
 		alias: ['number', 'numbers', 'num'],
-		handleMessage: async (message, response, question) => {
+		handleMessage: async (message, response) => {
 			if(isNaN(parseInt(message.content)))
 				return message.channel.send("Invalid response! Please provide a number value");
 
@@ -429,7 +511,7 @@ const qTypes = {
 			if(question.roles?.find(rl => rl.id == role.id))
 				return "Role already attached to question!";
 				
-			var action = await ctx.client.utils.awaitSelection(ctx, NACTIONS.map((e, i) => {
+			var action = await ctx.client.utils.awaitSelection(ctx, NACTIONS.map((e) => {
 				return e;
 			}), "How do you want to compare the answer?", {
 				min_values: 1, max_values: 1,
@@ -452,7 +534,7 @@ const qTypes = {
 
 			return question;
 		},
-		async roleRemove({ctx, question, role}) {
+		async roleRemove({question, role}) {
 			question.roles = question.roles.filter(r => r.id !== role.id);
 			return question;
 		},
@@ -501,7 +583,7 @@ const qTypes = {
 		description: 'requires the user to enter only a date',
 		text: "valid date required.",
 		alias: ['date', 'dt'],
-		handleMessage: async (message, response, question) => {
+		handleMessage: async (message, response) => {
 			var date = new Date(message.content);
 			if(isNaN(date))
 				return message.channel.send("Invalid response! Please send a valid date");
@@ -514,7 +596,7 @@ const qTypes = {
 		description: 'requires the user to send an image',
 		text: "image attachment required.",
 		alias: ['image', 'img'],
-		handleMessage: async (message, response, question) => {
+		handleMessage: async (message, response) => {
 			if(message.attachments.size == 0) {
 				message.channel.send('Invalid response! Please attach an image');
 				return undefined;
@@ -532,7 +614,7 @@ const qTypes = {
 		description: 'requires the user to send an attachment of any type',
 		text: "attachment required.",
 		alias: ['attachment', 'attach', 'att'],
-		handleMessage: async (message, response, question) => {
+		handleMessage: async (message, response) => {
 			if(message.attachments.size == 0) {
 				message.channel.send('Invalid response! Please add an attachment');
 				return undefined;
@@ -557,6 +639,65 @@ const options = [
 const numbers = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"];
 const confirmReacts = ['✅','❌'];
 
+const qButtons = {
+	nTemp: {
+		type: 2,
+		style: 2,
+	},
+	other: {
+		type: 2,
+		style: 2,
+		label: 'Other',
+		custom_id: 'other',
+		emoji: '🅾️'
+	},
+	select: {
+		type: 2,
+		style: 1,
+		label: 'Select',
+		custom_id: 'select',
+		emoji: '✏️'
+	},
+	skip: {
+		type: 2,
+		style: 2,
+		label: 'Skip',
+		custom_id: 'skip',
+		emoji: '➡️'
+	},
+	submit: {
+		type: 2,
+		style: 3,
+		label: 'Submit',
+		custom_id: 'submit',
+		emoji: { name: '✅'}
+	},
+	cancel: {
+		type: 2,
+		style: 4,
+		label: 'Cancel',
+		custom_id: 'cancel',
+		emoji: { name: '❌'}
+	}
+}
+
+const submitBtns = [
+	{
+		type: 2,
+		style: 3,
+		label: 'Submit',
+		custom_id: 'submit',
+		emoji: { name: '✅'}
+	},
+	{
+		type: 2,
+		style: 4,
+		label: 'Cancel',
+		custom_id: 'cancel',
+		emoji: { name: '❌'}
+	}
+]
+
 module.exports = {
 	qTypes,
 	TACTIONS,
@@ -568,6 +709,8 @@ module.exports = {
 	confirmBtns: [['yes', 'clear'], ['no', 'cancel']],
 	events: ['apply', 'submit', 'accept', 'deny'],
 
+	qButtons,
+	submitBtns,
 	clearBtns: [
 		{
 			type: 2,
@@ -600,6 +743,49 @@ module.exports = {
 			emoji: { name: '❌'}
 		}
 	],
+	responseBtns: [
+		{
+			type: 2,
+			style: 3,
+			label: 'Accept',
+			custom_id: 'accept',
+			emoji: '✅'
+		},
+		{
+			type: 2,
+			style: 4,
+			label: 'Deny',
+			custom_id: 'deny',
+			emoji: '❌'
+		}
+	],
+	pageBtns: [
+		{
+			type: 2,
+			label: "First",
+			style: 1,
+			custom_id: 'first'
+		},
+		{
+			type: 2,
+			label: 'Previous',
+			style: 1,
+			custom_id: 'prev'
+		},
+		{
+			type: 2,
+			label: 'Next',
+			style: 1,
+			custom_id: 'next'
+		},
+		{
+			type: 2,
+			label: 'Last',
+			style: 1,
+			custom_id: 'last'
+		}
+	],
+
 	requiredPerms: [
 		'ADD_REACTIONS',
 		'MANAGE_MESSAGES',
