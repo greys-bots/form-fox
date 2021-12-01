@@ -366,7 +366,7 @@ const qTypes = {
 				if(!response.selection) response.selection = [];
                 response.selection.push('OTHER')
                 return {response, send: false, menu: true};
-    		} else if(inter.custom_id == 'select') {
+    		} else if(inter.customId == 'select') {
     			if(!response.selection?.length) {
     				await inter.followUp("Please select something!");
     				return {response, send: false};
