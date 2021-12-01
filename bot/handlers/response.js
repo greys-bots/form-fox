@@ -429,7 +429,7 @@ class ResponseHandler {
 		if(type.message) question.message = question.message.concat(type.message(current));
 
 		question.buttons = [];
-		if(type.buttons) question.butons = type.buttons(current);
+		if(type.buttons) question.buttons = type.buttons(current);
 		question.buttons.push(QBTNS.cancel);
 
 		question.footer = {text: 'react with ❌ or type "cancel" to cancel.'};
