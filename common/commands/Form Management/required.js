@@ -64,5 +64,6 @@ module.exports = {
 		return 'Required questions set!';
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

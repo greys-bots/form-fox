@@ -17,5 +17,6 @@ module.exports = {
 		return 'Form closed!';
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

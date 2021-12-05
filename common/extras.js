@@ -795,4 +795,12 @@ module.exports = {
 		'VIEW_CHANNEL',
 		'SEND_MESSAGES'
 	],
+	opPerms: {
+		"MANAGE_RESPONSES": "Allow users to accept and deny responses",
+		"DELETE_RESPONSES": "Allow users to clear and delete responses",
+		"MANAGE_FORMS": "Allow users to create and edit forms",
+		"DELETE_FORMS": "Allow users to delete forms",
+		"MANAGE_CONFIG": "Allow users to set config options",
+		"MANAGE_OPS": "Allow users to add and remove opped users/roles",
+	}
 }

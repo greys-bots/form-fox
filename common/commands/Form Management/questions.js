@@ -37,6 +37,7 @@ module.exports = {
 	},
 	alias: ['q'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	subcommands: {}
 }
 

@@ -34,24 +34,19 @@ module.exports = {
 		})
 		if(typeof tocopy == 'string') return events;
 
-		var code = ctx.client.utils.genCode(ctx.client.chars);
 		var data = {};
 		tocopy.forEach(v => data[v] = form[v]);
 
 		try {
-			await ctx.client.stores.forms.create(ctx.guildId, code, data);
+			var created = await ctx.client.stores.forms.create(ctx.guildId, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		await ctx.editReply({
-			content: `Form copied! ID: ${code}\n` +
-					 `Use \`/channel ${code}\` to change what channel this form's responses go to!\n` +
-					 `See \`/help\` for more customization commands`,
-			components: [{
-				type: 1,
-				components: components.map(c => {c.disabled = true; return c})
-			}]
+			content: `Form copied! ID: ${created.hid}\n` +
+					 `Use \`/channel ${created.hid}\` to change what channel this form's responses go to!\n` +
+					 `See \`/help\` for more customization commands`
 		});
 		return;
 	},
@@ -72,6 +67,6 @@ module.exports = {
 			value: f.hid
 		}))
 	},
-	perms: ['MANAGE_MESSAGES'],
+	permissions: ['MANAGE_MESSAGES'],
 	guildOnly: true
 }

@@ -65,7 +65,8 @@ class InteractionHandler {
 					else slashData.set(mod.data.name, g2);
 				}
 				
-				command.permissions = command.permissions ?? group.permissions;
+				command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;
+				command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.opPerms = command.opPerms ?? group.opPerms;
 				command.guildOnly = command.guildOnly ?? group.guildOnly;
 				if(command.options) command.options = command.options.map(o => {
 					o.permissions = o.permissions ?? command.permissions
@@ -159,7 +160,9 @@ class InteractionHandler {
 		var cmd = this.parse(ctx);
 		if(!cmd) return;
 
-		var check = this.checkPerms(cmd, ctx);
+		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+
+		var check = this.checkPerms(cmd, ctx, cfg);
 		if(!check) return await ctx.reply({
 			content: "You don't have permission to use this command!",
 			ephemeral: true
@@ -251,12 +254,36 @@ class InteractionHandler {
 		menu.handle(ctx);
 	}
 
-	checkPerms(cmd, ctx) {
+	checkPerms(cmd, ctx, cfg) {
 		if(cmd.ownerOnly && ctx.user.id !== process.env.OWNER)
 			return false;
 		if(cmd.guildOnly && !ctx.member) return false; // pre-emptive in case of dm slash cmds
-		if(!cmd.permissions || !cmd.permissions[0]) return true;
-		return ctx.member.permissions.has(cmd.permissions);
+
+		if(!cmd.permissions?.length) return true; // no perms also means no opPerms
+		if(ctx.member.permissions.has(cmd.permissions))
+			return true;
+		
+		var found = this.findOpped(ctx.member ?? ctx.user, cfg?.opped)
+		if(found && cmd.opPerms){			
+			return (cmd.opPerms.filter(p => found.perms.includes(p))
+					.length == cmd.opPerms.length);
+		}
+
+		return false;
+	}
+
+	findOpped(user, opped) {
+		if(!opped || !user) return;
+
+		var f = opped.users?.find(u => u.id == user.id);
+		if(f) return f;
+
+		if(user.roles) {
+			f = opped.roles.find(r => user.roles.cache.has(r.id));
+			if(f) return f;
+		}
+
+		return;
 	}
 
 	async paginate(menu, ctx) {

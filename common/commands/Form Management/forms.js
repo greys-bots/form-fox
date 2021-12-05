@@ -94,5 +94,6 @@ module.exports = {
 	},
 	alias: ['list', 'l', 'f', 'form'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

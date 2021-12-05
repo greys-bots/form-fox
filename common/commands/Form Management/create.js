@@ -110,5 +110,6 @@ module.exports = {
 	},
 	alias: ['new', 'add', 'n', '+'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

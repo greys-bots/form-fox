@@ -54,5 +54,6 @@ module.exports = {
 		return 'Responses deleted!';
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['DELETE_RESPONSES'],
 	guildOnly: true
 }

@@ -43,6 +43,7 @@ module.exports = {
 	},
 	alias: ['imp'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true,
 	cooldown: 60
 }

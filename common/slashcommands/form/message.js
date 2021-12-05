@@ -109,6 +109,6 @@ module.exports = {
 			value: f.hid
 		}))
 	},
-	perms: ['MANAGE_MESSAGES'],
+	permissions: ['MANAGE_MESSAGES'],
 	guildOnly: true
 }

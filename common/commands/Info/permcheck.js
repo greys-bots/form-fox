@@ -61,6 +61,7 @@ module.exports = {
 		}
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_CONFIG'],
 	guildOnly: true
 }
 

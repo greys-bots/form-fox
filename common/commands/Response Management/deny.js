@@ -65,5 +65,6 @@ module.exports = {
 	},
 	alias: ['fail'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_RESPONSES'],
 	guildOnly: true
 }

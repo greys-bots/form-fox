@@ -29,5 +29,6 @@ module.exports = {
 		return 'Prefix changed!';
 	},
 	guildOnly: true,
-	permissions: ['MANAGE_GUILD']
+	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_CONFIG']
 }

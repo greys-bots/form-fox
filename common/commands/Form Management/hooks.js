@@ -54,6 +54,7 @@ module.exports = {
 	},
 	alias: ['hook', 'link', 'links'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true,
 	subcommands: {}
 }
@@ -87,6 +88,7 @@ module.exports.subcommands.add = {
 	},
 	alias: ['new', '+', 'create'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }
 
@@ -112,5 +114,6 @@ module.exports.subcommands.remove = {
 	},
 	alias: ['delete', 'd', 'rmv', 'r', '-'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

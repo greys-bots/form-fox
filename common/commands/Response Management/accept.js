@@ -68,5 +68,6 @@ module.exports = {
 	},
 	alias: ['acc', 'pass'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_RESPONSES'],
 	guildOnly: true
 }

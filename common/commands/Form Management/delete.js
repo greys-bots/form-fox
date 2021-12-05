@@ -98,5 +98,6 @@ module.exports = {
 	},
 	alias: ['del', 'remove'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['DELETE_FORMS'],
 	guildOnly: true
 }

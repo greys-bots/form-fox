@@ -22,5 +22,6 @@ module.exports = {
 	},
 	alias: ['col', 'colour'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

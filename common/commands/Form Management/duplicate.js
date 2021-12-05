@@ -41,7 +41,6 @@ module.exports = {
 		resp = resp.map(o => OPTIONS.find(op => op.alias.includes(o))?.val)
 				   .filter((x, i, arr) => x && arr.indexOf(x, i + 1) == -1); //de-duplicate, grab correct options
 
-		var code = bot.utils.genCode(bot.chars);
 		var data = {};
 		resp.forEach(o => data[o] = form[o]);
 		
@@ -50,18 +49,19 @@ module.exports = {
 		data.questions = form.questions;
 
 		try {
-			await bot.stores.forms.create(msg.channel.guild.id, code, data);
+			var created = await bot.stores.forms.create(msg.channel.guild.id, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		return [
-			`Form copied! ID: ${code}`,
-			`Use \`${bot.prefix}channel ${code}\` to change what channel this form's responses go to!`,
+			`Form copied! ID: ${created.hid}`,
+			`Use \`${bot.prefix}channel ${created.hid}\` to change what channel this form's responses go to!`,
 			`See \`${bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	},
 	alias: ['copy', 'dup', 'cp'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

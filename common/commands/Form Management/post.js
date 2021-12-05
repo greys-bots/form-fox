@@ -34,5 +34,6 @@ module.exports = {
 		return 'Posted!';
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

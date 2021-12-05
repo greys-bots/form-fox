@@ -76,5 +76,6 @@ module.exports = {
 	},
 	alias: ['resp', 'response', 'listresponses', 'listresponse', 'lr'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_RESPONSES'],
 	guildOnly: true
 }

@@ -2,12 +2,14 @@ const { confirmReacts: REACTS } = require('../../extras');
 const VALS = ["1", "true", "y", "yes", "enable", "✅"];
 
 module.exports = {
-	help: () => "Set if the bot should remove form reacts",
-	usage: () =>[
+	help: () => "Turn off the info embed for forms",
+	usage: () => [
 		" - Views current values",
 		" [true|false] - Sets the global value",
 		" [form id] [val] - Sets the value for a form"
 	],
+	desc: ()=> `The "info embed" shows the user a list of questions they'll be answering, along with info `+
+			   `about the form itself. Making this \`false\` means it won't be sent`,
 	execute: async (bot, msg, args) => {
 		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
 		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
@@ -15,7 +17,7 @@ module.exports = {
 			case 0:
 				var embeds = [{embed: {
 					title: 'Default settings',
-					description: `${cfg.reacts ?? "*(not set)*"}`,
+					description: `${cfg.embed ?? "*(not set)*"}`,
 					color: parseInt('ee8833', 16)
 				}}];
 
@@ -24,8 +26,8 @@ module.exports = {
 				embeds = embeds.concat(forms.map(f => {
 					chan = msg.channel.guild.channels.cache.find(c => c.id == f.channel_id);
 					return {embed: {
-						title: `Value for form ${f.name} (${f.hid})`,
-						description: `${form.reacts ?? "*(not set)*"}`,
+						title: `Channel for form ${f.name} (${f.hid})`,
+						description: `${form.embed ?? "*(not set)*"}`,
 						color: parseInt('ee8833', 16)
 					}}
 				}))
@@ -35,17 +37,15 @@ module.exports = {
 						embeds[i].embed.title += ` (${i+1}/${embeds.length})`;
 
 				return embeds;
-				break;
 			case 1:
 				var val;
 				if(VALS.includes(args[0].toLowerCase())) val = true;
 				else val = false;
 
-				if(!cfg.server_id) await bot.stores.configs.create(msg.channel.guild.id, {reacts: val});
-				else await bot.stores.configs.update(msg.channel.guild.id, {reacts: val});
+				if(!cfg.server_id) await bot.stores.configs.create(msg.channel.guild.id, {embed: val});
+				else await bot.stores.configs.update(msg.channel.guild.id, {embed: val});
 
 				return "Global config set!";
-				break;
 			case 2:
 				var form = forms.find(f => f.hid == args[0].toLowerCase());
 				if(!form) return 'Form not found!';
@@ -55,16 +55,16 @@ module.exports = {
 				else val = false;
 
 				try {
-					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {reacts: val});
+					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {embed: val});
 				} catch(e) {
 					return "ERR! "+e;
 				}
 
 				return "Form config set!";
-				break;
 		}
 	},
 	guildOnly: true,
 	permissions: ['MANAGE_MESSAGES'],
-	alias: ['reactremove', 'reaction', 'reacts', 'reactions', 'rr']
+	opPerms: ['MANAGE_CONFIG'],
+	alias: ['infoembed', 'embed']
 }

@@ -86,6 +86,7 @@ module.exports = {
 			value: f.hid
 		}))
 	},
-	perms: ['MANAGE_MESSAGES'],
+	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['DELETE_FORMS'],
 	guildOnly: true
 }

@@ -12,7 +12,8 @@ module.exports = async (bot) => {
 			message 			TEXT,
 			prefix 				TEXT,
 			reacts 				BOOLEAN,
-			embed 				BOOLEAN
+			embed 				BOOLEAN,
+			opped 				JSONB
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (

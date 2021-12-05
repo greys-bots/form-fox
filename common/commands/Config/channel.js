@@ -69,5 +69,6 @@ module.exports = {
 	},
 	alias: ['ch', 'chan'],
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_CONFIG'],
 	guildOnly: true
 }

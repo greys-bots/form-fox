@@ -30,5 +30,6 @@ module.exports = {
 		return 'Bound!';
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

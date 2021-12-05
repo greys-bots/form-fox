@@ -43,5 +43,6 @@ module.exports = {
 		return 'Emoji updated!';
 	},
 	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS'],
 	guildOnly: true
 }

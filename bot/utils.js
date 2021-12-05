@@ -157,7 +157,7 @@ module.exports = {
 	awaitSelection: async (ctx, choices, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
 		var components = [{
 			type: 3,
-			custom_id: 'copy_selector',
+			custom_id: 'selector',
 			options: choices,
 			...options
 		}]
@@ -184,7 +184,7 @@ module.exports = {
 
 		try {
 			var resp = await reply.awaitMessageComponent({
-				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'copy_selector',
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
 				time: 60000
 			});
 		} catch(e) { }

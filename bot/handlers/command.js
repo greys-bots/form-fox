@@ -76,10 +76,10 @@ class CommandHandler {
 	}
 
 	async handle(ctx) {
-		var {command, args, msg} = ctx;
+		var {command, args, msg, config: cfg} = ctx;
 		if(command.guildOnly && !msg.channel.guild) return "That command is guild only!";
 		if(msg.channel.guild) {
-			var check = this.checkPerms(ctx);
+			var check = this.checkPerms(ctx, cfg);
 			if(!check) return "You don't have permission to use that command!";
 		}
 		if(command.cooldown && this.cooldowns.get(`${msg.author.id}-${command.name}`)) {
@@ -102,10 +102,32 @@ class CommandHandler {
 		return res;
 	}
 
-	checkPerms(ctx) {
+	checkPerms(ctx, cfg) {
 		var {command: cmd, msg} = ctx;
-		if(cmd.permissions) return msg.member.permissions.has(cmd.permissions);
-		return true;
+		if(!cmd.permissions?.[0]) return true;
+		if(cmd.permissions && msg.member.permissions.has(cmd.permissions))
+			return true;
+
+		var found = this.findOpped(msg.member ?? msg.author, cfg?.opped)
+		if(found && cmd.opPerms){			
+			return (cmd.opPerms.filter(p => found.perms.includes(p))
+					.length == cmd.opPerms.length);
+		}
+		return false;
+	}
+
+	findOpped(user, opped) {
+		if(!opped || !user) return;
+
+		var f = opped.users?.find(u => u.id == user.id);
+		if(f) return f;
+
+		if(user.roles) {
+			f = opped.roles.find(r => user.roles.cache.has(r.id));
+			if(f) return f;
+		}
+
+		return;
 	}
 
 	groupArgs(args) {

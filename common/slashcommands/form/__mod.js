@@ -4,5 +4,6 @@ module.exports = {
 		description: 'Commands for managing forms'
 	},
 	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES']
+	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_FORMS']
 }
