@@ -187,8 +187,20 @@ class ResponsePostStore extends Collection {
         else msg = reaction.message;
         if(!msg.channel.guild) return;
 
+		var cfg = await this.bot.stores.configs.get(msg.guild.id);
         var mem = await msg.guild.members.fetch(user.id);
-        if(!mem.permissions.has('MANAGE_MESSAGES')) return;
+        var check = await this.bot.handlers.interaction.checkPerms(
+        	{
+        		permissions: ['MANAGE_MESSAGES'],
+        		opPerms: ['MANAGE_RESPONSES']
+        	},
+        	{
+        		member: mem,
+        		user
+        	},
+        	cfg
+        )
+        if(!check) return;
 
         var post = await this.get(msg.channel.guild.id, msg.channel.id, msg.id);
         if(!post) return;
@@ -349,6 +361,16 @@ class ResponsePostStore extends Collection {
 
         var {message: msg, user} = ctx;
         await ctx.deferUpdate();
+
+		var cfg = await this.bot.stores.configs.get(ctx.guild.id);
+        var check = await this.bot.handlers.interaction.checkPerms(
+        	{
+        		permissions: ['MANAGE_MESSAGES'],
+        		opPerms: ['MANAGE_RESPONSES']
+        	},
+        	ctx, cfg
+        )
+        if(!check) return;
 
         var u2 = await this.bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");

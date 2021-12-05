@@ -59,5 +59,6 @@ module.exports = {
 
 		return "Response accepted!";
 	},
-	permissions: ['MANAGE_MESSAGES']
+	permissions: ['MANAGE_MESSAGES'],
+	opPerms: ['MANAGE_RESPONSES']
 }
