@@ -27,14 +27,16 @@ class FormStore extends Collection {
 					emoji,
 					reacts,
 					embed,
-					apply_channel
-				) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+					apply_channel,
+					tickets_id
+				) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 				RETURNING *`,
 				[server, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, JSON.stringify(data.roles || []),
 				 data.message, data.color, data.open || true,
-				 data.cooldown, data.emoji, data.reacts, data.embed, data.apply_channel]);
+				 data.cooldown, data.emoji, data.reacts,
+				 data.embed, data.apply_channel, data.tickets_id]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -62,13 +64,16 @@ class FormStore extends Collection {
 					emoji,
 					reacts,
 					embed,
-					apply_channel
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-				[server, hid, data.name, data.description,
+					apply_channel,
+					tickets_id
+				) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+				RETURNING *`,
+				[server, data.name, data.description,
 				 JSON.stringify(data.questions || []),
 				 data.channel_id, JSON.stringify(data.roles || []),
 				 data.message, data.color, data.open || true,
-				 data.cooldown, data.emoji, data.reacts, data.embed, data.apply_channel]);
+				 data.cooldown, data.emoji, data.reacts,
+				 data.embed, data.apply_channel, data.tickets_id]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);

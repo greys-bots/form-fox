@@ -69,17 +69,36 @@ class ResponseHandler {
 			}
 			
 			if(cfg?.embed || form.embed) {
-				await user.send({embeds: [{
+				var fembeds = await this.bot.utils.genEmbeds(this.bot, form.questions, (q, i) => {
+					return {
+						name: `Question ${i+1}${form.required?.includes(i+1) ? " (required)" : ""}`,
+						value: q.value
+					}
+				}, {
 					title: form.name,
 					description: form.description,
-					fields: form.questions.map((q,i) => {
-						return {
-							name: `Question ${i+1}${form.required?.includes(i+1) ? " (required)" : ""}`,
-							value: q.value
-						}
-					}),
 					color: parseInt(form.color || 'ee8833', 16)
-				}]})
+				})
+				var fm = await user.send({embeds: [fembeds[0].embed]})
+				if(fembeds[1]) {
+					if(!this.bot.menus) this.bot.menus = {};
+					this.bot.menus[fm.id] = {
+						user: user.id,
+						data: fembeds,
+						index: 0,
+						timeout: setTimeout(()=> {
+							if(!this.bot.menus[fm.id]) return;
+							try {
+								fm.reactions.removeAll();
+							} catch(e) {
+								console.log(e);
+							}
+							delete this.bot.menus[fm.id];
+						}, 900000),
+						execute: this.bot.utils.paginateEmbeds
+					};
+					["⬅️", "➡️", "⏹️"].forEach(r => fm.react(r));
+				}
 			}
 			
 			var question = await this.handleQuestion(form, 0);

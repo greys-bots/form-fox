@@ -757,6 +757,13 @@ module.exports = {
 			label: 'Deny',
 			custom_id: 'deny',
 			emoji: '❌'
+		},
+		{
+			type: 2,
+			style: 2,
+			label: 'Ticket',
+			custom_id: 'ticket',
+			emoji: '🎟️'
 		}
 	],
 	pageBtns: [

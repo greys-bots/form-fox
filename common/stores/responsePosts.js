@@ -237,6 +237,7 @@ class ResponsePostStore extends Collection {
 
         var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
 
+       	var ticket = await this.bot.stores.tickets.get(msg.guild.id, post.response.hid);
         switch(reaction.emoji.name) {
             case '❌':
                 var reason;
@@ -279,6 +280,11 @@ class ResponsePostStore extends Collection {
                         color: parseInt('aa5555', 16),
                         timestamp: new Date().toISOString()
                     }]})
+
+                    if(ticket) {
+			        	var tch = msg.guild.channels.resolve(ticket.channel_id);
+			            tch.delete();
+			        }
 
                     this.bot.emit('DENY', post.response);
                 } catch(e) {
@@ -324,6 +330,11 @@ class ResponsePostStore extends Collection {
                         timestamp: new Date().toISOString()
                     }]});
 
+                    if(ticket) {
+			        	var tch = msg.guild.channels.resolve(ticket.channel_id);
+			            tch.delete();
+			        }
+
                     this.bot.emit('ACCEPT', post.response);
                 } catch(e) {
                     console.log(e);
@@ -346,6 +357,34 @@ class ResponsePostStore extends Collection {
                 await reaction.users.remove(user)
                 await this.update(msg.guild.id, msg.channel.id, msg.id, {page: post.page});
                 break;
+            case '🎟️':
+            	try {
+                    var ch_id = post.response.form.tickets_id ?? cfg?.ticket_category;
+                    if(!ch_id) return;
+                    var ch = msg.guild.channels.resolve(ch_id);
+                    if(!ch) return await msg.channel.send('No ticket category set!');
+
+                    if(ticket) return await msg.channel.send(`Channel already opened! Link: <#${ticket.channel_id}>`)
+
+                    var ch2 = await msg.guild.channels.create(`ticket-${post.response.hid}`, {
+                        parent: ch.id,
+                        reason: 'Mod opened ticket for response '+post.response.hid
+                    })
+
+                    await ch2.lockPermissions(); //get perms from parent category
+                    await ch2.permissionOverwrites.edit(u2.id, {
+                        'VIEW_CHANNEL': true,
+                        'SEND_MESSAGES': true,
+                        'READ_MESSAGE_HISTORY': true
+                    })
+
+                    await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+
+                    msg.channel.send(`Channel created: <#${ch2.id}>`);
+                } catch(e) {
+                    return msg.channel.send('ERR: '+e.message);
+                }
+            	break;
             default:
                 return;
                 break;
@@ -375,6 +414,8 @@ class ResponsePostStore extends Collection {
         var u2 = await this.bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
 
+		var ticket = await this.bot.stores.tickets.get(msg.guild.id, post.response.hid);
+		var cmp = msg.components;
         switch(ctx.customId) {
             case 'deny':
                 var reason;
@@ -402,7 +443,10 @@ class ResponsePostStore extends Collection {
                 try {
                     await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'denied'});
-                    await msg.edit({embeds: [embed], components: []});
+                    await msg.edit({
+                    	embeds: [embed],
+                    	components: []
+                    });
                     await msg.reactions.removeAll();
 
                     await u2.send({embeds: [{
@@ -439,7 +483,10 @@ class ResponsePostStore extends Collection {
                 try {
                     await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
-                    await msg.edit({embeds: [embed], components: []});
+                    await msg.edit({
+                    	embeds: [embed],
+                    	components: []
+                    });
                     await msg.reactions.removeAll();
 
                     var welc = post.response.form.message;
@@ -468,6 +515,38 @@ class ResponsePostStore extends Collection {
                     return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);
                 }
                 break;
+            case 'ticket':
+            	try {
+                    var ch_id = post.response.form.tickets_id ?? cfg?.ticket_category;
+                    if(!ch_id) return await msg.channel.send('No ticket category set!');
+                    var ch = msg.guild.channels.resolve(ch_id);
+                    if(!ch) return await msg.channel.send('Category not found!!');
+
+                    if(ticket) return await msg.channel.send(`Channel already opened! Link: <#${ticket.channel_id}>`)
+
+                    var ch2 = await msg.guild.channels.create(`ticket-${post.response.hid}`, {
+                        parent: ch.id,
+                        reason: 'Mod opened ticket for response '+post.response.hid
+                    })
+
+                    await ch2.lockPermissions(); //get perms from parent category
+                    await ch2.permissionOverwrites.edit(u2.id, {
+                        'VIEW_CHANNEL': true,
+                        'SEND_MESSAGES': true,
+                        'READ_MESSAGE_HISTORY': true
+                    })
+
+					cmp[0].components[2].disabled = true;
+					await msg.edit({
+						components: cmp
+					})
+                    await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+                    await ctx.followUp(`Channel created! <#${ch2.id}>`);
+                    return;
+                } catch(e) {
+                    return await msg.channel.send('ERR: '+e.message);
+                }
+            	break;
         }
 
         if(PGBTNS.find(pg => pg.custom_id == ctx.customId)) {

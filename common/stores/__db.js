@@ -13,7 +13,8 @@ module.exports = async (bot) => {
 			prefix 				TEXT,
 			reacts 				BOOLEAN,
 			embed 				BOOLEAN,
-			opped 				JSONB
+			opped 				JSONB,
+			ticket_category 	TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (
@@ -32,7 +33,8 @@ module.exports = async (bot) => {
 			emoji 			TEXT,
 			reacts 			BOOLEAN,
 			embed 			BOOLEAN,
-			apply_channel 	TEXT
+			apply_channel 	TEXT,
+			tickets_id 		TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS extras (
@@ -93,6 +95,13 @@ module.exports = async (bot) => {
 			page 		INTEGER
 		);
 
+		CREATE TABLE IF NOT EXISTS tickets (
+			id			SERIAL PRIMARY KEY,
+			server_id	TEXT,
+			channel_id	TEXT,
+			response_id	TEXT
+		);
+
 		CREATE OR REPLACE FUNCTION gen_hid() RETURNS TEXT AS
 			'select lower(substr(md5(random()::text), 0, 5));'
 		LANGUAGE SQL VOLATILE;
@@ -126,6 +135,12 @@ module.exports = async (bot) => {
 	}
 
 	files = fs.readdirSync(__dirname + '/migrations');
+	files = files.sort((a, b) => {
+		a = parseInt(a.slice(0, -3));
+		b = parseInt(b.slice(0, -3));
+
+		return a - b;
+	})
 	var version = parseInt((await db.query(`SELECT * FROM extras WHERE key = 'version'`)).rows[0]?.val || -1);
 	if(files.length > version + 1) {
 		for(var i = version + 1; i < files.length; i++) {

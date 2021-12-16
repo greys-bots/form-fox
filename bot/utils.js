@@ -62,7 +62,7 @@ module.exports = {
 					this.index -= 1;
 				}
 				await m.edit({embeds: [this.data[this.index].embed ?? this.data[this.index]]});
-				if(m.channel.type != "dm") await reaction.users.remove(this.user)
+				if(m.channel.type != "DM") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
 			case "➡️":
@@ -72,7 +72,7 @@ module.exports = {
 					this.index += 1;
 				}
 				await m.edit({embeds: [this.data[this.index].embed ?? this.data[this.index]]});
-				if(m.channel.type != "dm") await reaction.users.remove(this.user)
+				if(m.channel.type != "DM") await reaction.users.remove(this.user)
 				bot.menus[m.id] = this;
 				break;
 			case "⏹️":
