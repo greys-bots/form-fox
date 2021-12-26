@@ -65,7 +65,7 @@ module.exports = {
 
 		for(var form of forms) {
 			var channel = msg.channel.guild.channels.resolve(form.channel_id);
-			var roles = msg.channel.guild.roles.cache.filter(r => form.roles.includes(r.id));
+			var roles = msg.channel.guild.roles.cache.filter(r => form.roles?.includes(r.id));
 			var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 			var embed = {embed: {
