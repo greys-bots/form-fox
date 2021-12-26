@@ -13,7 +13,7 @@ module.exports = {
 			if(!forms?.length && !cfg.response_channel) return "No forms or config to check! Provide a channel to check that";
 
 			var check = [];
-			if(cfg.response_channel) check.push(cfg.response_channel);
+			if(cfg?.response_channel) check.push(cfg.response_channel);
 			for(var f of forms) {
 				if(f.channel_id && !check.includes(f.channel_id))
 					check.push(f.channel_id);
