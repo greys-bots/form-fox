@@ -56,7 +56,7 @@ module.exports = {
 		}
 
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {required});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -65,5 +65,6 @@ module.exports = {
 	},
 	permissions: ['MANAGE_MESSAGES'],
 	opPerms: ['MANAGE_FORMS'],
+	alias: ['req'],
 	guildOnly: true
 }
