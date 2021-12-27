@@ -12,7 +12,7 @@ module.exports = {
 			},
 			{
 				name: 'question',
-				description: "The question number to rephrase",
+				description: "The number of the question to change",
 				type: 4,
 				required: false
 			},
@@ -32,7 +32,6 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form) return 'Form not found!';
-		if(form.questions.length == 1) return "Can't delete the last question on a form!";
 
 		var p = ctx.options.getInteger('question');
 		var value = ctx.options.getBoolean('value');
