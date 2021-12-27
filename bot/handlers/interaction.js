@@ -160,7 +160,8 @@ class InteractionHandler {
 		var cmd = this.parse(ctx);
 		if(!cmd) return;
 
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg;
+		if(ctx.guild) cfg = await ctx.client.stores.configs.get(ctx.guild.id);
 
 		var check = this.checkPerms(cmd, ctx, cfg);
 		if(!check) return await ctx.reply({
@@ -262,7 +263,7 @@ class InteractionHandler {
 		if(!cmd.permissions?.length) return true; // no perms also means no opPerms
 		if(ctx.member.permissions.has(cmd.permissions))
 			return true;
-		
+
 		var found = this.findOpped(ctx.member ?? ctx.user, cfg?.opped)
 		if(found && cmd.opPerms){			
 			return (cmd.opPerms.filter(p => found.perms.includes(p))
