@@ -36,8 +36,13 @@ module.exports = {
 			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm) return confirm;
 
+			form.questions = form.questions.map(q => {
+				q.required = false;
+				return q;
+			})
+
 			try {
-				await bot.stores.forms.update(msg.channel.guild.id, form.hid, {required: []});
+				await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
 			} catch(e) {
 				return 'ERR! '+e;
 			}
