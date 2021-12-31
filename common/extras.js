@@ -501,8 +501,10 @@ const qTypes = {
 		text: "valid number required.",
 		alias: ['number', 'numbers', 'num'],
 		handleMessage: async (message, response) => {
-			if(isNaN(parseInt(message.content)))
-				return message.channel.send("Invalid response! Please provide a number value");
+			if(isNaN(parseInt(message.content))) {
+				await message.channel.send("Invalid response! Please provide a number value");
+				return undefined;
+			}
 
 			response.answers.push(message.content);
 			return {response, send: true};
@@ -585,8 +587,10 @@ const qTypes = {
 		alias: ['date', 'dt'],
 		handleMessage: async (message, response) => {
 			var date = new Date(message.content);
-			if(isNaN(date))
-				return message.channel.send("Invalid response! Please send a valid date");
+			if(isNaN(date)) {
+				await message.channel.send("Invalid response! Please send a valid date");
+				return undefined;
+			}
 
 			response.answers.push(date);
 			return {response, send: true};
@@ -598,11 +602,11 @@ const qTypes = {
 		alias: ['image', 'img'],
 		handleMessage: async (message, response) => {
 			if(message.attachments.size == 0) {
-				message.channel.send('Invalid response! Please attach an image');
+				await message.channel.send('Invalid response! Please attach an image');
 				return undefined;
 			}
 			if(!message.attachments.find(a => a.height && a.width)) {
-				message.channel.send('Invalid response! Please attach a valid image');
+				await message.channel.send('Invalid response! Please attach a valid image');
 				return undefined;
 			}
 			response.answers.push(message.content);
@@ -616,7 +620,7 @@ const qTypes = {
 		alias: ['attachment', 'attach', 'att'],
 		handleMessage: async (message, response) => {
 			if(message.attachments.size == 0) {
-				message.channel.send('Invalid response! Please add an attachment');
+				await message.channel.send('Invalid response! Please add an attachment');
 				return undefined;
 			}
 			response.answers.push(message.content);
