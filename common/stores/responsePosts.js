@@ -4,8 +4,8 @@ const {
 } = require('../extras');
 
 const VARIABLES = {
-    '$USER': `user`,
-    '$GUILD': `msg.channel.guild.name`
+    '$USER': (user, guild) => user,
+    '$GUILD': (user, guild) => guild.name
 }
 
 class ResponsePostStore extends Collection {
@@ -265,7 +265,7 @@ class ResponsePostStore extends Collection {
                 try {
                     await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'denied'});
-                    await message.edit({embeds: [embed], components: []});
+                    await msg.edit({embeds: [embed], components: []});
                     await msg.reactions.removeAll();
 
                     await u2.send({embeds: [{
@@ -307,13 +307,13 @@ class ResponsePostStore extends Collection {
                 try {
                     await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
                     post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
-                    await message.edit({embeds: [embed], components: []});
+                    await msg.edit({embeds: [embed], components: []});
                     await msg.reactions.removeAll();
 
                     var welc = post.response.form.message;
                     if(welc) {
                         for(var key of Object.keys(VARIABLES)) {
-                            welc = welc.replace(key, eval(VARIABLES[key]));
+                            welc = welc.replace(key, VARIABLES[key](u2, msg.guild));
                         }
                     }
 
@@ -492,7 +492,7 @@ class ResponsePostStore extends Collection {
                     var welc = post.response.form.message;
                     if(welc) {
                         for(var key of Object.keys(VARIABLES)) {
-                            welc = welc.replace(key, eval(VARIABLES[key]));
+                            welc = welc.replace(key, VARIABLES[key](u2, ctx.guild));
                         }
                     }
 
