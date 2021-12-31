@@ -55,6 +55,8 @@ module.exports = {
 		if(!form) return 'Form not found!';
 
 		var q = ctx.options.getString('question').trim();
+		if(q.length > 256) return "Question length too long! Must be 256 chars or less";
+		
 		var type = ctx.options.getString('type');
 		var required = ctx.options.getBoolean('required');
 		var pos = ctx.options.getInteger('position', false);

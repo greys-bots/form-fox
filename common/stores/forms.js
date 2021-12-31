@@ -405,8 +405,8 @@ class FormStore extends Collection {
 		if(form.questions.find(q => !q.value?.lengtg))
 			return {ok: false, reason: "Questions must have a value"};
 
-		if(form.questions.find(q => q.value.length > 100))
-			return {ok: false, reason: "Questions must be 100 characters or less"};
+		if(form.questions.find(q => q.value.length > 256))
+			return {ok: false, reason: "Questions must be 256 characters or less"};
 
 		if(form.questions.find(q => !TYPES[q.type]))
 			return {ok: false, reason: "Questions must have a valid type"};

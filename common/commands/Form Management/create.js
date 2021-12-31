@@ -49,6 +49,7 @@ module.exports = {
 			if(!resp) return 'Timed out! Aborting!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			if(resp.content.toLowerCase() == 'done') break;
+			if(resp.content.length > 256) return "Question too long! Must be 256 chars or less. Aborting!";
 			data.questions.push({value: resp.content, type: 'text', required: false});
 			await resp.delete();
 

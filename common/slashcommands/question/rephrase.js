@@ -37,6 +37,7 @@ module.exports = {
 		if(!q) return "No question with that number!";
 
 		var value = ctx.options.getString('value');
+		if(value.length > 256) return "Question length too long! Must be 256 chars or less";
 		form.questions[p - 1].value = value;
 
 		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {questions: form.questions});
