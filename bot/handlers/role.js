@@ -36,7 +36,16 @@ class RoleHandler {
 			}
 		}
 
-		if(roles.length) await member.roles.add(roles);
+		try {
+			if(roles.length) await member.roles.add(roles);
+		} catch(e) {
+			console.log(
+				`Error adding roles for form ${form.hid}`,
+				`server ${form.server_id}`,
+				`user ${ctx.user_id}`,
+				(e.message ?? e)
+			);
+		}
 	}
 }
 
