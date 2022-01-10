@@ -402,7 +402,7 @@ class FormStore extends Collection {
 		if(form.questions > 20)
 			return {ok: false, reason: "Max of 20 questions per form"};
 
-		if(form.questions.find(q => !q.value?.lengtg))
+		if(form.questions.find(q => !q.value?.length))
 			return {ok: false, reason: "Questions must have a value"};
 
 		if(form.questions.find(q => q.value.length > 100))
