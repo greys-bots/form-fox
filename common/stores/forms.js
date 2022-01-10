@@ -372,7 +372,7 @@ class FormStore extends Collection {
 					}
 
 					var {
-						id,
+						hid,
 						server_id,
 						channel_id,
 						roles,
@@ -383,7 +383,7 @@ class FormStore extends Collection {
 						await this.update(server, form.hid, form);
 						updated++;
 					} else {
-						await this.create(server, this.bot.utils.genCode(this.bot.chars), form);
+						await this.create(server, form);
 						created++;
 					}
 				}
