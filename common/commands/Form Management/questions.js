@@ -55,13 +55,16 @@ module.exports.subcommands.add = {
 		if(form.questions.length >= 20) return 'That form already has 20 questions!';
 
 		var resp;
-		var question = {value: args.slice(1).join(" "), type: 'text', required: false};
+		var value = args.slice(1).join(" ");
+		if(value.length > 256) return "Question length too long! Must be 256 chars or less";
+		var question = {value, type: 'text', required: false};
 		var position = form.questions.length + 1;
 		if(!question.value) {
 			await msg.channel.send('What question would you like to add to the form?\nType `cancel` to cancel!');
 			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
 			if(!resp) return 'ERR! Timed out!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
+			if(resp.content.length > 256) return "Question length too long! Must be 256 chars or less";
 			question.value = resp.content;
 		}
 
@@ -182,6 +185,7 @@ module.exports.subcommands.set = {
 			if(!resp) return 'Timed out! Aborting!';
 			if(resp.content.toLowerCase() == 'cancel') return 'Action cancelled!';
 			if(resp.content.toLowerCase() == 'done') break;
+			if(resp.content.length > 256) return "Question too long! Must be 256 chars or less. Aborting!";
 			data.questions.push({value: resp.content, type: 'text', required: false});
 			await resp.delete();
 
@@ -240,7 +244,6 @@ module.exports.subcommands.rephrase = {
 			position = parseInt(position);
 			if(isNaN(position)) return 'ERR! Please provide a real number!';
 			if(!form.questions[position - 1]) return "ERR! That question doesn't exist!";
-			question = 
 
 			await msg.channel.send("Enter the new question!");
 			resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, time: 2 * 60 * 1000, max: 1})).first();
@@ -248,6 +251,7 @@ module.exports.subcommands.rephrase = {
 			question = resp.content;
 		}
 
+		if(question.length > 256) return "Question length too long! Must be 256 chars or less";
 		form.questions[position - 1].value = question;
 		try {
 			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
