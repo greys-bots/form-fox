@@ -1,3 +1,10 @@
+const VARIABLES = {
+    '$USER': (user, guild) => user,
+    '$GUILD': (user, guild) => guild.name,
+    '$FORM': (user, guild, form) => form.name,
+    '$FORMID': (user, guild, form) => form.id,
+}
+
 module.exports = {
 	data: {
 		name: 'accept',

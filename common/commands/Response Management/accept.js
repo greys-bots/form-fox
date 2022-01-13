@@ -1,3 +1,10 @@
+const VARIABLES = {
+    '$USER': (user, guild) => user,
+    '$GUILD': (user, guild) => guild.name,
+    '$FORM': (user, guild, form) => form.name,
+    '$FORMID': (user, guild, form) => form.id,
+}
+
 module.exports = {
 	help: ()=> "Manually accept a response, in case reactions aren't working",
 	usage: ()=> [' [response ID] - Manually accepts the response with the given ID'],
