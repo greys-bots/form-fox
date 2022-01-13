@@ -5,7 +5,9 @@ const {
 
 const VARIABLES = {
     '$USER': (user, guild) => user,
-    '$GUILD': (user, guild) => guild.name
+    '$GUILD': (user, guild) => guild.name,
+    `$FORM`: (user, guild, form) => form.name,
+    `$FORMID`: (user, guild, form) => form.id,
 }
 
 class ResponsePostStore extends Collection {
@@ -376,7 +378,16 @@ class ResponsePostStore extends Collection {
                         'VIEW_CHANNEL': true,
                         'SEND_MESSAGES': true,
                         'READ_MESSAGE_HISTORY': true
-                    })
+                    });
+
+                    var tmsg = post.response.form.ticket_msg ?? cfg?.ticket_message;
+                    if(tmsg) {
+                    	for(var key of Object.keys(VARIABLES)) {
+                            tmsg = tmsg.replace(key, VARIABLES[key](u2, msg.guild));
+                        }
+
+                        await ch2.send(tmsg);
+                    }
 
                     await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
 
@@ -462,6 +473,11 @@ class ResponsePostStore extends Collection {
                         timestamp: new Date().toISOString()
                     }]})
 
+                    if(ticket) {
+			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
+			            tch.delete();
+			        }
+
                     this.bot.emit('DENY', post.response);
                 } catch(e) {
                     console.log(e);
@@ -509,6 +525,11 @@ class ResponsePostStore extends Collection {
                         timestamp: new Date().toISOString()
                     }]});
 
+                    if(ticket) {
+			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
+			            tch.delete();
+			        }
+
                     this.bot.emit('ACCEPT', post.response);
                 } catch(e) {
                     console.log(e);
@@ -535,6 +556,15 @@ class ResponsePostStore extends Collection {
                         'SEND_MESSAGES': true,
                         'READ_MESSAGE_HISTORY': true
                     })
+
+                    var tmsg = post.response.form.ticket_msg ?? cfg?.ticket_message;
+                    if(tmsg) {
+                    	for(var key of Object.keys(VARIABLES)) {
+                            tmsg = tmsg.replace(key, VARIABLES[key](u2, ctx.guild));
+                        }
+
+                        await ch2.send(tmsg);
+                    }
 
 					cmp[0].components[2].disabled = true;
 					await msg.edit({

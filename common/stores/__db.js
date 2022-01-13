@@ -14,7 +14,8 @@ module.exports = async (bot) => {
 			reacts 				BOOLEAN,
 			embed 				BOOLEAN,
 			opped 				JSONB,
-			ticket_category 	TEXT
+			ticket_category 	TEXT,
+			ticket_message		TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (
@@ -34,7 +35,8 @@ module.exports = async (bot) => {
 			reacts 			BOOLEAN,
 			embed 			BOOLEAN,
 			apply_channel 	TEXT,
-			tickets_id 		TEXT
+			tickets_id 		TEXT,
+			ticket_msg 		TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS extras (

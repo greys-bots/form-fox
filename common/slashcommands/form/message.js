@@ -24,6 +24,10 @@ module.exports = {
 		"[form_id] - View and optionally clear a form's message",
 		"[form_id] [message] - Set a form's message"
 	],
+	extra: 
+		"Variables available:\n" +
+		"$USER - ping the user who opened the response\n" +
+		"$GUILD - the guild's name",
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var m = ctx.options.get('message')?.value;
