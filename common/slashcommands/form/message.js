@@ -27,7 +27,9 @@ module.exports = {
 	extra: 
 		"Variables available:\n" +
 		"$USER - ping the user who opened the response\n" +
-		"$GUILD - the guild's name",
+		"$GUILD - the guild's name\n" +
+		"$FORM - the form's name\n" +
+		"$FORMID - the form's ID",
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var m = ctx.options.get('message')?.value;

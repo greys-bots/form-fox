@@ -315,7 +315,7 @@ class ResponsePostStore extends Collection {
                     var welc = post.response.form.message;
                     if(welc) {
                         for(var key of Object.keys(VARIABLES)) {
-                            welc = welc.replace(key, VARIABLES[key](u2, msg.guild));
+                            welc = welc.replace(key, VARIABLES[key](u2, msg.guild, post.response.form));
                         }
                     }
 
@@ -383,7 +383,7 @@ class ResponsePostStore extends Collection {
                     var tmsg = post.response.form.ticket_msg ?? cfg?.ticket_message;
                     if(tmsg) {
                     	for(var key of Object.keys(VARIABLES)) {
-                            tmsg = tmsg.replace(key, VARIABLES[key](u2, msg.guild));
+                            tmsg = tmsg.replace(key, VARIABLES[key](u2, msg.guild, post.response.form));
                         }
 
                         await ch2.send(tmsg);
@@ -508,7 +508,7 @@ class ResponsePostStore extends Collection {
                     var welc = post.response.form.message;
                     if(welc) {
                         for(var key of Object.keys(VARIABLES)) {
-                            welc = welc.replace(key, VARIABLES[key](u2, ctx.guild));
+                            welc = welc.replace(key, VARIABLES[key](u2, msg.guild, post.response.form));
                         }
                     }
 
@@ -560,7 +560,7 @@ class ResponsePostStore extends Collection {
                     var tmsg = post.response.form.ticket_msg ?? cfg?.ticket_message;
                     if(tmsg) {
                     	for(var key of Object.keys(VARIABLES)) {
-                            tmsg = tmsg.replace(key, VARIABLES[key](u2, ctx.guild));
+                            tmsg = tmsg.replace(key, VARIABLES[key](u2, msg.guild, post.response.form));
                         }
 
                         await ch2.send(tmsg);
