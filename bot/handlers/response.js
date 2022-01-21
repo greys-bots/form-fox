@@ -100,9 +100,13 @@ class ResponseHandler {
 					["⬅️", "➡️", "⏹️"].forEach(r => fm.react(r));
 				}
 			}
-			
+
 			var question = await this.handleQuestion(form, 0);
 			var qemb = {
+				content: ctx.auto ? 
+						 `**(This form was automatically sent from ` +
+						 `guild ${ctx.guild.name}!)**` :
+						 "",
 				embeds: [{
 					title: form.name,
 					description: form.description,
@@ -399,6 +403,30 @@ class ResponseHandler {
 
 		this.menus.delete(message.channel.id);
 		return {msg: 'Response cancelled!', success: true};
+	}
+
+	async autoCancel(ctx) {
+		var {user, channel, response} = ctx;
+
+		var prompt = await channel.messages.fetch(response.message_id);
+		try {
+			await this.bot.stores.openResponses.delete(response.channel_id);
+			await prompt.edit({
+				embeds: [{
+					title: "Response cancelled",
+					description: "Left the server; this form response has been automatically cancelled!",
+					color: parseInt('aa5555', 16),
+					timestamp: new Date().toISOString()
+				}],
+				components: []
+			});
+		} catch(e) {
+			console.log(e);
+			return Promise.reject('ERR! '+(e.message || e));
+		}
+
+		this.menus.delete(channel.id);
+		return;
 	}
 
 	async skipQuestion(response, message, user) {

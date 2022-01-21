@@ -15,7 +15,8 @@ module.exports = async (bot) => {
 			embed 				BOOLEAN,
 			opped 				JSONB,
 			ticket_category 	TEXT,
-			ticket_message		TEXT
+			ticket_message		TEXT,
+			autodm 				TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS forms (
