@@ -1,6 +1,5 @@
 module.exports = async (member, bot) => {
 	if(!member.user.dmChannel) return;
-	console.log('test');
 
 	var channel = await member.user.dmChannel.fetch();
 	var response = await bot.stores.openResponses.get(channel.id);
