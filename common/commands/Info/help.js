@@ -16,8 +16,8 @@ module.exports = {
 			modules.forEach(m => m.commands = m.commands.map(c => c));
 
 			var embeds = [{embed: {
-				title: 'About',
-				description: "Hi! I'm Fox! I help you make and manage forms here on discord! Here are some of my features:",
+				title: "Eee! I'm Fox!",
+				description: "I help you make and manage forms here on discord! Here are some of my features:",
 				fields: [
 					{
 						name: 'Reaction-based interaction',
@@ -30,6 +30,7 @@ module.exports = {
 							'\n- Multiple choice' +
 							'\n- Checkbox' +
 							'\n- Freeform' +
+							'\n- Attachment' +
 							'\n- Specific formats' +
 							'\n\nAll of these are also created to be accessible and can be handled using reactions and typing!'
 					},
@@ -49,11 +50,25 @@ module.exports = {
 						].join('\n')
 					},
 					{
-						name: 'An upbeat attitude!',
-						value: [
-							"This isn't really a feature, but it's worth mentioning :D",
-							"I hope you like what I do!"
-						].join('\n')
+						name: 'Answer-based roles',
+						value:
+							"In addition to form customization, you can also " +
+							"set up roles to be added based on a user's answers!\n" +
+							"For example, you can automatically give users an `Adult` " +
+							"role if they answer your form's age question with a " +
+							"number over 18"
+					},
+					{
+						name: "Need help? Join the support server!",
+						value: "[https://discord.gg/EvDmXGt](https://discord.gg/EvDmXGt)",
+						inline: true
+					},
+					{
+						name: "Support my creators!",
+						value: 
+							"[patreon](https://patreon.com/greysdawn) | " +
+							"[ko-fi](https://ko-fi.com/greysdawn)",
+						inline: true
 					}
 				],
 				color: parseInt('ee8833', 16),

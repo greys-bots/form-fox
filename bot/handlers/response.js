@@ -103,10 +103,6 @@ class ResponseHandler {
 
 			var question = await this.handleQuestion(form, 0);
 			var qemb = {
-				content: ctx.auto ? 
-						 `**(This form was automatically sent from ` +
-						 `guild ${ctx.guild.name}!)**` :
-						 "",
 				embeds: [{
 					title: form.name,
 					description: form.description,
@@ -115,6 +111,12 @@ class ResponseHandler {
 					footer: question.footer
 				}],
 				components: []
+			}
+
+			if(ctx.auto) {
+				qemb.content =
+					`**(This form was automatically sent from ` +
+					`guild ${ctx.guild.name}!)**`;
 			}
 
 			if(question.buttons) {
