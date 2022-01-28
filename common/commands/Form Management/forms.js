@@ -21,7 +21,6 @@ module.exports = {
 				if(!form) return "Form not found!";
 
 				var channel = msg.channel.guild.channels.resolve(form.channel_id);
-				var roles = msg.channel.guild.roles.cache.filter(r => form.roles?.includes(r.id));
 				var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 				var embeds = [{embed: {
@@ -32,7 +31,7 @@ module.exports = {
 						{name: "Message", value: form.message || "*(not set)*"},
 						{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
 						{name: "Response count", value: (responses?.length.toString() || '0')},
-						{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'}
+						{name: "Roles", value: form.roles?.map(r => `<@&${r.id}>`).join('\n') || '*(not set)*'}
 					],
 					color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 					footer: {text: 'See next page for questions' + (form.open ? '' : '| This form is closed!')}
@@ -65,7 +64,6 @@ module.exports = {
 
 		for(var form of forms) {
 			var channel = msg.channel.guild.channels.resolve(form.channel_id);
-			var roles = msg.channel.guild.roles.cache.filter(r => form.roles?.includes(r.id));
 			var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 			var embed = {embed: {
@@ -76,7 +74,7 @@ module.exports = {
 					{name: "Message", value: form.message || "*(not set)*"},
 					{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
 					{name: "Response count", value: (responses?.length.toString() || '0')},
-					{name: "Roles", value: roles?.map(r => `${r}`).join('\n') || '*(none)*'},
+					{name: "Roles", value: form.roles?.map(r => `<@&${r.id}>`).join('\n') || '*(not set)*'},
 					{name: "Questions", value: `Use \`${bot.prefix}form ${form.hid}\` to see questions`}
 				],
 				color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
