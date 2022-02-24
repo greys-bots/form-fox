@@ -106,6 +106,7 @@ module.exports = {
 		return [
 			`Form created! ID: ${fm.hid}`,
 			`Use \`${bot.prefix}channel ${fm.hid}\` to change what channel this form's responses go to!`,
+			`Use \`${bot.prefix}post ${fm.hid}\` on a channel for post your form !`,
 			`See \`${bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	},
