@@ -1,7 +1,4 @@
 const {
-	// confirmVals:STRINGS,
-	// confirmReacts:REACTS,
-	// numbers:NUMBERS,
 	qTypes: TYPES,
 	qButtons: QBTNS,
 	responseBtns: RESPBTNS,
@@ -351,6 +348,7 @@ class ResponseHandler {
 			}
 			if(embeds.length > 1) toSend.components.push({ type: 1, components: PGBTNS });
 			var rmsg = await channel.send(toSend);
+			if(config?.autothread) await rmsg.startThread({name: `Response ${created.hid}`})
 
 			await this.bot.stores.responsePosts.create(rmsg.channel.guild.id, channel.id, rmsg.id, {
 				response: created.hid,

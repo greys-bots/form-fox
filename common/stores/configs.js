@@ -20,12 +20,13 @@ class ConfigStore extends Collection {
 					embed,
 					ticket_category,
 					ticket_message,
-					autodm
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+					autodm,
+					autothread
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
 				[server, data.response_channel,
 				 data.message, data.prefix, data.reacts ?? true,
 				 data.embed ?? true, data.ticket_category,
-				 data.ticket_message, data.autodm]);
+				 data.ticket_message, data.autodm, data.autothread]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);
@@ -47,12 +48,13 @@ class ConfigStore extends Collection {
 					embed,
 					ticket_category,
 					ticket_message,
-					autodm
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+					autodm,
+					autothread
+				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
 				[server, data.response_channel,
 				 data.message, data.prefix, data.reacts ?? true,
 				 data.embed ?? true, data.ticket_category,
-				 data.ticket_message, data.autodm]);
+				 data.ticket_message, data.autodm, data.autothread]);
 			} catch(e) {
 				console.log(e);
 		 		return rej(e.message);

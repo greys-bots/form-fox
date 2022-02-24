@@ -26,7 +26,7 @@ module.exports = {
 
 		var form;
 		if(!id) {
-			if(!cfg.autodm) return 'No form set!';
+			if(!cfg?.autodm) return 'No form set!';
 			form = await ctx.client.stores.forms.get(ctx.guildId, cfg.autodm);
 			if(!form) return `Currently set form (${cfg.autodm}) is invalid or no longer exists!`;
 
@@ -85,8 +85,9 @@ module.exports = {
 		
 		form = await ctx.client.stores.forms.get(ctx.guildId, id);
 		if(!form) return 'Form not found!';
-		
-		await ctx.client.stores.configs.update(ctx.guildId, {autodm: form.hid});
+
+		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {autodm: form.hid});
+		else await ctx.client.stores.configs.update(ctx.guildId, {autodm: form.hid});
 		return 'Config updated!';
 	},
 	async auto(ctx) {
