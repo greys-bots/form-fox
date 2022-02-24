@@ -34,6 +34,7 @@ module.exports = {
 			`Form created! ID: ${form.hid}` +
 			"\nUse `/question add` to start adding questions to this form" +
 			"\nUse `/config channel` to set the response channel for this form" +
+			"\nUse `/form post` to post your form" +
 			"\nUse `/help form` for some customization options!"
 		)
 	}

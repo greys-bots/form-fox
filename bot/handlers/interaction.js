@@ -65,8 +65,8 @@ class InteractionHandler {
 					else slashData.set(mod.data.name, g2);
 				}
 				
-				command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;
-				command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.permissions = command.permissions ?? group.permissions;command.opPerms = command.opPerms ?? group.opPerms;
+				command.permissions = command.permissions ?? group.permissions;
+				command.opPerms = command.opPerms ?? group.opPerms;
 				command.guildOnly = command.guildOnly ?? group.guildOnly;
 				if(command.options) command.options = command.options.map(o => {
 					o.permissions = o.permissions ?? command.permissions
