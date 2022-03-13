@@ -43,26 +43,26 @@ const qTypes = {
 				})
 			];
 
-			if(current.other) message.push({name: 'Other', value: 'Enter a custom response (react with 🅾️ or type "other")'});
+			if(current.other) message.push({name: 'Other', value: 'Enter a custom response'});
 			return message;
 		},
-		text: "react or type the respective emoji/character to choose an option.",
-		reacts: (current) => {
-			var r = [...numbers.slice(1, current.choices.length + 1)];
-			if(current.other) r.push('🅾');
-			return r;
-		},
+		text: "interact or type the respective emoji/character to choose an option.",
 		buttons: (current) => {
-			var nms = [...numbers.slice(1, current.choices.length + 1)];
-			var r = nms.map((n, i) => {
-				return {
-					... qButtons.nTemp,
-					label: `Choice ${i + 1}`,
-					custom_id: i+1,
-					emoji: n
-				}
+			var r = [{
+				type: 2,
+				style: 2,
+				label: 'Select',
+				custom_id: 'select',
+				emoji: '✉️'
+			}]
+			if(current.other) r.push({
+				type: 2,
+				style: 2,
+				label: 'Fill in',
+				custom_id: 'other',
+				emoji: '📝'
 			})
-			if(current.other) r.push(qButtons.other);
+			
 			return r;
 		},
 		setup: async (bot, msg, message) => {
@@ -125,24 +125,40 @@ const qTypes = {
     		}
 		},
 		handleInteraction: async (msg, response, question, inter) => {
-			var index = inter.customId;
 			var embed = msg.embeds[0];
-    		if(question.choices[index - 1]) {
-    			response.answers.push(question.choices[index - 1]);
-    			return {response, send: true};
-    		} else if(inter.customId == "other" && question.other) {
-    			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await inter.message.edit({embeds: [embed]});
+			switch(inter.customId) {
+				case 'select':
+					var ch = question.choices.map((c, i) => ({
+						label: `Option ${i+1}`,
+						value: i.toString(),
+						emoji: numbers[i + 1],
+						description: c.slice(0, 100)
+					}))
 
-        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-				if(!response.selection) response.selection = [];
-                response.selection.push('OTHER')
+					var choice = await inter.client.utils.awaitSelection(
+						inter,
+						ch,
+						"Select an option below",
+						{
+							placeholder: 'Select option'
+						}
+					);
+					if(!Array.isArray(choice)) return await inter.followUp(choice);
 
-                return {response, menu: true, send: false}
-    		} else {
-    			await inter.followUp('Invalid choice! Please select something else');
-    			return undefined;
-    		}
+					response.answers.push(question.choices[parseInt(choice[0])])
+					return {response, send: true};
+					break;
+				case 'other':
+					embed.fields[embed.fields.length - 1].value = "Awaiting response...";
+	        		await inter.message.edit({embeds: [embed]});
+
+	        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
+					if(!response.selection) response.selection = [];
+	                response.selection.push('OTHER')
+
+	                return {response, menu: true, send: false}
+					break;
+			}
 		},
 		async roleSetup({ctx, question, role}) {
 			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
@@ -218,17 +234,28 @@ const qTypes = {
     		];
 		},
 		buttons: (current) => {
-			var nms = [...numbers.slice(1, current.choices.length + 1)];
-			var r = nms.map((n, i) => {
-				return {
-					... qButtons.nTemp,
-					label: `Choice ${i + 1}`,
-					custom_id: i+1,
-					emoji: n
-				}
+			var r = [{
+				type: 2,
+				style: 2,
+				label: 'Select',
+				custom_id: 'select',
+				emoji: '✉️'
+			}]
+			if(current.other) r.push({
+				type: 2,
+				style: 2,
+				label: 'Fill in',
+				custom_id: 'other',
+				emoji: '📝'
 			})
-			if(current.other) r.push(qButtons.other);
-			r.push(qButtons.select);
+
+			r.push({
+				type: 2,
+				style: 2,
+				label: 'Finish selection',
+				custom_id: 'finish',
+				emoji: '📥'
+			})
 			return r;
 		},
 		setup: async (bot, msg, message) => {
@@ -345,39 +372,61 @@ const qTypes = {
     		}
 		},
 		handleInteraction: async (msg, response, question, inter) => {
-			var index = inter.customId;
-    		var embed = msg.embeds[0];
-    		if(question.choices[index - 1]) {
-    			if(response.selection?.includes(question.choices[index - 1])) {
-    				embed.fields[index].value = question.choices[index - 1];
-    				response.selection = response.selection.filter(x => x != question.choices[index - 1]);
-    			} else {
-	    			embed.fields[index].value = question.choices[index - 1] + " ✅";
-    			}
-    			await inter.message.edit({embeds: [embed]});
-        		if(!response.selection) response.selection = [];
-        		response.selection.push(question.choices[index - 1]);
-        		return {response, send: false};
-    		} else if(inter.customId == "other" && question.other) {
-    			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await inter.message.edit({embeds: [embed]});
+			var embed = msg.embeds[0];
+			switch(inter.customId) {
+				case 'select':
+					var ch = question.choices.map((c, i) => ({
+						label: `Option ${i+1}`,
+						value: i.toString(),
+						emoji: numbers[i + 1],
+						description: c.slice(0, 100)
+					}))
 
-        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-				if(!response.selection) response.selection = [];
-                response.selection.push('OTHER')
-                return {response, send: false, menu: true};
-    		} else if(inter.customId == 'select') {
-    			if(!response.selection?.length) {
-    				await inter.followUp("Please select something!");
-    				return {response, send: false};
-    			}
-    			response.answers.push(response.selection.join("\n"));
-    			response.selection = [];
-    			return {response, send: true};
-    		} else {
-    			await inter.followUp('Invalid choice! Please select something else');
-    			return undefined;
-    		}
+					var choice = await inter.client.utils.awaitSelection(
+						inter,
+						ch,
+						"Select an option below",
+						{
+							placeholder: 'Select option',
+							max_values: question.choices.length
+						}
+					);
+					if(!Array.isArray(choice)) return await inter.followUp(choice);
+
+					var tmp = question.choices.filter((x, i) => choice.includes(i.toString()));
+					var other = response.selection?.find(x => !question.choices.includes(x));
+					if(other) tmp.push(other)
+					response.selection = tmp;
+					var fs = question.choices.map((c, i) => ({
+						name: `Option ${numbers[i+1]} ${response.selection.includes(c) ? '✅' : ''}`,
+						value: c
+					}))
+					if(question.other) fs.push(embed.fields[embed.fields.length - 1]);
+					
+					embed.fields = [embed.fields[0], ...fs];
+					await inter.message.edit({embeds: [embed]})
+					return {response, send: false};
+					break;
+				case 'other':
+					embed.fields[embed.fields.length - 1].value = "Awaiting response...";
+	        		await inter.message.edit({embeds: [embed]});
+
+	        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
+					if(!response.selection) response.selection = [];
+	                response.selection.push('OTHER')
+
+	                return {response, menu: true, send: false}
+					break;
+				case 'finish':
+					if(!response.selection?.length) {
+	    				await inter.followUp("Please select something!");
+	    				return {response, send: false};
+	    			}
+	    			response.answers.push(response.selection.join("\n"));
+	    			response.selection = [];
+	    			return {response, send: true};
+					break;
+			}
 		},
 		async roleSetup({ctx, question, role}) {
 			var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {

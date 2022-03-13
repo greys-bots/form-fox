@@ -163,7 +163,7 @@ module.exports = {
 		}]
 
 		var reply;
-		if(ctx.replied) {
+		if(ctx.replied || ctx.deferred) {
 			reply = await ctx.followUp({
 				content: msg,
 				components: [{
