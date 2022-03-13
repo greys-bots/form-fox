@@ -379,7 +379,8 @@ const qTypes = {
 						label: `Option ${i+1}`,
 						value: i.toString(),
 						emoji: numbers[i + 1],
-						description: c.slice(0, 100)
+						description: c.slice(0, 100),
+						default: response.selection?.includes(c)
 					}))
 
 					var choice = await inter.client.utils.awaitSelection(
