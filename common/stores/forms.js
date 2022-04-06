@@ -103,10 +103,17 @@ class FormStore extends Collection {
 			
 			if(data.rows && data.rows[0]) {
 				var form = data.rows[0];
-				if(form.questions.find(q => q == "")) {
-					form.questions = form.questions.filter(x => x != "");
-					form = await this.update(server, hid, {questions: form.questions});
+				var qs = [];
+				for(var q of form.questions) {
+					if(!q.value) continue; // filter emptt qs
+					if(q.choices) {
+						q.choices = q.choices.filter(x => x); // filter empty choices
+					}
+
+					qs.push(q);
 				}
+
+				form = await this.update(server, hid, {questions: qs});
 				this.set(`${server}-${hid}`, form)
 				res(data.rows[0])
 			} else res(undefined);
