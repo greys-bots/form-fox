@@ -78,7 +78,6 @@ class ResponseStore extends Collection {
 			if(data.rows && data.rows[0]) {
 				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 				if(form) data.rows[0].form = form;
-				this.set(`${server}-${hid}`, data.rows[0])
 				res(data.rows[0])
 			} else res(undefined);
 		})

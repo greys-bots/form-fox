@@ -33,7 +33,7 @@ module.exports = {
 		}
 
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {emoji: val});
+			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {emoji: val}, form);
 		} catch(e) {
 			if(e.message) return 'ERR! '+e.message;
 			else if(typeof e == 'string') return 'ERR! '+e;

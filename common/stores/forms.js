@@ -106,9 +106,11 @@ class FormStore extends Collection {
 				var qs = [];
 				var edited = false;
 				for(var q of form.questions) {
-					if(!q.value) continue; // filter emptt qs
-					if(q.choices && q.choices.find(x => !x)) {
-						q.choices = q.choices.filter(x => x); // filter empty choices
+					if(!q.value) continue; // filter empty qs
+					console.log(q)
+					if(q.choices && q.choices.includes('')) {
+						q.choices = q.choices.filter(x => x.length); // filter empty choices
+						console.log(q.choices)
 						edited = true;
 					}
 
@@ -116,32 +118,11 @@ class FormStore extends Collection {
 				}
 
 				if(edited || qs.length < form.questions.length)
-					form = await this.update(server, hid, {questions: qs});
-				this.set(`${server}-${hid}`, form)
-				res(data.rows[0])
+					form = await this.update(server, hid, {questions: qs}, form);
+				res(form)
 			} else res(undefined);
 		})
 	}
-
-	// async getByEmoji(server, emoji) {
-		// return new Promise(async (res, rej) => {
-			// try {
-				// var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND emoji = $2`,[server, emoji]);
-			// } catch(e) {
-				// console.log(e);
-				// return rej(e.message);
-			// }
-			// 
-			// if(data.rows && data.rows[0]) {
-				// var form = data.rows[0];
-				// if(form.questions.find(q => q == "")) {
-					// form.questions = form.questions.filter(x => x != "");
-					// form = await this.update(server, hid, {questions: form.questions});
-				// }
-				// res(data.rows[0])
-			// } else res(undefined);
-		// })
-	// }
 
 	async getAll(server) {
 		return new Promise(async (res, rej) => {
@@ -188,11 +169,10 @@ class FormStore extends Collection {
 		})
 	}
 
-	async update(server, hid, data = {}) {
+	async update(server, hid, data = {}, old) {
 		return new Promise(async (res, rej) => {
 			if(data.questions) data.questions = JSON.stringify(data.questions);
 			try {
-				var old = await this.get(server, hid);
 				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
 			} catch(e) {
 				console.log(e);
@@ -221,8 +201,13 @@ class FormStore extends Collection {
 							}
 
 							if(Object.keys(data).includes('emoji')) {
-								var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(old.emoji || '📝'));
-								if(react) react.remove();
+								if(!post.bound) {
+									await msg.reactions.removeAll();
+								} else {
+									var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(old.emoji || '📝'));
+									if(react) react.remove();
+								}
+
 								msg.react(data.emoji || '📝');
 							}
 

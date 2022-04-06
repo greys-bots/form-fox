@@ -69,7 +69,7 @@ const qTypes = {
 			await message.edit(`Please enter up to 10 options to choose from, separated by new lines.`);
 			var resp = (await msg.channel.awaitMessages({filter: m => m.author.id == msg.author.id, max: 1, time: 5 * 60 * 1000})).first();
 			if(!resp) return 'Timed out! Aborting!';
-			var choices = resp.content.split("\n").filter(x => x);
+			var choices = resp.content.split("\n")/*.filter(x => x)*/;
 			await resp.delete()
 
 			await message.edit("Would you like to include an 'other' option?");

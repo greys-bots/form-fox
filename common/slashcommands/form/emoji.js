@@ -89,7 +89,7 @@ module.exports = {
 		
 		var emoji = e.includes(':') ? e.replace(/<:(.*):>/, '$1') : e;
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {emoji});
+		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {emoji}, form);
 		return 'Form updated!';
 	},
 	async auto(ctx) {
