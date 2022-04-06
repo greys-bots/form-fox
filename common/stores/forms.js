@@ -107,7 +107,6 @@ class FormStore extends Collection {
 				var edited = false;
 				for(var q of form.questions) {
 					if(!q.value) continue; // filter empty qs
-					console.log(q)
 					if(q.choices && q.choices.includes('')) {
 						q.choices = q.choices.filter(x => x.length); // filter empty choices
 						console.log(q.choices)
