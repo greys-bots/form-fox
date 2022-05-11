@@ -47,8 +47,8 @@ module.exports = {
 			return 'Message not found!';
 		}
 
-		var post = await ctx.client.stores.formPosts.get(ctx.guildId, channel.id, msg.id);
-		if(post && !post.bound) return 'That is a dedicated post and cannot be bound to!';
+		var post = await ctx.client.stores.formPosts.get(ctx.guildId, msg.id);
+		if(post?.form && post.bound == false) return 'That is a dedicated post and cannot be bound to!';
 
 		post = (await ctx.client.stores.formPosts.getByMessage(ctx.guildId, msg.id))
 			?.find(p => p.form.emoji == form.emoji);

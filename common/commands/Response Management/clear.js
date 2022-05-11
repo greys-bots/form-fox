@@ -28,6 +28,8 @@ module.exports = {
 			} catch(e) {
 				return 'ERR! '+e;
 			}
+
+			return 'Responses deleted!';
 		}
 
 		var message = await msg.channel.send([

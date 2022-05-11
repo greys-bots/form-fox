@@ -1,141 +1,200 @@
-const { Collection } = require("discord.js");
 const { qTypes: TYPES } = require('../extras');
 
-class FormStore extends Collection {
-	constructor(bot, db) {
-		super();
+const KEYS = {
+	id: { },
+	server_id: { },
+	hid: { },
+	name: { patch: true },
+	description: { patch: true },
+	questions: { patch: true },
+	channel_id: { patch: true },
+	roles: { patch: true },
+	message: { patch: true },
+	color: { patch: true },
+	open: { patch: true },
+	cooldown: { patch: true },
+	emoji: { patch: true },
+	reacts: { patch: true },
+	embed: { patch: true },
+	apply_channel: { patch: true },
+	tickets_id: { patch: true },
+	ticket_msg: { patch: true }
+}
 
+class Form {
+	#store;
+
+	constructor(store, data) {
+		this.#store = store;
+		for(var k in KEYS) this[k] = data[k];
+		this.old = Object.assign({}, this);
+	}
+
+	async fetch() {
+		var data = await this.#store.getID(this.id);
+		for(var k in KEYS) this[k] = data[k];
+
+		return this;
+	}
+
+	async save() {
+		var obj = await this.verify();
+
+		var data;
+		if(this.id) data = await this.#store.update(this.id, obj, this.old);
+		else data = await this.#store.create(this.server_id, obj);
+		for(var k in KEYS) this[k] = data[k];
+		return this;
+	}
+
+	async delete() {
+		await this.#store.delete(this.id);
+	}
+
+	async verify(patch = true /* generate patch-only object */) {
+		var obj = {};
+		var errors = []
+		for(var k in KEYS) {
+			if(!KEYS[k].patch && patch) continue;
+			if(this[k] == undefined) continue;
+			if(this[k] == null) {
+				obj[k] = this[k];
+				continue;
+			}
+
+			var test = true;
+			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
+			if(!test) {
+				errors.push(KEYS[k].err);
+				continue;
+			}
+			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
+			else obj[k] = this[k];
+		}
+
+		if(errors.length) throw new Error(errors.join("\n"));
+		return obj;
+	}
+}
+
+class FormStore {
+	constructor(bot, db) {
 		this.db = db;
 		this.bot = bot;
 	};
 
 	async create(server, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				var form = await this.db.query(`INSERT INTO forms (
-					server_id,
-					hid,
-					name,
-					description,
-					questions,
-					channel_id,
-					roles,
-					message,
-					color,
-					open,
-					cooldown,
-					emoji,
-					reacts,
-					embed,
-					apply_channel,
-					tickets_id,
-					ticket_msg
-				) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-				RETURNING *`,
-				[server, data.name, data.description,
-				 JSON.stringify(data.questions || []),
-				 data.channel_id, JSON.stringify(data.roles || []),
-				 data.message, data.color, data.open || true,
-				 data.cooldown, data.emoji, data.reacts,
-				 data.embed, data.apply_channel, data.tickets_id,
-				 data.ticket_msg]);
-			} catch(e) {
-				console.log(e);
-		 		return rej(e.message);
-			}
+		try {
+			var form = await this.db.query(`INSERT INTO forms (
+				server_id,
+				hid,
+				name,
+				description,
+				questions,
+				channel_id,
+				roles,
+				message,
+				color,
+				open,
+				cooldown,
+				emoji,
+				reacts,
+				embed,
+				apply_channel,
+				tickets_id,
+				ticket_msg
+			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+			RETURNING *`,
+			[server, data.name, data.description,
+			 JSON.stringify(data.questions || []),
+			 data.channel_id, JSON.stringify(data.roles || []),
+			 data.message, data.color, data.open || true,
+			 data.cooldown, data.emoji, data.reacts,
+			 data.embed, data.apply_channel, data.tickets_id,
+			 data.ticket_msg]);
+		} catch(e) {
+			console.log(e);
+	 		return Promise.reject(e.message);
+		}
 
-			res(await this.get(server, form.rows[0].hid));
-		})
+		return await this.get(server, form.rows[0].hid);
 	}
 
-	async index(server, hid, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`INSERT INTO forms (
-					server_id,
-					hid,
-					name,
-					description,
-					questions,
-					channel_id,
-					roles,
-					message,
-					color,
-					open,
-					cooldown,
-					emoji,
-					reacts,
-					embed,
-					apply_channel,
-					tickets_id,
-					ticket_msg
-				) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-				RETURNING *`,
-				[server, data.name, data.description,
-				 JSON.stringify(data.questions || []),
-				 data.channel_id, JSON.stringify(data.roles || []),
-				 data.message, data.color, data.open || true,
-				 data.cooldown, data.emoji, data.reacts,
-				 data.embed, data.apply_channel, data.tickets_id,
-				 data.ticket_msg]);
-			} catch(e) {
-				console.log(e);
-		 		return rej(e.message);
-			}
-			
-			res();
-		})
+	async index(server, data = {}) {
+		try {
+			await this.db.query(`INSERT INTO forms (
+				server_id,
+				hid,
+				name,
+				description,
+				questions,
+				channel_id,
+				roles,
+				message,
+				color,
+				open,
+				cooldown,
+				emoji,
+				reacts,
+				embed,
+				apply_channel,
+				tickets_id,
+				ticket_msg
+			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+			[server, data.name, data.description,
+			 JSON.stringify(data.questions || []),
+			 data.channel_id, JSON.stringify(data.roles || []),
+			 data.message, data.color, data.open || true,
+			 data.cooldown, data.emoji, data.reacts,
+			 data.embed, data.apply_channel, data.tickets_id,
+			 data.ticket_msg]);
+		} catch(e) {
+			console.log(e);
+	 		return Promise.reject(e.message);
+		}
+
+		return;
 	}
 
-	async get(server, hid, forceUpdate = false) {
-		return new Promise(async (res, rej) => {
-			if(!forceUpdate) {
-				var form = super.get(`${server}-${hid}`);
-				if(form) return res(form);
-			}
-			
-			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			if(data.rows && data.rows[0]) {
-				var form = data.rows[0];
-				var qs = [];
-				var edited = false;
-				for(var q of form.questions) {
-					if(!q.value) continue; // filter empty qs
-					if(q.choices && q.choices.includes('')) {
-						q.choices = q.choices.filter(x => x.length); // filter empty choices
-						console.log(q.choices)
-						edited = true;
-					}
-
-					qs.push(q);
+	async get(server, hid) {
+		try {
+			var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var form = new Form(this, data.rows[0]);
+			var qs = [];
+			var edited = false;
+			for(var q of form.questions) {
+				if(!q.value) continue; // filter empty qs
+				if(q.choices && q.choices.includes('')) {
+					q.choices = q.choices.filter(x => x.length); // filter empty choices
+					console.log(q.choices)
+					edited = true;
 				}
 
-				if(edited || qs.length < form.questions.length)
-					form = await this.update(server, hid, {questions: qs}, form);
-				res(form)
-			} else res(undefined);
-		})
+				qs.push(q);
+			}
+
+			if(edited || qs.length < form.questions.length)
+				form = await form.save();
+			return form;
+		} else return new Form(this, { server_id: server });
 	}
 
 	async getAll(server) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			if(data.rows && data.rows[0]) {
-				res(data.rows)
-			} else res(undefined);
-		})
+		try {
+			var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) return data.rows.map(x => new Form(this, x));
+		else return undefined;
 	}
 
 	async getByHids(server, ids) {
@@ -166,6 +225,25 @@ class FormStore extends Collection {
 			if(data.rows?.[0]) res(data.rows[0]);
 			else res(undefined);
 		})
+	}
+
+	async getID(id) {
+		try {
+			var data = await this.db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var form = new Form(this, data.rows[0]);
+			if(form.questions.find(q => q == "")) {
+				form.questions = form.questions.filter(x => x != "");
+				form = await form.save();
+			}
+
+			return form;
+		} else return new Form(this, {});
 	}
 
 	async update(server, hid, data = {}, old) {
@@ -280,117 +358,90 @@ class FormStore extends Collection {
 		})
 	}
 
-	async delete(server, hid) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`DELETE FROM forms WHERE server_id = $1 AND hid = $2`, [server, hid]);
-				await this.bot.stores.formPosts.deleteByForm(server, hid);
-				await this.bot.stores.openResponses.deleteByForm(server, hid);
-				await this.bot.stores.responses.deleteByForm(server, hid);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			super.delete(`${server}-${hid}`);
-			res();
-		})
+	async delete(id) {
+		try {
+			await this.db.query(`DELETE FROM forms WHERE id = $1`, [id]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
 	async deleteAll(server) {
-		return new Promise(async (res, rej) => {
-			try {
-				var forms = await this.getAll(server);
-				if(!forms?.[0]) return res();
-				for(var form of forms) await this.delete(server, form.hid);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			res();
-		})
-	}
-
-	async deleteByHids(server, ids) {
-		return new Promise(async (res, rej) => {
-			try {
-				var forms = await this.getByHids(server, ids);
-				if(!forms?.[0]) return res();
-				for(var form of forms) await this.delete(server, form.hid);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			res();
-		})
+		try {
+			var forms = await this.getAll(server);
+			if(!forms?.length) return;
+			for(var form of forms) await this.delete(server, form.hid);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
 	async export(server, ids, resp = false) {
-		return new Promise(async (res, rej) => {
-			try {
-				var forms = await this.getAll(server);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
+		try {
+			var forms = await this.getAll(server);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
 
-			var r;
-			if(!forms?.length) return res();
-			if(ids?.length) forms = forms.filter(f => ids.includes(f.hid));
-			if(!forms?.length) return res();
-			if(resp) r = await this.bot.stores.responses.getByForms(server, ids);
+		var r;
+		if(!forms?.length) return;
+		if(ids?.length) forms = forms.filter(f => ids.includes(f.hid));
+		if(!forms?.length) return;
+		if(resp) r = await this.bot.stores.responses.getByForms(server, ids);
+		
+		for(var form of forms) {
+			// remove server-specific data
+			delete form.id;
+			delete form.server_id;
+			delete form.channel_id;
+			delete form.roles;
 			
-			for(var form of forms) {
-				// remove server-specific data
-				delete form.id;
-				delete form.server_id;
-				delete form.channel_id;
-				delete form.roles;
-				
-				if(resp && r) form.responses = r[form.hid] ?? [];
-				else form.responses = [];
-			}
-			
-			res(forms);
-		})
+			if(resp && r) form.responses = r[form.hid] ?? [];
+			else form.responses = [];
+		}
+		
+		return forms;
 	}
 
 	async import(server, data = []) {
-		return new Promise(async (res, rej) => {
-			try {
-				var forms = await this.getAll(server);
-				var updated = 0, created = 0, failed = [];
-				for(var f of data) {
-					var verify = this.verify(f);
-					if(!verify.ok) {
-						failed.push(`${f.name || f.hid || "(invalid form)"} - ${verify.reason}`);
-						continue;
-					}
-
-					var {
-						hid,
-						server_id,
-						channel_id,
-						roles,
-						responses,
-						...form
-					} = f;
-					if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
-						await this.update(server, form.hid, form);
-						updated++;
-					} else {
-						await this.create(server, form);
-						created++;
-					}
+		try {
+			var forms = await this.getAll(server);
+			var updated = 0, created = 0, failed = [];
+			for(var f of data) {
+				var verify = this.verify(f);
+				if(!verify.ok) {
+					failed.push(`${f.name || f.hid || "(invalid form)"} - ${verify.reason}`);
+					continue;
 				}
-			} catch(e) {
-				return rej(e);
-			}
 
-			return res({updated, created, failed, forms: await this.getAll(server)});
-		})
+				var {
+					hid,
+					server_id,
+					channel_id,
+					roles,
+					responses,
+					...form
+				} = f;
+				if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
+					await this.update(server, form.hid, form);
+					updated++;
+				} else {
+					await this.create(server, form);
+					created++;
+				}
+			}
+		} catch(e) {
+			return Promise.reject(e);
+		}
+
+		return {updated, created, failed, forms: await this.getAll(server)};
 	}
 
 	verify(form) {

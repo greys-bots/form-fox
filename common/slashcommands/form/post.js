@@ -54,9 +54,10 @@ module.exports = {
 					}]
 				}]
 			});
-			await ctx.client.stores.formPosts.create(ctx.guildId, chan.id, message.id, {
+			var p = await ctx.client.stores.formPosts.create(ctx.guildId, chan.id, message.id, {
 				form: form.hid
 			});
+			console.log(p)
 		} catch(e) {
 			return 'ERR! '+(e.message || e);
 		}

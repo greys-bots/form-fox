@@ -1,9 +1,69 @@
-const {Collection} = require("discord.js");
+const KEYS = {
+	id: { },
+	server_id: { },
+	channel_id: { },
+	message_id: { },
+	form: { },
+	bound: { }
+}
 
-class FormPostStore extends Collection {
+class FormPost {
+	#store;
+
+	constructor(store, data) {
+		this.#store = store;
+		for(var k in KEYS) this[k] = data[k];
+	}
+
+	async fetch() {
+		var data = await this.#store.getID(this.id);
+		for(var k in KEYS) this[k] = data[k];
+
+		return this;
+	}
+
+	async save() {
+		var obj = await this.verify();
+
+		var data;
+		if(this.id) data = await this.#store.update(this.id, obj);
+		else data = await this.#store.create(this.server_id, this.channel_id, this.message_id, obj);
+		for(var k in KEYS) this[k] = data[k];
+		return this;
+	}
+
+	async delete() {
+		await this.#store.delete(this.id);
+	}
+
+	async verify(patch = true /* generate patch-only object */) {
+		var obj = {};
+		var errors = []
+		for(var k in KEYS) {
+			if(!KEYS[k].patch && patch) continue;
+			if(this[k] == undefined) continue;
+			if(this[k] == null) {
+				obj[k] = this[k];
+				continue;
+			}
+
+			var test = true;
+			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
+			if(!test) {
+				errors.push(KEYS[k].err);
+				continue;
+			}
+			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
+			else obj[k] = this[k];
+		}
+
+		if(errors.length) throw new Error(errors.join("\n"));
+		return obj;
+	}
+}
+
+class FormPostStore {
 	constructor(bot, db) {
-		super();
-
 		this.db = db;
 		this.bot = bot;
 	};
@@ -17,9 +77,9 @@ class FormPostStore extends Collection {
 			}
 		})
 
-		this.bot.on('messageDelete', async ({guild, channel, id}) => {
+		this.bot.on('messageDelete', async ({channel, id}) => {
 			try {
-				await this.delete(channel.guild.id, channel.id, id);
+				await this.deleteByMessage(channel.guild.id, id);
 			} catch(e) {
 				console.log(e.message || e);
 			}
@@ -35,323 +95,192 @@ class FormPostStore extends Collection {
 	}
 
 	async create(server, channel, message, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`INSERT INTO form_posts (
-					server_id,
-					channel_id,
-					message_id,
-					form,
-					bound
-				) VALUES ($1,$2,$3,$4,$5)`,
-				[server, channel, message, data.form, data.bound || false]);
-			} catch(e) {
-				console.log(e);
-		 		return rej(e.message);
-			}
-			
-			res(await this.get(server, channel, message));
-		})
+		try {
+			await this.db.query(`INSERT INTO form_posts (
+				server_id,
+				channel_id,
+				message_id,
+				form,
+				bound
+			) VALUES ($1,$2,$3,$4,$5)`,
+			[server, channel, message, data.form, data.bound || false]);
+		} catch(e) {
+			console.log(e);
+	 		return Promise.reject(e.message);
+		}
+		
+		return await this.get(server, message);
 	}
 
 	async index(server, channel, message, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`INSERT INTO form_posts (
-					server_id,
-					channel_id,
-					message_id,
-					form,
-					bound
-				) VALUES ($1,$2,$3,$4,$5)`,
-				[server, channel, message, data.form, data.bound || false]);
-			} catch(e) {
-				console.log(e);
-		 		return rej(e.message);
-			}
-			
-			res();
-		})
+		try {
+			await this.db.query(`INSERT INTO form_posts (
+				server_id,
+				channel_id,
+				message_id,
+				form,
+				bound
+			) VALUES ($1,$2,$3,$4,$5)`,
+			[server, channel, message, data.form, data.bound || false]);
+		} catch(e) {
+			console.log(e);
+	 		return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
-	async get(server, channel, message, forceUpdate = false) {
-		return new Promise(async (res, rej) => {
-			if(!forceUpdate) {
-				var post = super.get(`${server}-${channel}-${message}`);
-				if(post) return res(post);
-			}
-			
+	async get(server, message) {
+		try {
+			var data = await this.db.query(`
+				SELECT * FROM form_posts WHERE
+				server_id = $1
+				AND message_id = $2
+				AND bound = FALSE
+			`, [server, message]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+
+		if(data.rows?.[0]) {
+			var guild = this.bot.guilds.resolve(server);
+			if(!guild) return Promise.reject("Couldn't get guild!");
+			guild = await guild.fetch();
 			try {
-				var data = await this.db.query(`
-					SELECT * FROM form_posts WHERE
-					server_id = $1
-					AND channel_id = $2
-					AND message_id = $3
-					AND bound = FALSE
-				`, [server, channel, message]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
+				var chan = await guild.channels.fetch(data.rows[0].channel_id);
+				var msg = await chan?.messages.fetch(message);
+			} catch(e) { }
+			if(!chan || !msg) {
+				await this.delete(data.rows[0].id);
+				return new FormPost(this, { server_id: server, message_id: message, bound: false });
 			}
 
-			if(data.rows && data.rows[0]) {
-				var guild = this.bot.guilds.resolve(server);
-				if(!guild) return rej("Couldn't get guild!");
-				guild = await guild.fetch();
-				try {
-					var chan = guild.channels.resolve(data.rows[0].channel_id);
-					var msg = chan?.messages.fetch(message);
-				} catch(e) { }
-				if(!chan || !msg) {
-					await this.delete(server, channel, message);
-					return res(undefined);
-				}
-
-				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-				if(form) data.rows[0].form = form;
-				this.set(`${server}-${channel}-${message}`, data.rows[0])
-				res(data.rows[0])
-			} else res(undefined);
-		})
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			if(form) data.rows[0].form = form;
+			return new FormPost(this, data.rows[0]);
+		} else return new FormPost(this, { server_id: server, message_id: message, bound: false });
 	}
-
-	// async getByEmoji(server, message, emoji) {
-		// return new Promise(async (res, rej) => {
-			// try {
-				// var data = await this.db.query(`
-					// SELECT * FROM form_posts WHERE
-					// server_id = $1
-					// AND message_id = $2
-					// AND emoji = $3
-				// `, [server, message, emoji]);
-			// } catch(e) {
-				// console.log(e);
-				// return rej(e.message);
-			// }
-//
-			// if(data.rows && data.rows[0]) {
-				// var guild = this.bot.guilds.resolve(server);
-				// if(!guild) return rej("Couldn't get guild!");
-				// guild = await guild.fetch();
-				// var chan = guild.channels.resolve(data.rows[0].channel_id);
-				// var msg = chan?.messages.fetch(message);
-				// if(!chan || !msg) {
-					// await this.delete(server, data.rows[0].channel_id, message);
-					// return res(undefined);
-				// }
-//
-				// var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-				// if(form) data.rows[0].form = form;
-				// res(data.rows[0]);
-			// } else res(undefined);
-		// })
-	// }
 
 	async getBound(server, message, hid) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`
-					SELECT * FROM form_posts WHERE
-					server_id = $1
-					AND message_id = $2
-					AND form = $3
-					AND bound = TRUE
-				`, [server, message, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
+		try {
+			var data = await this.db.query(`
+				SELECT * FROM form_posts WHERE
+				server_id = $1
+				AND message_id = $2
+				AND form = $3
+				AND bound = TRUE
+			`, [server, message, hid]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
 
-			if(data.rows && data.rows[0]) {
-				var guild = this.bot.guilds.resolve(server);
-				if(!guild) return rej("Couldn't get guild!");
-				guild = await guild.fetch();
-				try {
-					var chan = guild.channels.resolve(data.rows[0].channel_id);
-					var msg = chan?.messages.fetch(message);
-				} catch(e) { }
-				if(!chan || !msg) {
-					await this.delete(server, data.rows[0].channel_id, message);
-					return res(undefined);
-				}
-
-				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-				if(form) data.rows[0].form = form;
-				res(data.rows[0])
-			} else res(undefined);
-		})
-	}
-
-	async getByForm(server, hid) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`
-					SELECT * FROM form_posts WHERE
-					server_id = $1
-					AND form = $2
-				`,[server, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-
+		if(data.rows?.[0]) {
 			var guild = this.bot.guilds.resolve(server);
-			if(!guild) return rej("Couldn't get guild!");
+			if(!guild) return Promise.reject("Couldn't get guild!");
 			guild = await guild.fetch();
-			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					try {
-						var chan = guild.channels.resolve(data.rows[i].channel_id);
-						var msg = chan?.messages.fetch(data.rows[i].message_id);
-					} catch(e) { }
-					if(!chan || !msg) {
-						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
-						data.rows[i] = 'deleted';
-						continue;
-					}
-
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
-				}
-				res(data.rows.filter(x => x != 'deleted'))
-			} else res(undefined);
-		})
-	}
-
-	async getBoundByForm(server, hid) {
-		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`
-					SELECT * FROM form_posts WHERE
-					server_id = $1
-					AND form = $2
-					AND bound = TRUE
-				`,[server, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
+				var chan = await guild.channels.fetch(data.rows[0].channel_id);
+				var msg = await chan?.messages.fetch(message);
+			} catch(e) { }
+			if(!chan || !msg) {
+				await this.delete(data.rows[0].id);
+				return new FormPost(this, { server_id: server, message_id: message, form: hid, bound: true });
 			}
 
-			var guild = this.bot.guilds.resolve(server);
-			if(!guild) return rej("Couldn't get guild!");
-			guild = await guild.fetch();
-			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					try {
-						var chan = guild.channels.resolve(data.rows[i].channel_id);
-						var msg = chan?.messages.fetch(data.rows[i].message_id);
-					} catch(e) { }
-					if(!chan || !msg) {
-						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
-						data.rows[i] = 'deleted';
-						continue;
-					}
-
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
-				}
-				res(data.rows.filter(x => x != 'deleted'))
-			} else res(undefined);
-		})
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			if(form) data.rows[0].form = form;
+			return new FormPost(this, data.rows[0])
+		} else return new FormPost(this, { server_id: server, message_id: message, form: hid, bound: true });
 	}
 
 	async getByMessage(server, message) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`
-					SELECT * FROM form_posts WHERE
-					server_id = $1
-					AND message_id = $2
-				`,[server, message]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
+		try {
+			var data = await this.db.query(`
+				SELECT * FROM form_posts WHERE
+				server_id = $1
+				AND message_id = $2
+			`,[server, message]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
 
-			var guild = this.bot.guilds.resolve(server);
-			if(!guild) return rej("Couldn't get guild!");
-			guild = await guild.fetch();
-			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					try {
-						var chan = guild.channels.resolve(data.rows[i].channel_id);
-						var msg = chan?.messages.fetch(data.rows[i].message_id);
-					} catch(e) { }
-					if(!chan || !msg) {
-						await this.delete(server, data.rows[i].channel_id, data.rows[i].message_id);
-						data.rows[i] = 'deleted';
-						continue;
-					}
-
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
-				}
-				res(data.rows.filter(x => x != 'deleted'))
-			} else res(undefined);
-		})
-	}
-
-	async update(server, channel, message, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`
-					UPDATE form_posts SET
-					${Object.keys(data).map((k, i) => k+"=$"+(i+4)).join(",")}
-					WHERE server_id = $1
-					AND channel_id = $2
-					AND message_id = $3
-				`, [server, channel, message, ...Object.values(data)]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-
-			res(await this.get(server, channel, message, true));
-		})
-	}
-
-	async delete(server, channel, message) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`
-					DELETE FROM form_posts
-					WHERE server_id = $1
-					AND channel_id = $2
-					AND message_id = $3
-				`, [server, channel, message]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
+		var guild = this.bot.guilds.resolve(server);
+		if(!guild) return Promise.reject("Couldn't get guild!");
+		guild = await guild.fetch();
+		
+		if(data.rows && data.rows[0]) {
+			for(var i = 0; i < data.rows.length; i++) {
+				var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
+				if(form) data.rows[i].form = form;
 			}
 			
-			super.delete(`${server}-${channel}-${message}`);
-			res();
-		})
+			return data.rows.map(x => new FormPost(this, x));
+		} else return undefined;
 	}
 
-	async deleteByForm(server, hid) {
-		return new Promise(async (res, rej) => {
-			try {
-				var posts = await this.getByForm(server, hid);
-				if(!posts?.[0]) return res();
-				await this.db.query(`
-					DELETE FROM form_posts
-					WHERE server_id = $1
-					AND form = $2
-				`, [server, hid]);
-				if(posts)
-					for(var post of posts)
-						super.delete(`${server}-${post.channel_id}-${post.message_id}`);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			res();
-		})
+	async getID(id) {
+		try {
+			var data = await this.db.query(`
+				SELECT * FROM form_posts WHERE
+				id = $1
+			`, [id]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+
+		if(data.rows?.[0]) {
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			if(form) data.rows[0].form = form;
+			return new FormPost(this, data.rows[0]);
+		} else return new FormPost(this, {});
+	}
+
+	async update(id, data = {}) {
+		try {
+			await this.db.query(`
+				UPDATE form_posts SET
+				${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")}
+				WHERE id = $1
+			`, [id, ...Object.values(data)]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+
+		return await this.getID(id);
+	}
+
+	async delete(id) {
+		try {
+			await this.db.query(`
+				DELETE FROM form_posts
+				WHERE id = $1
+			`, [id]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
+	}
+
+	async deleteByMessage(server, message) {
+		try {
+			await this.db.query(`
+				DELETE FROM form_posts
+				WHERE server_id = $1 AND
+				message_id = $2
+			`, [server, message]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
 	async handleReactions(reaction, user) {
@@ -365,12 +294,12 @@ class FormPostStore extends Collection {
 
 		var posts = await this.getByMessage(msg.channel.guild.id, msg.id);
 		if(!posts?.[0]) return;
-		var post = posts.find(p => (p.form.emoji || '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
+		var post = posts.find(p => (p.form.emoji ?? '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
 		if(!post) return;
 
 		var cfg = await this.bot.stores.configs.get(msg.channel.guild.id);
 		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
-		if(!post.form.open) return;
+		if(!post.form.open) return await user.send("That form isn't accepting responses!");
 
 		var resp = await this.bot.handlers.response.startResponse({
 			user,
@@ -386,17 +315,23 @@ class FormPostStore extends Collection {
 		if(!intr.inGuild()) return;
 		var { user, message: msg, component: button } = intr;
 
-		var posts = await this.getByMessage(intr.guildId, msg.id);
-		if(!posts?.[0]) return;
+		var post = await this.get(intr.guildId, msg.id); // no reason to get all on the message, only unbound matters
+		console.log(post);
+		if(!post.id) return;
 		var id = button.customId.split('-')[0];
-		var post = posts.find(p => p.form.hid == id);
-		if(!post) return;
+		if(!post.form.hid == id) return;
+		if(!post.form.open) return await intr.reply({
+			content: "That form isn't accepting responses!",
+			ephemeral: true
+		});
 
 		var cfg = await this.bot.stores.configs.get(intr.guildId);
-		if(!post.form.open) return;
 
 		if(!post.form.channel_id && !cfg?.response_channel)
-			return await user.send('No response channel set for that form! Ask the mods to set one first!');
+			return await intr.reply({
+				content: 'No response channel set for that form! Ask the mods to set one first!',
+				ephemeral: true
+			});
 
 		var resp = await this.bot.handlers.response.startResponse({
 			user,

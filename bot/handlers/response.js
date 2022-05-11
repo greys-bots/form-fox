@@ -406,7 +406,7 @@ class ResponseHandler {
 	}
 
 	async autoCancel(ctx) {
-		var {user, channel, response} = ctx;
+		var {channel, response} = ctx;
 
 		var prompt = await channel.messages.fetch(response.message_id);
 		try {
@@ -513,8 +513,9 @@ class ResponseHandler {
 			return;
 		}
 
-		var response = await this.bot.stores.openResponses.getByMessage(msg.channel.id, msg.id);
+		var response = await this.bot.stores.openResponses.get(msg.channel.id);
 		if(!response) return;
+		if(response.message_id != msg.id) return;
 
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		if(!questions?.[0]) {
@@ -648,8 +649,9 @@ class ResponseHandler {
 			return;
 		}
 
-		var response = await this.bot.stores.openResponses.getByMessage(msg.channel.id, msg.id);
+		var response = await this.bot.stores.openResponses.get(msg.channel.id);
 		if(!response) return;
+		if(response.message_id != msg.id) return;
 
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		if(!questions?.[0]) {

@@ -1,167 +1,224 @@
-const {Collection} = require("discord.js");
+const KEYS = {
+	id: { },
+	server_id: { },
+	hid: { },
+	user_id: { },
+	form: { },
+	questions: { },
+	answers: { },
+	status: { patch: true },
+	received: { }
+}
 
-class ResponseStore extends Collection {
+class Response {
+	#store;
+
+	constructor(store, data) {
+		this.#store = store;
+		for(var k in KEYS) this[k] = data[k];
+	}
+
+	async fetch() {
+		var data = await this.#store.getID(this.id);
+		for(var k in KEYS) this[k] = data[k];
+
+		return this;
+	}
+
+	async save() {
+		var obj = await this.verify();
+
+		var data;
+		if(this.id) data = await this.#store.update(this.id, obj);
+		else data = await this.#store.create(this.server_id, obj);
+		for(var k in KEYS) this[k] = data[k];
+		return this;
+	}
+
+	async delete() {
+		await this.#store.delete(this.id);
+	}
+
+	async verify(patch = true /* generate patch-only object */) {
+		var obj = {};
+		var errors = []
+		for(var k in KEYS) {
+			if(!KEYS[k].patch && patch) continue;
+			if(this[k] == undefined) continue;
+			if(this[k] == null) {
+				obj[k] = this[k];
+				continue;
+			}
+
+			var test = true;
+			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
+			if(!test) {
+				errors.push(KEYS[k].err);
+				continue;
+			}
+			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
+			else obj[k] = this[k];
+		}
+
+		if(errors.length) throw new Error(errors.join("\n"));
+		return obj;
+	}
+}
+
+class ResponseStore {
 	constructor(bot, db) {
-		super();
-
 		this.db = db;
 		this.bot = bot;
 	};
 
 	async create(server, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				var resp = await this.db.query(`INSERT INTO responses (
-					server_id,
-					hid,
-					user_id,
-					form,
-					questions,
-					answers,
-					status,
-					received
-				) VALUES ($1,find_unique('responses'),$2,$3,$4,$5,$6,$7)
-				RETURNING *`,
-				[server, data.user_id, data.form, data.questions || [],
-				data.answers || [], data.status || 'pending', data.received || new Date()]);
-			} catch(e) {
-				console.log(e);
-		 		return rej(e.message);
-			}
-			
-			res(await this.get(server, resp.rows[0].hid));
-		})
+		try {
+			var resp = await this.db.query(`INSERT INTO responses (
+				server_id,
+				hid,
+				user_id,
+				form,
+				questions,
+				answers,
+				status,
+				received
+			) VALUES ($1,find_unique('responses'),$2,$3,$4,$5,$6,$7)
+			RETURNING *`,
+			[server, data.user_id, data.form, data.questions || [],
+			data.answers || [], data.status || 'pending', data.received || new Date()]);
+		} catch(e) {
+			console.log(e);
+	 		return Promise.reject(e.message);
+		}
+		
+		return await this.get(server, resp.rows[0].hid);
 	}
 
 	async index(server, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`INSERT INTO responses (
-					server_id,
-					hid,
-					user_id,
-					form,
-					questions,
-					answers,
-					status,
-					received
-				) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-				[server, data.hid, data.user_id, data.form, data.questions || [],
-				data.answers || [], data.status || 'pending', data.received || new Date()]);
-			} catch(e) {
-				console.log(e);
-		 		return rej(e.message);
-			}
-			
-			res();
-		})
+		try {
+			await this.db.query(`INSERT INTO responses (
+				server_id,
+				hid,
+				user_id,
+				form,
+				questions,
+				answers,
+				status,
+				received
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+			[server, data.hid, data.user_id, data.form, data.questions || [],
+			data.answers || [], data.status || 'pending', data.received || new Date()]);
+		} catch(e) {
+			console.log(e);
+	 		return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
-	async get(server, hid, forceUpdate = false) {
-		return new Promise(async (res, rej) => {
-			if(!forceUpdate) {
-				var response = super.get(`${server}-${hid}`);
-				if(response) {
-					var form = await this.bot.stores.forms.get(response.server_id, response.form);
-					if(form) response.form = form;
-					return res(response);
-				}
-			}
+	async get(server, hid) {
+		try {
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND hid = $2`,[server, hid]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var resp = new Response(this, data.rows[0])
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			if(form) resp.form = form;
 			
-			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND hid = $2`,[server, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			if(data.rows && data.rows[0]) {
-				var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
-				if(form) data.rows[0].form = form;
-				res(data.rows[0])
-			} else res(undefined);
-		})
+			return resp;
+		} else return new Response(this, { server_id: server });
 	}
 
 	async getAll(server) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1`,[server]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
+		try {
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1`,[server]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var responses = [];
+			var forms = {};
+			for(var r of data.rows) {
+				var resp = new Response(this, r)
+				var form = forms[r.form];
+				if(!form) form = await this.bot.stores.forms.get(r.server_id, r.form);
+				if(form) {
+					resp.form = form;
+					forms[form.hid] = form;
+				}
+
+				responses.push(resp);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
-				}
-				res(data.rows)
-			} else res(undefined);
-		})
+			return responses;
+		} else return undefined;
 	}
 
 	async getByUser(server, user) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND user_id = $2`,[server, user]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
+		try {
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND user_id = $2`,[server, user]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var responses = [];
+			var forms = {};
+			for(var r of data.rows) {
+				var resp = new Response(this, r)
+				var form = forms[r.form];
+				if(!form) form = await this.bot.stores.forms.get(r.server_id, r.form);
+				if(form) {
+					resp.form = form;
+					forms[form.hid] = form;
+				}
+
+				responses.push(resp);
 			}
 			
-			if(data.rows && data.rows[0]) {
-				for(var i = 0; i < data.rows.length; i++) {
-					var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
-					if(form) data.rows[i].form = form;
-				}
-				res(data.rows)
-			} else res(undefined);
-		})
+			return responses;
+		} else return undefined;
 	}
 
 	async getByForm(server, hid) {
-		return new Promise(async (res, rej) => {
-			try {
-				var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND form = $2`,[server, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			if(data.rows && data.rows[0]) {
-				var form = await this.bot.stores.forms.get(server, hid);
-                for(var i = 0; i < data.rows.length; i++) {
-                    if(form) data.rows[i].form = form;
-                }
-                
-				res(data.rows)
-			} else res(undefined);
-		})
+		try {
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND form = $2`,[server, hid]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var form = await this.bot.stores.forms.get(server, hid);
+            
+			return data.rows.map( x => {
+				var r = new Response(this, x);
+				r.form = form;
+				return r;
+			})
+		} else return undefined;
 	}
 
 	async getByForms(server, ids) {
 		try {
-			var data;
-			if(ids) {
-				data = await this.db.query(`
-					SELECT * FROM responses
-					WHERE server_id = $1
-					AND form = ANY($2)
-				`, [server, ids]);
-			} else {
-				data = await this.db.query(`
-					SELECT * FROM responses
-					WHERE server_id = $1
-				`, [server]);
-			}
+			var data = await this.db.query(`
+				SELECT * FROM responses
+				WHERE server_id = $1
+			`, [server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
 		}
 
 		if(!data?.rows?.length) return undefined;
+		if(ids) data.rows = data.rows.filter(x => ids.includes(x.form));
 		
 		var d = {};
 		for(var r of data.rows) {
@@ -189,81 +246,48 @@ class ResponseStore extends Collection {
 		return d;
 	}
 
-	async update(server, hid, data = {}) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`UPDATE responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
+	async update(id, data = {}) {
+		try {
+			await this.db.query(`UPDATE responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
 
-			res(await this.get(server, hid, true));
-		})
+		return await this.getID(id);
 	}
 
-	async delete(server, hid) {
-		return new Promise(async (res, rej) => {
-			try {
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND hid = $2`, [server, hid]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			super.delete(`${server}-${hid}`);
-			res();
-		})
+	async delete(id) {
+		try {
+			await this.db.query(`DELETE FROM responses WHERE id = $1`, [id]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
 	async deleteAll(server) {
-		return new Promise(async (res, rej) => {
-			try {
-				var responses = await this.getAll(server);
-				if(!responses?.[0]) return res();
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1`, [server]);
-				for(var response of responses) super.delete(`${server}-${response.hid}`);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			res();
-		})
-	}
-
-	async deleteByUser(server, user) {
-		return new Promise(async (res, rej) => {
-			try {
-				var responses = await this.getByUser(server, user);
-				if(!responses?.[0]) return res();
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND user_id = $2`, [server, user]);
-				for(var response of responses) super.delete(`${server}-${response.hid}`);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			res();
-		})
+		try {
+			await this.db.query(`DELETE FROM responses WHERE server_id = $1`, [server]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 
 	async deleteByForm(server, form) {
-		return new Promise(async (res, rej) => {
-			try {
-				var responses = await this.getByForm(server, form);
-				if(!responses?.[0]) return res();
-				await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
-				for(var response of responses) {
-					super.delete(`${server}-${response.hid}`);
-				}
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
-			
-			res();
-		})
+		try {
+			await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		return;
 	}
 }
 

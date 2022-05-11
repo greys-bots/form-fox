@@ -1,4 +1,3 @@
-const {Collection} = require("discord.js");
 const {
     pageBtns: PGBTNS
 } = require('../extras');
@@ -10,10 +9,72 @@ const VARIABLES = {
     '$FORMID': (user, guild, form) => form.id,
 }
 
-class ResponsePostStore extends Collection {
-    constructor(bot, db) {
-        super();
+const KEYS = {
+    id: { },
+    server_id: { },
+    channel: { },
+    message_id: { },
+    response: { },
+    page: { patch: true }
+}
 
+class ResponsePost {
+    #store;
+
+    constructor(store, data) {
+        this.#store = store;
+        for(var k in KEYS) this[k] = data[k];
+    }
+
+    async fetch() {
+        var data = await this.#store.getID(this.id);
+        for(var k in KEYS) this[k] = data[k];
+
+        return this;
+    }
+
+    async save() {
+        var obj = await this.verify();
+
+        var data;
+        if(this.id) data = await this.#store.update(this.id, obj);
+        else data = await this.#store.create(this.server_id, this.channel_id, this.message_id, obj);
+        for(var k in KEYS) this[k] = data[k];
+        return this;
+    }
+
+    async delete() {
+        await this.#store.delete(this.id);
+    }
+
+    async verify(patch = true /* generate patch-only object */) {
+        var obj = {};
+        var errors = []
+        for(var k in KEYS) {
+            if(!KEYS[k].patch && patch) continue;
+            if(this[k] == undefined) continue;
+            if(this[k] == null) {
+                obj[k] = this[k];
+                continue;
+            }
+
+            var test = true;
+            if(KEYS[k].test) test = await KEYS[k].test(this[k]);
+            if(!test) {
+                errors.push(KEYS[k].err);
+                continue;
+            }
+            if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
+            else obj[k] = this[k];
+        }
+
+        if(errors.length) throw new Error(errors.join("\n"));
+        return obj;
+    }
+}
+
+class ResponsePostStore {
+    constructor(bot, db) {
         this.db = db;
         this.bot = bot;
     };
@@ -34,150 +95,131 @@ class ResponsePostStore extends Collection {
                 console.log(e.message || e);
             }
         })
+
+        this.bot.on('messageDelete', async ({ channel, id }) => {
+            if(!channel.guild) return;
+            await this.deleteByMessage(channel.guild.id, channel.id, id);
+        })
     }
 
     async create(server, channel, message, data = {}) {
-        return new Promise(async (res, rej) => {
-            try {
-                await this.db.query(`INSERT INTO response_posts (
-                    server_id,
-                    channel_id,
-                    message_id,
-                    response,
-                    page
-                ) VALUES ($1,$2,$3,$4,$5)`,
-                [server, channel, message, data.response, data.page ?? 1]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
-            
-            res(await this.get(server, channel, message));
-        })
+        try {
+            await this.db.query(`INSERT INTO response_posts (
+                server_id,
+                channel_id,
+                message_id,
+                response,
+                page
+            ) VALUES ($1,$2,$3,$4,$5)`,
+            [server, channel, message, data.response, data.page ?? 1]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
+        
+        return await this.get(server, channel, message);
     }
 
     async index(server, channel, message, data = {}) {
-        return new Promise(async (res, rej) => {
-            try {
-                await this.db.query(`INSERT INTO response_posts (
-                    server_id,
-                    channel_id,
-                    message_id,
-                    response,
-                    page
-                ) VALUES ($1,$2,$3,$4,$5)`,
-                [server, channel, message, data.response, data.page ?? 1]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
-            
-            res();
-        })
+        try {
+            await this.db.query(`INSERT INTO response_posts (
+                server_id,
+                channel_id,
+                message_id,
+                response,
+                page
+            ) VALUES ($1,$2,$3,$4,$5)`,
+            [server, channel, message, data.response, data.page ?? 1]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
+        
+        return;
     }
 
-    async get(server, channel, message, forceUpdate = false) {
-        return new Promise(async (res, rej) => {
-            if(!forceUpdate) {
-                var post = super.get(`${server}-${channel}-${message}`);
-                if(post) {
-                    var form = await this.bot.stores.forms.get(post.server_id, post.form);
-                    if(form) post.form = form;
-                    return res(post);
-                }
-            }
+    async get(server, channel, message) {
+        try {
+            var data = await this.db.query(`
+                SELECT * FROM response_posts WHERE
+                server_id = $1
+                AND channel_id = $2
+                AND message_id = $3
+            `, [server, channel, message]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
+        
+        if(data.rows?.[0]) {
+            var post = new ResponsePost(this, data.rows[0]);
+            var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
+            if(response) post.response = response;
             
-            try {
-                var data = await this.db.query(`
-                    SELECT * FROM response_posts WHERE
-                    server_id = $1
-                    AND channel_id = $2
-                    AND message_id = $3
-                `, [server, channel, message]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
-            
-            if(data.rows && data.rows[0]) {
-                var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
-                if(response) data.rows[0].response = response;
-                this.set(`${server}-${channel}-${message}`, data.rows[0])
-                res(data.rows[0])
-            } else res(undefined);
-        })
+            return post;
+        } else return new ResponsePost(this, { server_id: server, channel_id: channel, message_id: message });
     }
 
     async getByResponse(server, hid) {
-        return new Promise(async (res, rej) => {
-            try {
-                var data = await this.db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
+        try {
+            var data = await this.db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
+        
+        if(data.rows?.[0]) {
+            var post = new ResponsePost(this, data.rows[0]);
+            var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
+            if(response) post.response = response;
             
-            if(data.rows && data.rows[0]) {
-                var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
-                if(response) data.rows[0].response = response;
-                res(data.rows[0])
-            } else res(undefined);
-        })
+            return post;
+        } else return new ResponsePost(this, { server_id: server, response: hid });
     }
 
-    async update(server, channel, message, data = {}) {
-        return new Promise(async (res, rej) => {
-            try {
-                await this.db.query(`
-                    UPDATE response_posts SET
-                    ${Object.keys(data).map((k, i) => k+"=$"+(i+4)).join(",")}
-                    WHERE server_id = $1
-                    AND channel_id = $2
-                    AND message_id = $3
-                `, [server, channel, message, ...Object.values(data)]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
+    async update(id, data = {}) {
+        try {
+            await this.db.query(`
+                UPDATE response_posts SET
+                ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")}
+                WHERE id = $1
+            `, [id, ...Object.values(data)]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
 
-            res(await this.get(server, channel, message, true));
-        })
+        return await this.getID(id)
     }
 
-    async delete(server, channel, message) {
-        return new Promise(async (res, rej) => {
-            try {
-                await this.db.query(`
-                    DELETE FROM response_posts
-                    WHERE server_id = $1
-                    AND channel_id = $2
-                    AND message_id = $3
-                `, [server, channel, message]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
-            
-            super.delete(`${server}-${channel}-${message}`);
-            res();
-        })
+    async delete(id) {
+        try {
+            await this.db.query(`
+                DELETE FROM response_posts
+                WHERE id = $1
+            `, [id]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
+        
+        return;
     }
 
-    async deleteByResponse(server, hid) {
-        return new Promise(async (res, rej) => {
-            try {
-                await this.db.query(`
-                    DELETE FROM response_posts
-                    WHERE server_id = $1
-                    AND response = $2
-                `, [server, hid]);
-            } catch(e) {
-                console.log(e);
-                return rej(e.message);
-            }
-            
-            res();
-        })
+    async deleteByMessage(server, channel, message) {
+        try {
+            await this.db.query(`
+                DELETE FROM response_posts
+                WHERE server_id = $1
+                AND channel_id = $2
+                AND message_id = $3
+            `, [server, channel, message]);
+        } catch(e) {
+            console.log(e);
+            return Promise.reject(e.message);
+        }
+        
+        return;
     }
 
     async handleReactions(reaction, user) {
@@ -295,7 +337,6 @@ class ResponsePostStore extends Collection {
                 }
 
                 return await msg.channel.send('Response denied!');
-                break;
             case '✅':
                 var embed = msg.embeds[0];
                 embed.color = parseInt('55aa55', 16);
@@ -398,7 +439,6 @@ class ResponsePostStore extends Collection {
             	break;
             default:
                 return;
-                break;
         }
     }
 
@@ -485,7 +525,6 @@ class ResponsePostStore extends Collection {
                 }
 
                 return await msg.channel.send('Response denied!');
-                break;
             case 'accept':
                 var embed = msg.embeds[0];
                 embed.color = parseInt('55aa55', 16);
@@ -576,7 +615,6 @@ class ResponsePostStore extends Collection {
                 } catch(e) {
                     return await msg.channel.send('ERR: '+e.message);
                 }
-            	break;
         }
 
         if(PGBTNS.find(pg => pg.custom_id == ctx.customId)) {
