@@ -20,7 +20,7 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var rdata = {
 			content: "Are you **sure** you want to delete this form?\n**WARNING:** All response data for this form will be lost! **This can't be undone!**",
@@ -39,7 +39,7 @@ module.exports = {
 		if(conf.msg) {
 			msg = conf.msg;
 		} else {
-			await ctx.client.stores.forms.delete(ctx.guildId, form.hid);
+			await form.delete()
 			msg = 'Form deleted!';
 		}
 

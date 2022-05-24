@@ -28,7 +28,7 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var c = ctx.options.get('cooldown')?.value;
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!c) {
 			if(!form.cooldown) return 'Form has no cooldown set!';
@@ -54,7 +54,8 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {cooldown: undefined});
+				form.cooldown = undefined;
+				await form.save()
 				msg = 'Cooldown reset!';
 			}
 
@@ -89,7 +90,8 @@ module.exports = {
 		var cd = parseInt(c);
 		if(cd < 0) return 'Cooldown must be positive!';
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {cooldown: cd});
+		form.cooldown = cd;
+		await form.save()
 		return 'Form updated!';
 	},
 	async auto(ctx) {

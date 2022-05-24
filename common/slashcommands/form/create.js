@@ -30,6 +30,7 @@ module.exports = {
 			questions: []
 		});
 
+		console.log(form)
 		return (
 			`Form created! ID: ${form.hid}` +
 			"\nUse `/question add` to start adding questions to this form" +

@@ -30,15 +30,16 @@ module.exports = {
 
 		if(farg) {
 			var form = await ctx.client.stores.forms.get(ctx.guildId, farg);
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {embed: val});
+			form.embed = val;
+			await form.save();
 			return "Form updated!";
 		}
 
 		var cfg = await ctx.client.stores.configs.get(ctx.guildId);
-		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {embed: val});
-		else await ctx.client.stores.configs.update(ctx.guildId, {embed: val});
+		cfg.embed = val;
+		await cfg.save();
 		
 		return "Config updated!";
 	}

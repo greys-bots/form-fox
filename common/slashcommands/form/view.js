@@ -44,7 +44,7 @@ module.exports = {
 		}
 
 		var form = await ctx.client.stores.forms.get(ctx.guildId, arg);
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		
 		var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, form.hid);
 		return {embeds: [{

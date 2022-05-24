@@ -18,9 +18,10 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {open: true});
+		form.open = true;
+		await form.save()
 		return 'Form updated!';
 	},
 	async auto(ctx) {

@@ -21,9 +21,9 @@ class RoleHandler {
 		var { form, answers: ans } = ctx;
 		var guild = await ctx.client.guilds.fetch(ctx.server_id);
 		var member = await guild.members.fetch(ctx.user_id);
-		
+
 		var roles = form.roles
-			.filter(x => x.events.includes(event))
+			?.filter(x => x.events.includes(event))
 			.map(x => x.id);
 
 		if(event == 'ACCEPT') {

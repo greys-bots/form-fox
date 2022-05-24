@@ -32,7 +32,7 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var channel;
 		var ch = ctx.options.getChannel('channel');
@@ -53,7 +53,7 @@ module.exports = {
 		var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(form.emoji || '📝'));
 		if(react) react.remove();
 
-		await ctx.client.stores.formPosts.delete(ctx.guildId, channel.id, msg.id);
+		await post.delete()
 		return 'Unbound!'
 	},
 	async auto(ctx) {

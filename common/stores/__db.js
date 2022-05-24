@@ -1,4 +1,4 @@
-  var fs = require('fs');
+var fs = require('fs');
 var {Pool} = require('pg');
 
 module.exports = async (bot) => {

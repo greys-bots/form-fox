@@ -5,7 +5,7 @@ module.exports = {
 		if(!args[1]) return 'I need a form and channel to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		var channel = msg.channel.guild.channels.cache.find(c => [c.name, c.id].includes(args[1].toLowerCase().replace(/[<@#>]/g, '')));
 		if(!channel) return 'Channel not found!';
 

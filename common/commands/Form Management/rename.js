@@ -8,7 +8,8 @@ module.exports = {
 		if(!form) return 'Form not found!';
 
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {name: args.slice(1).join(' ')});
+			form.name = args.slice(1).join(' ');
+			await form.save()
 		} catch(e) {
 			if(e.message) return 'ERR! '+e.message;
 			else if(typeof e == 'string') return 'ERR! '+e;

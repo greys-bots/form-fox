@@ -32,11 +32,11 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var channel;
 		var ch = ctx.options.getChannel('channel');
-		if(ch && ['GUILD_TEXT', 'GUILD_NEWS'].includes(ch.type)) channel = ch;
+		if(ch) channel = ch;
 		else channel = ctx.channel;
 
 		var mid = ctx.options.get('msg_id').value.trim();

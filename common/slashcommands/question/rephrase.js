@@ -30,7 +30,7 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var p = ctx.options.getInteger('question');
 		var q = form.questions[p - 1];
@@ -40,7 +40,7 @@ module.exports = {
 		if(value.length > 256) return "Question length too long! Must be 256 chars or less";
 		form.questions[p - 1].value = value;
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {questions: form.questions});
+		await form.save()
 		return 'Question updated!';
 	},
 	async auto(ctx) {

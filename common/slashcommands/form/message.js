@@ -34,7 +34,7 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var m = ctx.options.get('message')?.value;
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!m) {
 			if(!form.message) return 'Form has no message set!';
@@ -61,7 +61,8 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {message: undefined});
+				form.message = undefined;
+				await form.save()
 				msg = 'Message reset!';
 			}
 
@@ -95,7 +96,8 @@ module.exports = {
 
 		if(m.length > 1000) return "Message length must be 1000 or less!"
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {message: m});
+		form.message = m;
+		await form.save()
 		return 'Form updated!';
 	},
 	async auto(ctx) {

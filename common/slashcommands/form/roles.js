@@ -27,7 +27,7 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles for that form!";
 		
@@ -97,11 +97,12 @@ opts.push({
 		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		roles = roles.map(r => ({id: r.id, events: [event]}));
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(roles)});
+		form.roles = JSON.stringify(roles);
+		await form.save();
 		
 		return 'Form updated!';
 	},
@@ -165,13 +166,13 @@ opts.push({
 		var event = ctx.options.getString('event');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!form.roles) form.roles = [];
-		roles = roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: [event]}));
-		form.roles = form.roles.concat(roles);
+		roles = JSON.stringify(roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: [event]})));
+		form.roles = JSON.stringify(form.roles.concat(roles));
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
+		await form.save();
 		return "Form updated!";
 	},
 	async auto(ctx) {
@@ -223,12 +224,12 @@ opts.push({
 		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles to remove!";
-		form.roles = form.roles.filter(r => !roles.includes(r.id));
+		form.roles = JSON.stringify(form.roles.filter(r => !roles.includes(r.id)));
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify(form.roles)});
+		await form.save()
 		return "Form updated!";
 	},
 	
@@ -270,7 +271,7 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		
 		var rdata = {
 			content: "Are you sure you want to clear ALL roles on this form?",
@@ -287,7 +288,8 @@ opts.push({
 		if(conf.msg) {
 			msg = conf.msg;
 		} else {
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {roles: JSON.stringify([])});
+			form.roles = JSON.stringify([]);
+			await form.save()
 			msg = 'Roles cleared!';
 		}
 

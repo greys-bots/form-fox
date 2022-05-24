@@ -247,7 +247,7 @@ class ResponsePostStore {
         if(!check) return;
 
         var post = await this.get(msg.channel.guild.id, msg.channel.id, msg.id);
-        if(!post) return;
+        if(!post?.id) return;
 
         if(!post.response?.user_id) {
         	await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
@@ -307,8 +307,8 @@ class ResponsePostStore {
                 }
 
                 try {
-                    await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
-                    post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'denied'});
+					post.response.status = 'denied';
+                    post.response = await post.response.save();
                     await msg.edit({embeds: [embed], components: []});
                     await msg.reactions.removeAll();
 
@@ -325,12 +325,13 @@ class ResponsePostStore {
                         timestamp: new Date().toISOString()
                     }]})
 
-                    if(ticket) {
+                    if(ticket?.id) {
 			        	var tch = msg.guild.channels.resolve(ticket.channel_id);
 			            tch.delete();
 			        }
 
                     this.bot.emit('DENY', post.response);
+                    await post.delete();
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');
@@ -348,8 +349,8 @@ class ResponsePostStore {
                 }
 
                 try {
-                    await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
-                    post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
+                	post.response.status = 'accepted';
+                    post.response = await post.response.save();
                     await msg.edit({embeds: [embed], components: []});
                     await msg.reactions.removeAll();
 
@@ -373,12 +374,13 @@ class ResponsePostStore {
                         timestamp: new Date().toISOString()
                     }]});
 
-                    if(ticket) {
+                    if(ticket?.id) {
 			        	var tch = msg.guild.channels.resolve(ticket.channel_id);
 			            tch.delete();
 			        }
 
                     this.bot.emit('ACCEPT', post.response);
+                    await post.delete();
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);
@@ -390,7 +392,7 @@ class ResponsePostStore {
 
                 await msg.edit({embeds: [embeds[post.page - 1]]});
                 await reaction.users.remove(user)
-                await this.update(msg.guild.id, msg.channel.id, msg.id, {page: post.page});
+                await post.save();
                 break;
             case '➡️':
                 if(post.page == embeds.length) post.page = 1;
@@ -398,7 +400,7 @@ class ResponsePostStore {
 
                 await msg.edit({embeds: [embeds[post.page - 1]]});
                 await reaction.users.remove(user)
-                await this.update(msg.guild.id, msg.channel.id, msg.id, {page: post.page});
+                await post.save();
                 break;
             case '🎟️':
             	try {
@@ -447,7 +449,7 @@ class ResponsePostStore {
         if(!ctx.guild) return;
 
         var post = await this.get(ctx.channel.guild.id, ctx.channel.id, ctx.message.id);
-        if(!post) return;
+        if(!post?.id) return;
 
         var {message: msg, user} = ctx;
         await ctx.deferUpdate();
@@ -492,8 +494,8 @@ class ResponsePostStore {
                 }
 
                 try {
-                    await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
-                    post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'denied'});
+                	post.response.status = 'denied';
+                    post.response = await post.response.save();
                     await msg.edit({
                     	embeds: [embed],
                     	components: []
@@ -513,12 +515,13 @@ class ResponsePostStore {
                         timestamp: new Date().toISOString()
                     }]})
 
-                    if(ticket) {
+                    if(ticket?.id) {
 			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
-			            tch.delete();
+			            tch?.delete();
 			        }
 
                     this.bot.emit('DENY', post.response);
+                    await post.delete();
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');
@@ -536,8 +539,8 @@ class ResponsePostStore {
                 }
 
                 try {
-                    await this.delete(msg.channel.guild.id, msg.channel.id, msg.id);
-                    post.response = await this.bot.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
+                	post.response.status = 'accepted';
+                	post.response = await post.response.save();
                     await msg.edit({
                     	embeds: [embed],
                     	components: []
@@ -564,12 +567,13 @@ class ResponsePostStore {
                         timestamp: new Date().toISOString()
                     }]});
 
-                    if(ticket) {
+                    if(ticket?.id) {
 			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
-			            tch.delete();
+			            tch?.delete();
 			        }
 
                     this.bot.emit('ACCEPT', post.response);
+                    await post.delete();
                 } catch(e) {
                     console.log(e);
                     return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);
@@ -582,7 +586,7 @@ class ResponsePostStore {
                     var ch = msg.guild.channels.resolve(ch_id);
                     if(!ch) return await msg.channel.send('Category not found!!');
 
-                    if(ticket) return await msg.channel.send(`Channel already opened! Link: <#${ticket.channel_id}>`)
+                    if(ticket?.id) return await msg.channel.send(`Channel already opened! Link: <#${ticket.channel_id}>`)
 
                     var ch2 = await msg.guild.channels.create(`ticket-${post.response.hid}`, {
                         parent: ch.id,
@@ -651,7 +655,7 @@ class ResponsePostStore {
             }
 
             await msg.edit({embeds: [embeds[post.page - 1]]});
-            await this.update(ctx.guild.id, ctx.channel.id, ctx.message.id, {page: post.page});
+            await post.save();
             return;
         }
     }

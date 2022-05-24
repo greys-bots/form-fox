@@ -9,7 +9,7 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(args[0]) {
 			var form = await bot.stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 
 			var message = await msg.channel.send([
 				"Are you sure you want to delete ",

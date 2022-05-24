@@ -30,7 +30,7 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var c = ctx.options.get('color')?.value;
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!c) {
 			if(!form.color) return 'Form has no color set!';
@@ -57,7 +57,8 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color: undefined});
+				form.color = undefined;
+				await form.save()
 				msg = 'Color reset!';
 			}
 
@@ -93,7 +94,8 @@ module.exports = {
 		if(!color.isValid()) return 'That color isn\'t valid!';
 
 		color = color.toHex();
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {color});
+		form.color = color;
+		await form.save();
 		return 'Form updated!';
 	},
 	async auto(ctx) {

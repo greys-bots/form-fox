@@ -26,7 +26,7 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var chan = ctx.options.getChannel('channel');
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, form.hid);
 		try {
@@ -57,7 +57,6 @@ module.exports = {
 			var p = await ctx.client.stores.formPosts.create(ctx.guildId, chan.id, message.id, {
 				form: form.hid
 			});
-			console.log(p)
 		} catch(e) {
 			return 'ERR! '+(e.message || e);
 		}

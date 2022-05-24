@@ -19,7 +19,7 @@ module.exports = {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var embeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
 			return {
@@ -51,7 +51,7 @@ module.exports.subcommands.add = {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		if(form.questions.length >= 20) return 'That form already has 20 questions!';
 
 		var resp;
@@ -108,7 +108,7 @@ module.exports.subcommands.add = {
 
 		form.questions.splice(position - 1, 0, question);
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
+			await form.save();
 		} catch(e) {
 			console.log(e)
 			return 'ERR! '+e;
@@ -128,7 +128,7 @@ module.exports.subcommands.remove = {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		if(form.questions.length <= 1)
 			return "That form can't have any more questions removed!";
 
@@ -148,7 +148,7 @@ module.exports.subcommands.remove = {
 
 		form.questions.splice(question - 1, 1);
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
+			await form.save()
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -167,7 +167,7 @@ module.exports.subcommands.set = {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var data = {};
 		data.questions = [];
@@ -209,7 +209,7 @@ module.exports.subcommands.set = {
 		}
 
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, data);
+			await form.save()
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -229,7 +229,7 @@ module.exports.subcommands.rephrase = {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var resp;
 		var position = args[1];
@@ -254,7 +254,7 @@ module.exports.subcommands.rephrase = {
 		if(question.length > 256) return "Question length too long! Must be 256 chars or less";
 		form.questions[position - 1].value = question;
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
+			await form.save()
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -274,7 +274,7 @@ module.exports.subcommands.reorder = {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var resp;
 		var question = args[1];
@@ -308,7 +308,7 @@ module.exports.subcommands.reorder = {
 		form.questions.splice(question - 1, 1);
 		form.questions.splice(position - 1, 0, tmp);
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {questions: form.questions});
+			await form.save()
 		} catch(e) {
 			return 'ERR! '+e;
 		}

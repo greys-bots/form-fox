@@ -133,6 +133,23 @@ class ResponseStore {
 		} else return new Response(this, { server_id: server });
 	}
 
+	async getID(id) {
+		try {
+			var data = await this.db.query(`SELECT * FROM responses WHERE id = $1`,[id]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			var resp = new Response(this, data.rows[0])
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			if(form) resp.form = form;
+			
+			return resp;
+		} else return new Response(this, { });
+	}
+
 	async getAll(server) {
 		try {
 			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1`,[server]);

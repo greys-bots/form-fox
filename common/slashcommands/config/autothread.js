@@ -24,8 +24,8 @@ module.exports = {
 			return `Auto-threads are currently **${cfg?.autothread ? "enabled" : "disabled"}**.`
 		}
 
-		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {autothread: val});
-		else await ctx.client.stores.configs.update(ctx.guildId, {autothread: val});
+		cfg.autothread = val;
+		await cfg.save();
 		return 'Config updated!';
 	},
 	permissions: ['MANAGE_MESSAGES'],

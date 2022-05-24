@@ -5,13 +5,14 @@ module.exports = {
 		if(!args[1]) return 'I need a form and a color!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var color = bot.tc(args.slice(1).join(''));
 		if(!color.isValid()) return 'That color is invalid!';
 
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {color: color.toHex()});
+			form.color = color.toHex();
+			await form.save()
 		} catch(e) {
 			if(e.message) return 'ERR! '+e.message;
 			else if(typeof e == 'string') return 'ERR! '+e;

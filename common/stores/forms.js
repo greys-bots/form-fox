@@ -44,6 +44,7 @@ class Form {
 		if(this.id) data = await this.#store.update(this.id, obj, this.old);
 		else data = await this.#store.create(this.server_id, obj);
 		for(var k in KEYS) this[k] = data[k];
+		this.old = Object.assign({}, data);
 		return this;
 	}
 
@@ -106,8 +107,8 @@ class FormStore {
 			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
 			RETURNING *`,
 			[server, data.name, data.description,
-			 JSON.stringify(data.questions || []),
-			 data.channel_id, JSON.stringify(data.roles || []),
+			 JSON.stringify(data.questions ?? []),
+			 data.channel_id, JSON.stringify(data.roles ?? []),
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,
 			 data.embed, data.apply_channel, data.tickets_id,
@@ -246,94 +247,50 @@ class FormStore {
 		} else return new Form(this, {});
 	}
 
-	async update(server, hid, data = {}, old) {
-		return new Promise(async (res, rej) => {
-			if(data.questions) data.questions = JSON.stringify(data.questions);
-			try {
-				await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+3)).join(",")} WHERE server_id = $1 AND hid = $2`,[server, hid, ...Object.values(data)]);
-			} catch(e) {
-				console.log(e);
-				return rej(e.message);
-			}
+	async update(id, data = {}, old) {
+		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
+		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
+		console.log(data)
+		try {
+			await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
 
-			var form = await this.get(server, hid, true);
-			if(!form) return res(undefined); //that's just silly
-			var responses = await this.bot.stores.responses.getByForm(server, hid);
-			var posts = await this.bot.stores.formPosts.getByForm(server, hid);
+		var form = await this.getID(id);
+		if(!form) return undefined; //that's just silly
+		var responses = await this.bot.stores.responses.getByForm(form.server_id, form.hid);
+		var posts = await this.bot.stores.formPosts.getByForm(form.server_id, form.hid);
 
-			var errs = [];
-			if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
-				var guild = this.bot.guilds.resolve(server);
-				if(posts) {
-					for(var post of posts) {
-						try {
-							try {
-								var chan = guild.channels.resolve(post.channel_id);
-								var msg = await chan.messages.fetch(post.message_id);
-							} catch(e) { }
-							if(!msg) {
-								await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
-								errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: Message missing!`);
-								continue;
-							}
-
-							if(Object.keys(data).includes('emoji')) {
-								if(!post.bound) {
-									await msg.reactions.removeAll();
-								} else {
-									var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(old.emoji || '📝'));
-									if(react) react.remove();
-								}
-
-								msg.react(data.emoji || '📝');
-							}
-
-							if(post.bound) continue;
-
-							await msg.edit({embeds: [{
-								title: form.name,
-								description: form.description,
-								color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-								fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
-								footer: {
-									text: `Form ID: ${form.hid} | ` +
-										  (!form.open ?
-										  'this form is not accepting responses right now!' :
-										  'react below to apply to this form!')
-								}
-							}]})
-						} catch(e) {
-							errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
-						}
-					}
-				}
-			}
-
-			if(errs[0]) rej(errs.join('\n\n'));
-			else res(form);
-		})
-	}
-
-	async updateCount(server, hid) {
-		return new Promise(async (res, rej) => {
-			var form = await this.get(server, hid);
-			if(!form) return res(undefined); //that's just silly
-
-			var errs = [];
-			var responses = await this.bot.stores.responses.getByForm(server, hid);
-			var posts = await this.bot.stores.formPosts.getByForm(server, hid);
-			var guild = this.bot.guilds.resolve(server);
+		var errs = [];
+		if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
+			var guild = this.bot.guilds.resolve(form.server_id);
 			if(posts) {
 				for(var post of posts) {
-					if(post.bound) continue;
-					
 					try {
-						var chan = guild.channels.resolve(post.channel_id);
-						var msg = await chan.messages.fetch(post.message_id);
+						try {
+							var chan = await guild.channels.fetch (post.channel_id);
+							var msg = await chan.messages.fetch(post.message_id);
+						} catch(e) { }
 						if(!msg) {
-							await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
-							return rej('Message missing!');
+							errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: Message missing!`);
+							await post.delete();
+							continue;
 						}
+
+						if(Object.keys(data).includes('emoji')) {
+							if(!post.bound) {
+								await msg.reactions.removeAll();
+							} else {
+								var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(old.emoji || '📝'));
+								if(react) react.remove();
+							}
+
+							msg.react(data.emoji || '📝');
+						}
+
+						if(post.bound) continue;
 
 						await msg.edit({embeds: [{
 							title: form.name,
@@ -348,14 +305,56 @@ class FormStore {
 							}
 						}]})
 					} catch(e) {
-						errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
+						errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 					}
 				}
 			}
+		}
 
-			if(errs.length > 0) rej(errs);
-			else res(await this.get(server, hid, true));
-		})
+		if(errs[0]) Promise.reject(errs.join('\n\n'));
+		else return form;
+	}
+
+	async updateCount(server, hid) {
+		var form = await this.get(server, hid);
+		if(!form) return undefined; //that's just silly
+
+		var errs = [];
+		var responses = await this.bot.stores.responses.getByForm(server, hid);
+		var posts = await this.bot.stores.formPosts.getByForm(server, hid);
+		var guild = this.bot.guilds.resolve(server);
+		if(posts) {
+			for(var post of posts) {
+				if(post.bound) continue;
+				
+				try {
+					var chan = guild.channels.resolve(post.channel_id);
+					var msg = await chan.messages.fetch(post.message_id);
+					if(!msg) {
+						await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
+						return rej('Message missing!');
+					}
+
+					await msg.edit({embeds: [{
+						title: form.name,
+						description: form.description,
+						color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
+						fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
+						footer: {
+							text: `Form ID: ${form.hid} | ` +
+								  (!form.open ?
+								  'this form is not accepting responses right now!' :
+								  'react below to apply to this form!')
+						}
+					}]})
+				} catch(e) {
+					errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
+				}
+			}
+		}
+
+		if(errs.length > 0) Promise.reject(errs);
+		else return await this.get(server, hid, true);
 	}
 
 	async delete(id) {

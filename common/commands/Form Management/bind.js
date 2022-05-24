@@ -6,17 +6,17 @@ module.exports = {
 
 		try {
 			var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 			var channel = msg.channel.guild.channels.cache.find(c => [c.name, c.id].includes(args[1].toLowerCase().replace(/[<@#>]/g, '')));
 			if(!channel) return 'Channel not found!';
 			var message = await channel.messages.fetch(args[2]);
 			if(!message) return 'Message not found!';
 			
 			var post = await bot.stores.formPosts.get(msg.channel.guild.id, channel.id, message.id);
-			if(post && !post.bound) return 'That is a dedicated post and cannot be bound to!';
+			if(post?.id && !post.bound) return 'That is a dedicated post and cannot be bound to!';
 			post = (await bot.stores.formPosts.getByMessage(msg.channel.guild.id, message.id))
 				   ?.find(p => p.form.emoji == form.emoji);
-			if(post) return 'Form with that emoji already bound to that message!';
+			if(post?.id) return 'Form with that emoji already bound to that message!';
 
 			await bot.stores.formPosts.create(msg.channel.guild.id, channel.id, message.id, {
 				form: form.hid,

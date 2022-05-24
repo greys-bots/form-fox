@@ -66,7 +66,7 @@ module.exports = {
 			if(!forms?.[0]) return 'No forms to delete!';
 
 			try {
-				for(var form of forms) await form.delete()
+				for(var form of forms) await form.delete();
 			} catch(e) {
 				return 'ERR! '+e;
 			}

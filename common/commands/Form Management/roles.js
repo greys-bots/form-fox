@@ -29,7 +29,7 @@ module.exports = {
 				break;
 			case 1:
 				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-				if(!form) return 'Form not found!';
+				if(!form.id) return 'Form not found!';
 
 				await msg.channel.send({embeds: [{
 					title: `Roles for form ${form.name} (${form.hid})`,
@@ -45,7 +45,8 @@ module.exports = {
 					if(confirm.msg) return confirm.msg;
 
 					try {
-						await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: JSON.stringify([])});
+						form.roles = [];
+						await form.save()
 					} catch(e) {
 						return 'ERR! '+e;
 					}
@@ -56,7 +57,7 @@ module.exports = {
 				break;
 			default:
 				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-				if(!form) return 'Form not found!';
+				if(!form.id) return 'Form not found!';
 
 				var roles = args.slice(1).map(a => {
 					return msg.channel.guild.roles.cache.find(r => {
@@ -66,9 +67,9 @@ module.exports = {
 				}).filter(x => x);
 				if(!roles[0]) return 'No valid roles given!';
 
-				roles = roles.map(r => ({id: r, events: ['ACCEPT']}));
+				form.roles = roles.map(r => ({id: r, events: ['ACCEPT']}));
 				try {
-					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {roles: JSON.stringify(roles)});
+					await form.save()
 				} catch(e) {
 					return 'ERR! '+e;
 				}

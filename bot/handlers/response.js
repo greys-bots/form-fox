@@ -55,7 +55,7 @@ class ResponseHandler {
 
 		try {
 			var existing = await this.bot.stores.openResponses.get(user.dmChannel?.id);
-			if(existing) return 'Please finish your current form before starting a new one!';
+			if(existing?.id) return 'Please finish your current form before starting a new one!';
 
 			if(form.cooldown && form.cooldown > 0) {
 				var past = (await this.bot.stores.responses.getByUser(form.server_id, user.id))?.pop();
@@ -193,7 +193,8 @@ class ResponseHandler {
 			}
 			if(embeds.length > 1) {
 				content.components.push({ type: 1, components: PGBTNS });
-				await this.bot.stores.openResponses.update(message.channel.id, {page: 1});
+				response.page = 1;
+				await response.update();
 			}
 			var msg = await message.channel.send(content);
 
@@ -360,7 +361,7 @@ class ResponseHandler {
 			return Promise.reject('ERR! '+(e.message || e));
 		}
 
-		await this.bot.stores.openResponses.delete(response.channel_id);
+		await response.delete();
 		return {
 			msg: 'Response sent! Response ID: '+created.hid +
 				 '\nUse this code to make sure your response has been received',
@@ -389,7 +390,7 @@ class ResponseHandler {
 		if(confirm.msg) return confirm;
 
 		try {
-			await this.bot.stores.openResponses.delete(response.channel_id);
+			await response.delete();
 			await prompt.edit({embeds: [{
 				title: "Response cancelled",
 				description: "This form response has been cancelled!",
@@ -410,7 +411,7 @@ class ResponseHandler {
 
 		var prompt = await channel.messages.fetch(response.message_id);
 		try {
-			await this.bot.stores.openResponses.delete(response.channel_id);
+			await response.delete();
 			await prompt.edit({
 				embeds: [{
 					title: "Response cancelled",
@@ -454,7 +455,8 @@ class ResponseHandler {
 
 		response.answers.push('*(answer skipped)*');
 		var msg = await this.sendQuestion(response, message);
-		await this.bot.stores.openResponses.update(message.channel.id, {message_id: msg.id, answers: response.answers});
+		response.message_id = msg.id;
+		await response.save();
 
 		return {success: true};
 	}
@@ -462,7 +464,7 @@ class ResponseHandler {
 	async handleQuestion(data, number) {
 		var questions = data.questions?.[0] ? data.questions : data.form.questions;
 		var current = questions[number];
-		if(!current) return Promise.resolve(undefined);
+		if(!current) return undefined;
 
 		var question = {};
 		var type = TYPES[current.type];
@@ -514,12 +516,12 @@ class ResponseHandler {
 		}
 
 		var response = await this.bot.stores.openResponses.get(msg.channel.id);
-		if(!response) return;
+		if(!response?.id) return;
 		if(response.message_id != msg.id) return;
 
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		if(!questions?.[0]) {
-			await this.bot.stores.openResponses.delete(msg.channel.id);
+			await response.delete();
 			return msg.channel.send("That form is invalid! This response is now closed");
 		}
 
@@ -606,7 +608,7 @@ class ResponseHandler {
 			}
 
 			await msg.edit({embeds: [embeds[response.page - 1]]});
-            await this.bot.stores.openResponses.update(msg.channel.id,{page: response.page});
+            await response.save();
             return;
 		}
 
@@ -621,12 +623,9 @@ class ResponseHandler {
 
 		var message;
 		if(res2.send) var message = await this.sendQuestion(response, msg);
-
-		await this.bot.stores.openResponses.update(msg.channel.id, {
-			message_id: message?.id || msg.id,
-			answers: response.answers,
-			selection: response.selection
-		});
+		response.message_id = message?.id ?? msg.id;
+		
+		await response.save();
 
 		if(message) await msg.edit({
 			components: [{
@@ -650,12 +649,12 @@ class ResponseHandler {
 		}
 
 		var response = await this.bot.stores.openResponses.get(msg.channel.id);
-		if(!response) return;
+		if(!response?.id) return;
 		if(response.message_id != msg.id) return;
 
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		if(!questions?.[0]) {
-			await this.bot.stores.openResponses.delete(msg.channel.id);
+			await response.delete();
 			return msg.channel.send("That form is invalid! This response is now closed");
 		}
 
@@ -668,10 +667,7 @@ class ResponseHandler {
 		if(!res) return;
 		response = res.response;
 
-		await this.bot.stores.openResponses.update(msg.channel.id, {
-			answers: response.answers,
-			selection: response.selection
-		});
+		await response.save();
 	}
 
 	async handleMessage(message) {
@@ -680,11 +676,11 @@ class ResponseHandler {
 		if(message.content.toLowerCase().startsWith(this.bot.prefix)) return; //in case they're doing commands
 
 		var response = await this.bot.stores.openResponses.get(message.channel.id);
-		if(!response) return;
+		if(!response?.id) return;
 
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		if(!questions?.[0]) {
-			await this.bot.stores.openResponses.delete(message.channel.id);
+			await response.delete();
 			return message.channel.send("That form is invalid! This response is now closed");
 		}
 		var question = questions[response.answers.length];
@@ -702,7 +698,7 @@ class ResponseHandler {
 				embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
 				await prompt.edit({embeds: [embed]});
 				response.selection = response.selection.filter(x => x != 'OTHER');
-				await this.bot.stores.openResponses.update(message.channel.id, {selection: response.selection});
+				await response.save();
 				this.menus.delete(message.channel.id);
 				return;
 			}
@@ -717,11 +713,9 @@ class ResponseHandler {
 				response.selection = [];
 				msg = await this.sendQuestion(response, message);
 			}
-			await this.bot.stores.openResponses.update(message.channel.id, {
-				message_id: msg?.id ?? response.message_id,
-				selection: response.selection,
-				answers: response.answers
-			});
+
+			response.message_id = msg?.id ?? response.message_id;
+			await response.save();
 			return;
 		}
 
@@ -794,11 +788,8 @@ class ResponseHandler {
 
 		if(res2.send) msg = await this.sendQuestion(response, message);
 
-		await this.bot.stores.openResponses.update(message.channel.id, {
-			message_id: msg?.id ?? response.message_id,
-			answers: response.answers,
-			selection: response.selection
-		});
+		response.message_id = msg?.id ?? response.message_id;
+		await response.save();
 
 		if(msg) await prompt.edit({
 			components: [{
@@ -819,11 +810,11 @@ class ResponseHandler {
 		}
 
 		var response = await this.bot.stores.openResponses.get(inter.message.channel.id);
-		if(!response) return;
+		if(!response?.id) return;
 
 		var questions = response.questions?.[0] ? response.questions : response.form.questions;
 		if(!questions?.[0]) {
-			await this.bot.stores.openResponses.delete(inter.message.channel.id);
+			await response.delete();
 			return inter.reply("That form is invalid! This response is now closed");
 		}
 
@@ -916,7 +907,7 @@ class ResponseHandler {
 			}
 
 			await inter.message.edit({embeds: [embeds[response.page - 1]]});
-	        await this.bot.stores.openResponses.update(inter.message.channel.id, {page: response.page});
+	        await response.save()
 	        return;
 		}
 
@@ -932,11 +923,8 @@ class ResponseHandler {
 		var message;
 		if(res2.send) var message = await this.sendQuestion(response, inter.message);
 
-		await this.bot.stores.openResponses.update(inter.message.channel.id, {
-			message_id: message?.id || inter.message.id,
-			answers: response.answers,
-			selection: response.selection
-		});
+		response.message_id = message?.id ?? inter.message.id;
+		await response.save();
 
 		if(message) await inter.message.edit({
 			components: [{

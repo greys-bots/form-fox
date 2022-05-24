@@ -25,7 +25,7 @@ module.exports = {
 		var rdata;
 		if(id) {
 			var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 
 			rdata = {
 				content: "Are you sure you want to delete ALL responses for this form? This can't be undone!",

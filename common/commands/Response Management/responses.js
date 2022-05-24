@@ -15,7 +15,7 @@ module.exports = {
 		if(args[0]) {
 			if(!['accepted', 'denied', 'pending'].includes(args[0].toLowerCase())) {
 				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-				if(form) {
+				if(form.id) {
 					responses = responses.filter(x => x.form.hid == form.hid);
 					if(args[1] && args[1].startsWith('from:')) responses = responses.filter(x => x.user_id == args[1].replace('from:', ''));
 				} else if(args[0].startsWith('from:')) responses = responses.filter(x => x.user_id == args[0].replace('from:', ''));

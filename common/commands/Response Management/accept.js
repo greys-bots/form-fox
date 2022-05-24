@@ -12,7 +12,7 @@ module.exports = {
 		if(!args[0]) return 'I need a response to accept!';
 
 		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!response) return 'Response not found!';
+		if(!response.id) return 'Response not found!';
 
 		var user = await bot.users.fetch(response.user_id);
 		if(!user) return "Couldn't get that response's user!";
@@ -27,7 +27,6 @@ module.exports = {
 			embed.footer = {text: 'Response accepted!'};
 			embed.timestamp = new Date().toISOString();
 			try {
-				await bot.stores.responsePosts.delete(message.channel.guild.id, message.channel.id, message.id);
 				await message.edit({embeds: [embed]});
 				await message.reactions.removeAll();
 			} catch(e) {
@@ -43,7 +42,8 @@ module.exports = {
                 }
             }
 
-            response = await bot.stores.responses.update(msg.channel.guild.id, response.hid, {status: 'accepted'});
+			response.status = 'accepted';
+            response = await response.save()
             await user.send({embeds: [{
                 title: 'Response accepted!',
                 description: welc,
@@ -66,6 +66,7 @@ module.exports = {
 					msg.channel.send('Err while adding roles: '+e.message);
 				}
 			}
+			await post.delete()
 		} catch(e) {
 			console.log(e);
 			return 'ERR! Response accepted, but couldn\'t message the user!';

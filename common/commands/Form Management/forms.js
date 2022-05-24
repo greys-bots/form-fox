@@ -18,7 +18,7 @@ module.exports = {
 			else if(args[0].toLowerCase() == 'closed') forms = forms.filter(f => !f.open);
 			else {
 				var form = forms.find(f => f.hid == args[0].toLowerCase());
-				if(!form) return "Form not found!";
+				if(!form?.id) return "Form not found!";
 
 				var channel = msg.channel.guild.channels.resolve(form.channel_id);
 				var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);

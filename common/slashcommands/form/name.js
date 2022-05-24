@@ -27,13 +27,12 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var n = ctx.options.get('name')?.value;
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
-
-		if(!n) return "Name required!";
+		if(!form.id) return 'Form not found!';
 
 		if(n.length > 100) return "Name length must be 100 or less!"
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {name: n});
+		form.name = n;
+		await form.save()
 		return 'Form updated!';
 	},
 	async auto(ctx) {

@@ -27,7 +27,7 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var hooks = await ctx.client.stores.hooks.getByForm(ctx.guildId, form.hid);
 		if(!hooks?.[0]) return "No hooks for that form!";
@@ -90,7 +90,7 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var url = ctx.options.get('url').value;
 		if(!ctx.client.utils.checkUrl(url)) return "I need a valid URL!";
@@ -157,7 +157,7 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var url = ctx.options.get('url').value;
 		if(!ctx.client.utils.checkUrl(url)) return "I need a valid URL!";
@@ -223,14 +223,13 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		
 		var hid = ctx.options.get('hook_id').value.toLowerCase().trim();
 		var hook = await ctx.client.stores.hooks.get(ctx.guildId, form.hid, hid);
 		if(!hook) return "Hook not found!";
 
-		await ctx.client.stores.hooks.delete(ctx.guildId, form.hid, hook.hid);
-
+		await hook.delete();
 		return 'Hook deleted!'
 	},
 	async auto(ctx) {
@@ -273,7 +272,7 @@ opts.push({
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		
 		var rdata = {
 			content: "Are you sure you want to delete ALL hooks on this form?",

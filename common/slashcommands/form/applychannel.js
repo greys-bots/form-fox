@@ -26,7 +26,7 @@ module.exports = {
 		var channel = ctx.options.getChannel('channel');
 		var id = ctx.options.getString('form_id')?.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!channel) {
 			if(!form.apply_channel) return 'Form has no apply channel set!';
@@ -52,7 +52,8 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {apply_channel: undefined});
+				form.apply_channel = undefined;
+				await form.save()
 				msg = 'Apply channel reset!';
 			}
 
@@ -87,7 +88,8 @@ module.exports = {
 		var exists = await ctx.client.stores.forms.getByApplyChannel(ctx.guild.id, channel.id);
 		if(exists) return 'Another form already has that channel set!';
 
-		await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {apply_channel: channel.id});
+		form.apply_channel = channel.id;
+		await form.save()
 		return 'Form updated!';
 	},
 	async auto(ctx) {

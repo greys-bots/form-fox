@@ -28,7 +28,7 @@ module.exports = {
 		if(!id) {
 			if(!cfg?.autodm) return 'No form set!';
 			form = await ctx.client.stores.forms.get(ctx.guildId, cfg.autodm);
-			if(!form) return `Currently set form (${cfg.autodm}) is invalid or no longer exists!`;
+			if(!form.id) return `Currently set form (${cfg.autodm}) is invalid or no longer exists!`;
 
 			var rdata = {
 				embeds: [
@@ -51,10 +51,11 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				await ctx.client.stores.configs.update(ctx.guildId, {autodm: undefined});
+				cfg.autodm = undefined;
 				msg = 'Form cleared!';
 			}
 
+			await cfg.save();
 			if(conf.interaction) {
 				await conf.interaction.update({
 					content: msg,
@@ -84,10 +85,10 @@ module.exports = {
 		}
 		
 		form = await ctx.client.stores.forms.get(ctx.guildId, id);
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
-		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {autodm: form.hid});
-		else await ctx.client.stores.configs.update(ctx.guildId, {autodm: form.hid});
+		cfg.autodm = form.hid;
+		await cfg.save()
 		return 'Config updated!';
 	},
 	async auto(ctx) {

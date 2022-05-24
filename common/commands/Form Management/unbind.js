@@ -6,17 +6,17 @@ module.exports = {
 
 		try {
 			var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 			var channel = msg.channel.guild.channels.cache.find(c => [c.name, c.id].includes(args[1].toLowerCase().replace(/[<@#>]/g, '')));
 			if(!channel) return 'Channel not found!';
 			var message = await channel.messages.fetch(args[2]);
 			if(!message) return 'Message not found!';
 			var post = await bot.stores.formPosts.getBound(msg.channel.guild.id, message.id, form.hid);
-			if(!post) return 'Form not bound to that message!';
+			if(!post.id) return 'Form not bound to that message!';
 			var react = message.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(form.emoji || '📝'));
 
 			if(react) react.remove();
-			await bot.stores.formPosts.delete(msg.channel.guild.id, channel.id, message.id);
+			await post.delete()
 		} catch(e) {
 			return 'ERR! '+(e.message || e);
 		}

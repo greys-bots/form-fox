@@ -24,7 +24,7 @@ module.exports = {
 				embeds = embeds.concat(forms.map(f => {
 					chan = msg.channel.guild.channels.cache.find(c => c.id == f.channel_id);
 					return {embed: {
-						title: `Value for form ${f.name} (${f.hid})`,
+						title: `Setting for form ${f.name} (${f.hid})`,
 						description: `${form.reacts ?? "*(not set)*"}`,
 						color: parseInt('ee8833', 16)
 					}}
@@ -41,21 +41,22 @@ module.exports = {
 				if(VALS.includes(args[0].toLowerCase())) val = true;
 				else val = false;
 
-				if(!cfg.server_id) await bot.stores.configs.create(msg.channel.guild.id, {reacts: val});
-				else await bot.stores.configs.update(msg.channel.guild.id, {reacts: val});
+				cfg.reacts = val;
+				await cfg.save()
 
 				return "Global config set!";
 				break;
 			case 2:
-				var form = forms.find(f => f.hid == args[0].toLowerCase());
-				if(!form) return 'Form not found!';
+				var form = forms?.find(f => f.hid == args[0].toLowerCase());
+				if(!form?.id) return 'Form not found!';
 
 				var val;
 				if(VALS.includes(args[1].toLowerCase())) val = true;
 				else val = false;
 
 				try {
-					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {reacts: val});
+					form.reacts = val;
+					await form.save()
 				} catch(e) {
 					return "ERR! "+e;
 				}

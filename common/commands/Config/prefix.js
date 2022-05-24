@@ -19,12 +19,13 @@ module.exports = {
 			var conf = await bot.utils.getConfirmation(bot, message, msg.author);
 			if(conf.msg) return conf.msg;
 
-			await bot.stores.configs.update(msg.channel.guild.id, { prefix: null });
+			cfg.prefix = undefined;
+			await cfg.save();
 			return 'Prefix reset!';
 		}
 
-		if(cfg.new) await bot.stores.configs.create(msg.channel.guild.id, { prefix: args[0].toLowerCase() });
-		else await bot.stores.configs.update(msg.channel.guild.id, { prefix: args[0].toLowerCase() });
+		cfg.prefix = args[0].toLowerCase();
+		await cfg.save()
 
 		return 'Prefix changed!';
 	},

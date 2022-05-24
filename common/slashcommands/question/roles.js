@@ -40,7 +40,7 @@ opts.push({
 		var q = ctx.options.getInteger('question');
 
 		var form = await ctx.client.stores.forms.get(ctx.guild.id, f);
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		
 		if(q === 0) q = 1;
 		if(q > form.questions.length) q = form.questions.length;
@@ -151,7 +151,7 @@ opts.push({
 		if(typeof question == 'string') return question;
 		form.questions[q - 1] = question;
 
-		await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {questions: form.questions});
+		await form.save()
 		return "Question updated!";
 	},
 	async auto(ctx) {
@@ -228,7 +228,7 @@ opts.push({
 		if(typeof question == 'string') return question;
 		form.questions[q - 1] = question;
 
-		await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {questions: form.questions});
+		await form.save()
 		return "Question updated!";
 	},
 	async auto(ctx) {
@@ -308,7 +308,7 @@ opts.push({
 				q = q - 1;
 				form.questions[q].roles = [];
 			}
-			await ctx.client.stores.forms.update(ctx.guild.id, form.hid, {questions: form.questions});
+			await form.save()
 			msg = 'Roles cleared!';
 		}
 

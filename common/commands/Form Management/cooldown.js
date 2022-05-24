@@ -9,11 +9,14 @@ module.exports = {
 		if(!args[1]) return 'I need a form and a cooldown!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
-		if(isNaN(parseInt(args[1]))) return 'I need a real number!';
+		if(!form.id) return 'Form not found!';
+		var num = parseInt(args[1]);
+		if(isNaN(num)) return 'I need a real number!';
+		if(num < 0) num = 0;
 
 		try {
-			await bot.stores.forms.update(msg.channel.guild.id, form.hid, {cooldown: parseInt(args[1])});
+			form.cooldown = num;
+			await form.save()
 		} catch(e) {
 			if(e.message) return 'ERR! '+e.message;
 			else if(typeof e == 'string') return 'ERR! '+e;

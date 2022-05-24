@@ -211,13 +211,36 @@ class FormPostStore {
 		if(!guild) return Promise.reject("Couldn't get guild!");
 		guild = await guild.fetch();
 		
-		if(data.rows && data.rows[0]) {
+		if(data.rows?.[0]) {
 			for(var i = 0; i < data.rows.length; i++) {
 				var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
 				if(form) data.rows[i].form = form;
 			}
 			
 			return data.rows.map(x => new FormPost(this, x));
+		} else return undefined;
+	}
+
+	async getByForm(server, form) {
+		try {
+			var data = await this.db.query(`
+				SELECT * FROM form_posts WHERE
+				server_id = $1
+				AND form = $2
+			`,[server, form]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+
+		var form = await this.bot.stores.forms.get(server, form);
+		if(data.rows?.[0]) {
+
+			return data.rows.map(x => {
+				var f = new FormPost(this, x);
+				f.form = form;
+				return f;
+			});
 		} else return undefined;
 	}
 
@@ -316,8 +339,7 @@ class FormPostStore {
 		var { user, message: msg, component: button } = intr;
 
 		var post = await this.get(intr.guildId, msg.id); // no reason to get all on the message, only unbound matters
-		console.log(post);
-		if(!post.id) return;
+		if(!post?.id) return;
 		var id = button.customId.split('-')[0];
 		if(!post.form.hid == id) return;
 		if(!post.form.open) return await intr.reply({

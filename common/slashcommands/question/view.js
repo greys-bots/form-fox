@@ -18,7 +18,7 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var embeds = await ctx.client.utils.genEmbeds(ctx.client, form.questions, (data, i) => {
 			return {

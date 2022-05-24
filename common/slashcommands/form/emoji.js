@@ -28,7 +28,7 @@ module.exports = {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var e = ctx.options.get('emoji')?.value;
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!e) {
 			if(!form.emoji) return 'Form uses the default emoji! 📝';
@@ -55,7 +55,8 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				await ctx.client.stores.forms.update(ctx.guildId, form.hid, {emoji: undefined});
+				form.emoji = undefined;
+				await form.save()
 				msg = 'Emoji reset!';
 			}
 
@@ -89,7 +90,8 @@ module.exports = {
 		
 		var emoji = e.includes(':') ? e.replace(/<:(.*):>/, '$1') : e;
 
-		await ctx.client.stores.forms.update(ctx.guildId, form.hid, {emoji}, form);
+		form.emoji = emoji;
+		await form.save()
 		return 'Form updated!';
 	},
 	async auto(ctx) {

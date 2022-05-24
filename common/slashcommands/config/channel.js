@@ -29,15 +29,16 @@ module.exports = {
 
 		if(farg) {
 			var form = await ctx.client.stores.forms.get(ctx.guildId, farg);
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {channel_id: chan.id});
+			form.channel_id = chan.id;
+			await form.save()
 			return "Form updated!";
 		}
 
 		var cfg = await ctx.client.stores.configs.get(ctx.guildId);
-		if(!cfg) await ctx.client.stores.configs.create(ctx.guildId, {response_channel: chan.id});
-		else await ctx.client.stores.configs.update(ctx.guildId, {response_channel: chan.id});
+		cfg.response_channel = chan.id;
+		await cfg.save()
 		
 		return "Config updated!";
 	},

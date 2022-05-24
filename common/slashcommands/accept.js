@@ -33,8 +33,8 @@ module.exports = {
         }
 
         try {
-            await ctx.client.stores.responsePosts.delete(msg.channel.guild.id, msg.channel.id, msg.id);
-            post.response = await ctx.client.stores.responses.update(msg.channel.guild.id, post.response.hid, {status: 'accepted'});
+            post.response.status = 'accepted';
+            post.response = await post.response.save()
             await msg.edit({embeds: [embed], components: []});
             await msg.reactions.removeAll();
 
@@ -59,6 +59,7 @@ module.exports = {
             }]});
 
             ctx.client.emit('ACCEPT', post.response);
+            await post.delete()
         } catch(e) {
             console.log(e);
             return `ERR! ${e.message || e}\n(Response still accepted!)`;

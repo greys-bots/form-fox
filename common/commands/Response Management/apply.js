@@ -7,10 +7,10 @@ module.exports = {
 		var form;
 		if(!args[0]) {
 			form = await bot.stores.forms.getByApplyChannel(msg.guild.id, msg.channel.id);
-			if(!form) return "Please supply a form ID, or use this in a form's apply channel!";
+			if(!form.id) return "Please supply a form ID, or use this in a form's apply channel!";
 		} else {
 			form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-			if(!form) return 'Form not found!';
+			if(!form.id) return 'Form not found!';
 		}
 
 		// if(form.apply_channel && form.apply_channel != msg.channel.id) {

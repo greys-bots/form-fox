@@ -17,7 +17,7 @@ module.exports = {
 		if(!args[0]) return "I need a form ID to duplicate!";
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return "Form not found!";
+		if(!form.id) return "Form not found!";
 
 		var resp;
 		if(args[1]) resp = args.slice(1).join(" ").toLowerCase().split(/,?\s+/g);

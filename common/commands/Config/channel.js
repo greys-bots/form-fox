@@ -41,8 +41,8 @@ module.exports = {
 				if(!channel) return "Channel not found!";
 
 				try {
-					if(cfg) await bot.stores.configs.update(msg.channel.guild.id, {response_channel: channel.id});
-					else await bot.stores.configs.create(msg.channel.guild.id, {response_channel: channel.id});
+					cfg.response_channel = channel.id;
+					await cfg.save()
 				} catch(e) {
 					return "ERR! "+e;
 				}
@@ -51,14 +51,15 @@ module.exports = {
 				break;
 			case 2:
 				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-				if(!form) return 'Form not found!';
+				if(!form.id) return 'Form not found!';
 
 				var channel = msg.channel.guild.channels.cache
 							  .find(c => [c.name, c.id].includes(args[1].toLowerCase().replace(/[<@#>]/g, "")));
 				if(!channel) return "Channel not found!";
 
 				try {
-					await bot.stores.forms.update(msg.channel.guild.id, form.hid, {channel_id: channel.id});
+					form.channel_id = channel.id;
+					await form.save()
 				} catch(e) {
 					return "ERR! "+e;
 				}

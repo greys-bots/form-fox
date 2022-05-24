@@ -26,7 +26,7 @@ module.exports = {
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		if(form.questions.length == 1) return "Can't delete the last question on a form!";
 
 		var p = ctx.options.getInteger('question');
@@ -54,7 +54,7 @@ module.exports = {
 			msg = conf.msg;
 		} else {
 			form.questions.splice(p - 1, 1);
-			await ctx.client.stores.forms.update(ctx.guildId, form.hid, {questions: form.questions});
+			await form.save()
 			msg = 'Question deleted!';
 		}
 

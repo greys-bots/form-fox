@@ -20,7 +20,7 @@ module.exports = {
 	async execute(ctx) {
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		var form = await ctx.client.stores.forms.get(ctx.guildId, farg);
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		var tocopy = await ctx.client.utils.awaitSelection(ctx, OPTIONS.map(o => {
 				return {

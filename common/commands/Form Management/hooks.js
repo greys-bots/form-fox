@@ -16,7 +16,7 @@ module.exports = {
 	execute: async (bot, msg, args) => {
 		if(!args[0]) return 'I need at least a form!';
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 
 		if(!args[1]) {
 			var hooks = await bot.stores.hooks.getByForm(msg.channel.guild.id, form.hid);
@@ -67,9 +67,8 @@ module.exports.subcommands.add = {
 	execute: async (bot, msg, args) => {
 		if(!args[1]) return "I need at least a form and a url!";
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		if(bot.utils.checkUrl(args[1])) return 'I need a real url!';
-		console.log(args.slice(2))
 		if(args.length > 2 && args.slice(2).find(a => !EVENTS.includes(a.toLowerCase())))
 			return 'Invalid events given! See command help for more info';
 
@@ -100,12 +99,12 @@ module.exports.subcommands.remove = {
 	execute: async (bot, msg, args) => {
 		if(!args[1]) return "I need at least a form and a hook!";
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
-		if(!form) return 'Form not found!';
+		if(!form.id) return 'Form not found!';
 		var hook = await bot.stores.hooks.get(msg.channel.guild.id, form.hid, args[1].toLowerCase());
-		if(!hook) return 'Hook not found!';
+		if(!hook.id) return 'Hook not found!';
 
 		try {
-			await bot.stores.hooks.delete(msg.channel.guild.id, form.hid, hook.hid);
+			await hook.delete()
 		} catch(e) {
 			return 'Err! '+e;
 		}
