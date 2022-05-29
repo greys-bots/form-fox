@@ -93,6 +93,17 @@ module.exports = {
 				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
 				bot.removeListener('interactionCreate', intListener)
+
+				msg.edit({
+					components: [{
+						type: 1,
+						components: msg.components[0].components.map(b => ({
+							...b,
+							disabled: true
+						}))
+					}]
+				})
+
 				if(STRINGS[0].includes(message.content.toLowerCase())) return res({confirmed: true, message});
 				else return res({confirmed: false, message, msg: 'Action cancelled!'});
 			}
@@ -105,6 +116,17 @@ module.exports = {
 				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
 				bot.removeListener('interactionCreate', intListener)
+
+				msg.edit({
+					components: [{
+						type: 1,
+						components: msg.components[0].components.map(b => ({
+							...b,
+							disabled: true
+						}))
+					}]
+				})
+
 				if(react.emoji.name == REACTS[0]) return res({confirmed: true, react});
 				else return res({confirmed: false, react, msg: 'Action cancelled!'});
 			}
@@ -117,7 +139,18 @@ module.exports = {
 				clearTimeout(timeout);
 				bot.removeListener('messageCreate', msgListener);
 				bot.removeListener('messageReactionAdd', reactListener);
-				bot.removeListener('interactionCreate', intListener)
+				bot.removeListener('interactionCreate', intListener);
+
+				intr.update({
+					components: [{
+						type: 1,
+						components: intr.message.components[0].components.map(b => ({
+							...b,
+							disabled: true
+						}))
+					}]
+				})
+				
 				if(BUTTONS[0].includes(intr.customId)) return res({confirmed: true, interaction: intr});
 				else return res({confirmed: false, interaction: intr, msg: 'Action cancelled!'});
 			}
@@ -201,5 +234,30 @@ module.exports = {
 		});
 
 		return resp.values;
+	},
+
+	async awaitModal(ctx, data, user, ephemeral = false, time = 30000) {
+		return new Promise(async res => {
+			await ctx.showModal(data);
+			
+			async function modListener(m) {
+				if(!m.isModalSubmit()) return;
+				if(!(m.customId == data.custom_id &&
+					m.user.id == user.id))
+					return;
+
+				clearTimeout(timeout);
+				ctx.client.removeListener('interactionCreate', modListener);
+
+				await m.deferReply({ephemeral});
+				res(m);
+			}
+
+			ctx.client.on("interactionCreate", modListener);
+			const timeout = setTimeout(async () => {
+				ctx.client.removeListener('interactionCreate', modListener)
+				res()
+			}, time);
+		})
 	}
 }

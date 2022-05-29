@@ -55,37 +55,12 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				form.emoji = undefined;
+				form.emoji = null;
 				await form.save()
 				msg = 'Emoji reset!';
 			}
 
-			if(conf.interaction) {
-				await conf.interaction.update({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			} else {
-				await ctx.editReply({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			}
-			return;
+			return msg;
 		}
 		
 		var emoji = e.includes(':') ? e.replace(/<:(.*):>/, '$1') : e;

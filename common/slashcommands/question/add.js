@@ -1,4 +1,4 @@
-const { qTypes: TYPES, confBtns } = require('../../extras');
+const { qTypes: TYPES } = require('../../extras');
 
 module.exports = {
 	data: {
@@ -71,18 +71,36 @@ module.exports = {
 		}
 
 		if(TYPES[type].setup) {
-			var rep = await ctx.reply({content: "Please enter up to 10 choices for this question", fetchReply: true});
-			var m = await rep.channel.awaitMessages({
-				filter: (ms) => ms.author.id == ctx.user.id,
-				max: 1,
-				time: 300000
-			});
-			m = m?.first();
+			var mdata = {
+				title: "Add new question",
+				custom_id: `question-add-${form.hid}`,
+				components: [
+					{
+						type: 1,
+						components: [
+							{
+								type: 4,
+								custom_id: 'answers',
+								label: "Answers",
+								style: 2,
+								max_length: 2000,
+								placeholder: (
+									"Enter your choices, each on a separate line. Maximum of 10. Example:\n" +
+									"Answer 1\n" +
+									"Answer 2\n" +
+									"Answer 2\n"
+								),
+								required: true
+							}
+						]
+					}
+				]
+			}
+			var m = await ctx.client.utils.awaitModal(ctx, mdata, ctx.user, false, 300000)
 			if(!m) return "No choices given!";
-			question.choices = m.content.split("\n").slice(0, 10);
-			await m.delete()
+			question.choices = m.fields.getField('answers').value.trim().split("\n").slice(0, 10);
 
-			rep = await ctx.editReply({
+			var rep = await m.followUp({
 				content: "Do you want to include an `other` option?",
 				components: [{
 					type: 1,
@@ -107,55 +125,6 @@ module.exports = {
 			});
 			var c = await ctx.client.utils.getConfirmation(ctx.client, rep, ctx.user);
 			if(c.confirmed) question.other = true;
-			if(c.interaction) {
-				await c.interaction.update({
-					components: [{
-						type: 1,
-						components: [
-							{
-								type: 2,
-								style: 3,
-								label: 'Yes',
-								custom_id: 'yes',
-								emoji: { name: '✅'},
-								disabled: true
-							},
-							{
-								type: 2,
-								style: 4,
-								label: 'No',
-								custom_id: 'no',
-								emoji: { name: '❌'},
-								disabled: true
-							},
-						]
-					}]
-				})
-			} else {
-				await ctx.editReply({
-					components: [{
-						type: 1,
-						components: [
-							{
-								type: 2,
-								style: 3,
-								label: 'Yes',
-								custom_id: 'yes',
-								emoji: { name: '✅'},
-								disabled: true
-							},
-							{
-								type: 2,
-								style: 4,
-								label: 'No',
-								custom_id: 'no',
-								emoji: { name: '❌'},
-								disabled: true
-							},
-						]
-					}]
-				})
-			}
 		}
 
 		form.questions.splice(pos - 1, 0, question);

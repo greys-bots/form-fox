@@ -51,28 +51,6 @@ module.exports = {
 			if(results.failed.length) msg += results.failed.join("\n");
 		}
 
-		if(conf.interaction) {
-			await conf.interaction.editReply({
-				content: msg,
-				embeds: [],
-				components: [{
-					type: 1,
-					components: confBtns.map(b => {
-						return {... b, disabled: true};
-					})
-				}]
-			})
-		} else {
-			await ctx.editReply({
-				content: msg,
-				embeds: [],
-				components: [{
-					type: 1,
-					components: confBtns.map(b => {
-						return {... b, disabled: true};
-					})
-				}]
-			})
-		}
+		return msg;
 	}
 }

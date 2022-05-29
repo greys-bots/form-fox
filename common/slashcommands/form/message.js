@@ -61,37 +61,12 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				form.message = undefined;
+				form.message = null;
 				await form.save()
 				msg = 'Message reset!';
 			}
 
-			if(conf.interaction) {
-				await conf.interaction.update({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			} else {
-				await ctx.editReply({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			}
-			return;
+			return msg;
 		}
 
 		if(m.length > 1000) return "Message length must be 1000 or less!"

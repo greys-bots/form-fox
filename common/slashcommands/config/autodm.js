@@ -51,37 +51,12 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				cfg.autodm = undefined;
+				cfg.autodm = null;
 				msg = 'Form cleared!';
 			}
 
 			await cfg.save();
-			if(conf.interaction) {
-				await conf.interaction.update({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			} else {
-				await ctx.editReply({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			}
-			return;
+			return msg;
 		}
 		
 		form = await ctx.client.stores.forms.get(ctx.guildId, id);

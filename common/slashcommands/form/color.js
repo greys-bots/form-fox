@@ -57,37 +57,12 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				form.color = undefined;
+				form.color = null;
 				await form.save()
 				msg = 'Color reset!';
 			}
 
-			if(conf.interaction) {
-				await conf.interaction.update({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			} else {
-				await ctx.editReply({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			}
-			return;
+			return msg;
 		}
 		
 		var color = tc(c);

@@ -57,9 +57,9 @@ class Form {
 		var errors = []
 		for(var k in KEYS) {
 			if(!KEYS[k].patch && patch) continue;
-			if(this[k] == undefined) continue;
-			if(this[k] == null) {
-				obj[k] = this[k];
+			if(this[k] === undefined) continue;
+			if(this[k] === null) {
+				obj[k] = null;
 				continue;
 			}
 
@@ -173,7 +173,6 @@ class FormStore {
 				if(!q.value) continue; // filter empty qs
 				if(q.choices && q.choices.includes('')) {
 					q.choices = q.choices.filter(x => x.length); // filter empty choices
-					console.log(q.choices)
 					edited = true;
 				}
 
@@ -250,7 +249,6 @@ class FormStore {
 	async update(id, data = {}, old) {
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
-		console.log(data)
 		try {
 			await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
 		} catch(e) {

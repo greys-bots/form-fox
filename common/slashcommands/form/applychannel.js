@@ -52,37 +52,12 @@ module.exports = {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				form.apply_channel = undefined;
+				form.apply_channel = null;
 				await form.save()
 				msg = 'Apply channel reset!';
 			}
 
-			if(conf.interaction) {
-				await conf.interaction.update({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			} else {
-				await ctx.editReply({
-					content: msg,
-					embeds: [],
-					components: [{
-						type: 1,
-						components: clearBtns.map(b => {
-							b.disabled = true;
-							return b;
-						})
-					}]
-				})
-			}
-			return;
+			return msg;
 		}
 
 		var exists = await ctx.client.stores.forms.getByApplyChannel(ctx.guild.id, channel.id);

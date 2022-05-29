@@ -46,9 +46,9 @@ class Config {
 		var errors = []
 		for(var k in KEYS) {
 			if(!KEYS[k].patch && patch) continue;
-			if(this[k] == undefined) continue;
-			if(this[k] == null) {
-				obj[k] = this[k];
+			if(this[k] === undefined) continue;
+			if(this[k] === null) {
+				obj[k] = null;
 				continue;
 			}
 

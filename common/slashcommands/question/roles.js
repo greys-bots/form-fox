@@ -312,30 +312,7 @@ opts.push({
 			msg = 'Roles cleared!';
 		}
 
-		if(conf.interaction) {
-			await conf.interaction.update({
-				content: msg,
-				embeds: [],
-				components: [{
-					type: 1,
-					components: clearBtns.map(b => {
-						return {... b, disabled: true};
-					})
-				}]
-			});
-			return;
-		}
-
-		return {
-			content: msg,
-			embeds: [],
-			components: [{
-				type: 1,
-				components: clearBtns.map(b => {
-					return {... b, disabled: true};
-				})
-			}]
-		}
+		return msg;
 	},
 	async auto(ctx) {
 		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);

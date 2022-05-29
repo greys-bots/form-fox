@@ -21,7 +21,7 @@ module.exports = {
 	},
 	usage: [
 		"[category] - Set the default ticket category for all forms",
-	"[category] [form_id] - Set the ticket category for a form"
+		"[category] [form_id] - Set the ticket category for a form"
 	],
 	async execute(ctx) {
 		var farg = ctx.options.getString('form_id')?.toLowerCase().trim();
