@@ -150,7 +150,7 @@ class HookStore {
 		} else return new Hook(this, { server_id: server, form });
 	}
 
-	async get(id) {
+	async getID(id) {
 		try {
 			var data = await this.db.query(`
 				SELECT * FROM hooks

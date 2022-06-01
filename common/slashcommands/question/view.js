@@ -1,4 +1,4 @@
-const { qTypes:TYPES } = require('../../extras');
+const { qTypes:TYPES, numbers: NUMS } = require('../../extras');
 
 module.exports = {
 	data: {
@@ -20,17 +20,54 @@ module.exports = {
 		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
+		var color = parseInt(form.color, 16);
+		if(isNaN(color)) color = 0x55aa55;
+
 		var embeds = await ctx.client.utils.genEmbeds(ctx.client, form.questions, (data, i) => {
+			var text;
+			if(!['mc', 'cb'].includes(data.type)) {
+				text = "Type: " + TYPES[data.type].alias[0];
+			} else {
+				text = (data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
+					   (data.other ? 'This question has an "other" option!' : '')
+			}
+
+			var name = `${NUMS[i + 1]} **${data.value}**`;
+			if(data.required) name += " :exclamation:";
+
+			switch(data.type) {
+				case 'mc':
+					name += " :radio_button:";
+					break;
+				case 'cb':
+					name += " :white_check_mark:";
+					break;
+				case 'text':
+					name += " :pencil:";
+					break;
+				case 'dt':
+					name += " :calendar:";
+					break;
+				case 'num':
+					name += " :1234:";
+					break;
+				case 'img':
+					name += " :frame_photo:";
+					break;
+				case 'att':
+					name += " :link:"
+					break;
+			}
+
 			return {
-				name: `**${data.value}${data.required ? " (required)" : ""}**`,
-				value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
-					(data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
-					(data.other ? 'This question has an "other" option!' : '')
+				name,
+				value: text
 			}
 		},
 		{
 			title: form.name,
-			description: form.description
+			description: form.description,
+			color
 		})
 
 		return embeds.map(e => e.embed);

@@ -22,78 +22,113 @@ class InteractionHandler {
 	}
 
 	async load(path) {
-		var slashCommands = new Collection();
-		var slashData = new Collection();
-		var devOnly = new Collection();
+		var slashCommands = new Collection(); // actual commands, with execute data
+		var slashData = new Collection(); // just what gets sent to discord
+		var devOnly = new Collection(); // slashData: dev edition
 
 		var files = this.bot.utils.recursivelyReadDirectory(path);
 
 		for(var f of files) {
-			var path_frags = f.replace(path, "").split(/(?:\\|\/)/);
-			var mods = path_frags.slice(1, -1);
-			var file = path_frags[path_frags.length - 1];
-			if(file == '__mod.js') continue;
-			delete require.cache[require.resolve(f)];
-			var command = require(f);
-
-			var {data} = command;
+			var path_frags = f.replace(path, "").split(/(?:\\|\/)/); // get fragments of path to slice up
+			var mods = path_frags.slice(1, -1); // the module names (folders SHOULD = mod name)
+			var file = path_frags[path_frags.length - 1]; // the actual file name
+			if(file == '__mod.js') continue; // ignore mod files, only load if command exists
+			delete require.cache[require.resolve(f)]; // for reloading
+			
+			var command = require(f); // again, full command data
+			var {data} = command; // what gets sent to discord
 			if(command.options) {
+				// map options into data for discord
 				var d2 = command.options.map(({data: d}) => d);
 				data.options = d2;
 			}
 
-			if(mods[0]) {
-				var group = slashCommands.get(mods[0]);
-				var g2 = slashData.get(mods[0]);
-				if(!group) {
-					var mod;
-					delete require.cache[require.resolve(f.replace(file, "/__mod.js"))];
-					mod = require(f.replace(file, "/__mod.js"));
-					group = {
-						...mod,
-						options: [],
-						type: 1
-					};
-					g2 = {
-						...mod.data,
-						options: [],
-						type: 1
-					};
+			// if the commands are part of modules,
+			// then we need to nest them into those modules for parsing
+			if(mods.length) {
+				let curmod; // current FULL module data
+				let curdat; // current discord-only module data
+				for(var i = 0; i < mods.length; i++) {
+					var group; // the mod we're using. basically curmod but for this loop
+					var g2; // discord-only data again
+					if(!curmod) {
+						// start of loop, set up group and current mod
+						curmod = slashCommands.get(mods[i]);
+						group = curmod;
+						curdat = slashData.get(mods[i]);
+						g2 = curdat;
+					} else {
+						// just get the group out of the curmod's options (/nesting)
+						group = curmod.options.find(x => x.data.name == mods[i]);
+						g2 = curdat.options.find(x => x.name == mods[i]);
+					}
 
-					slashCommands.set(mod.data.name, group);
-					if(mod.dev) devOnly.set(mod.data.name, g2);
-					else slashData.set(mod.data.name, g2);
+					if(!group) {
+						// no group data? we need to create it
+						var mod;
+						delete require.cache[require.resolve(path + `/${mods.slice(0, i + 1).join("/")}/__mod.js`)];
+						mod = require(path + `/${mods.slice(0, i + 1).join("/")}/__mod.js`);
+						group = {
+							...mod,
+							options: [],
+							type: mod.data.type ?? 1
+						};
+						g2 = {
+							...mod.data,
+							options: [],
+							type: mod.data.type ?? 1
+						};
+
+						if(!curmod) {
+							// start of loop again, also means we can
+							// safely set this as a top-level command in our collections
+							slashCommands.set(mod.data.name, group);
+							if(mod.dev) devOnly.set(mod.data.name, g2);
+							else slashData.set(mod.data.name, g2);
+						} else {
+							// otherwise it belongs nested below the current module data
+							curmod.options.push(group);
+							curdat.options.push(g2);
+						}
+					}
+
+					// set the current mod to the group so we have proper nesting for
+					// the next group or command
+					curmod = group;
+					curdat = g2;
 				}
-				
-				command.permissions = command.permissions ?? group.permissions;
-				command.opPerms = command.opPerms ?? group.opPerms;
-				command.guildOnly = command.guildOnly ?? group.guildOnly;
-				if(command.options) command.options = command.options.map(o => {
-					o.permissions = o.permissions ?? command.permissions
-					return o;
-				})
 
-				group.options.push(command)
-				if(mod.dev) {
-					var dg = devOnly.get(mod.data.name);
+				// inherit permissions from parent module
+				command.permissions = command.permissions ?? curmod.permissions;
+				command.opPerms = command.opPerms ?? curmod.opPerms;
+				command.guildOnly = command.guildOnly ?? curmod.guildOnly;
+
+				curmod.options.push(command) // nest the command
+				if(curmod.dev) {
+					// okay not actually sure what to do about this part lol
+					// TODO: figure out how to handle dev commands before going live
+					var dg = devOnly.get(curmod.data.name);
 					dg.options.push({
 						...data,
 						type: data.type ?? 1
 					});
 				} else {
-					g2.options.push({
+					// if it's not a dev command then we can add it to the discord-only data
+					curdat.options.push({
 						...data,
 						type: data.type ?? 1
 					})
 				}
 			} else {
+				// no mods? just make it top-level
 				slashCommands.set(command.data.name, command);
 				slashData.set(command.data.name, data)
 			}
 		}
 
-		this.bot.slashCommands = slashCommands;
+		this.bot.slashCommands = slashCommands; // for safe keeping
 
+		// all of below is just sending it off to discord
 		try {
 			if(!this.bot.application?.owner) await this.bot.application?.fetch();
 
@@ -105,12 +140,22 @@ class InteractionHandler {
 					Routes.applicationGuildCommands(this.bot.application.id, process.env.COMMAND_GUILD),
 					{ body: cmds },
 				);
+
+				await rest.put(
+					Routes.applicationCommands(this.bot.application.id),
+					{ body: [] }
+				)
 			} else {
 				if(process.env.COMMAND_GUILD) {
 					await rest.put(
 						Routes.applicationGuildCommands(this.bot.application.id, process.env.COMMAND_GUILD),
 						{ body: cmds },
 					);
+
+					await rest.put(
+						Routes.applicationCommands(this.bot.application.id),
+						{ body: [] }
+					)
 				} else {
 					await rest.put(
 						Routes.applicationCommands(this.bot.application.id),
@@ -138,21 +183,27 @@ class InteractionHandler {
 	}
 
 	parse(ctx) {
+		var long = "";
 		var cmd = this.bot.slashCommands.get(ctx.commandName);
 		if(!cmd) return;
+		long += cmd.name ?? cmd.data.name;
 
 		if(ctx.options.getSubcommandGroup(false)) {
 			cmd = cmd.options.find(o => o.data.name == ctx.options.getSubcommandGroup());
 			if(!cmd) return;
+			long += ` ${cmd.data.name}`;
 			var opt = ctx.options.getSubcommand(false);
 			if(opt) {
 				cmd = cmd.options.find(o => o.data.name == opt);
+				if(cmd) long += ` ${cmd.data.name}`;
 			} else return;
 		} else if(ctx.options.getSubcommand(false)) {
 			cmd = cmd.options.find(o => o.data.name == ctx.options.getSubcommand());
 			if(!cmd) return;
+			long += ` ${cmd.data.name}`;
 		}
 
+		if(cmd) cmd.long = long;
 		return cmd;
 	}
 
@@ -202,7 +253,7 @@ class InteractionHandler {
 						components: [
 							{
 								type: 1,
-								components: PAGE
+								components: PAGE(1, res.length)
 							}
 						]
 					}
@@ -217,7 +268,8 @@ class InteractionHandler {
 						timeout: setTimeout(() => {
 							if(!this.menus.get(message.id)) return;
 							this.menus.delete(message.id);
-						}, 5 * 60000)
+						}, 5 * 60000),
+						handle: (ctx) => this.paginate(menu, ctx)
 					}
 
 					this.menus.set(message.id, menu);
@@ -231,11 +283,18 @@ class InteractionHandler {
 
 	async handleButtons(ctx) {
 		var {message} = ctx;
-
-		if(!this.menus.get(message.id)) return;
-
 		var menu = this.menus.get(message.id);
-		this.paginate(menu, ctx);
+		if(!menu) return;
+
+		menu.handle(ctx);
+	}
+
+	async handleSelect(ctx) {
+		var {message} = ctx;
+		var menu = this.menus.get(message.id);
+		if(!menu) return;
+
+		menu.handle(ctx);
 	}
 
 	async handleAuto(ctx) {
@@ -244,15 +303,6 @@ class InteractionHandler {
 
 		var result = await cmd.auto(ctx);
 		return await ctx.respond(result ?? []);
-	}
-
-	async handleSelect(ctx) {
-		var {message} = ctx;
-
-		if(!this.menus.get(message.id)) return;
-
-		var menu = this.menus.get(message.id);
-		menu.handle(ctx);
 	}
 
 	checkPerms(cmd, ctx, cfg) {
@@ -309,7 +359,11 @@ class InteractionHandler {
 		}
 
 		await ctx.update({
-			embeds: [data[menu.index]]
+			embeds: [data[menu.index]],
+			components: [{
+				type: 1,
+				components: PAGE(menu.index + 1, data.length)
+			}]
 		})
 	}
 }

@@ -34,6 +34,7 @@ opts.push({
 	async execute(ctx) {
 		var target = ctx.options.getMentionable('target');
 		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		console.log(cfg);
 		if(!cfg?.opped || !Object.keys(cfg.opped).find(k => cfg.opped[k].length))
 			return "No ops to view!";
 
@@ -150,8 +151,8 @@ opts.push({
 		if(target instanceof Role) opped.roles.push(obj);
 		else opped.users.push(obj);
 
-		if(cfg) await ctx.client.stores.configs.update(ctx.guild.id, {opped});
-		else await ctx.client.stores.configs.create(ctx.guild.id, {opped});
+		cfg.opped = opped;
+		await cfg.save();
 		
 		return "Target opped!";
 	},
@@ -196,7 +197,8 @@ opts.push({
 			opped.roles = opped.roles.filter(o => o.id != target.id);
 		else opped.users = opped.users.filter(o => o.id != target.id);
 
-		await ctx.client.stores.configs.update(ctx.guild.id, {opped});
+		cfg.opped = opped;
+		await cfg.save();
 		
 		return "Target de-opped!";
 	},
@@ -252,8 +254,8 @@ opts.push({
 
 		if(!found.perms.includes(perm)) found.perms.push(perm);
 		cfg.opped[target instanceof Role ? "roles" : "users"].splice(index, 1, found);
-
-		await ctx.client.stores.configs.update(ctx.guild.id, {opped: cfg.opped});
+		
+		await cfg.save()
 		return "Target updated!"
 	},
 	guildOnly: true,
@@ -309,7 +311,7 @@ opts.push({
 		if(found.perms.includes(perm)) found.perms = found.perms.filter(x => x != perm);
 		cfg.opped[target instanceof Role ? "roles" : "users"].splice(index, 1, found);
 
-		await ctx.client.stores.configs.update(ctx.guild.id, {opped: cfg.opped});
+		await cfg.save()
 		return "Target updated!"
 	},
 	guildOnly: true,

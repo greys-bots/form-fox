@@ -6,6 +6,7 @@ const KEYS = {
 	prefix: { patch: true },
 	reacts: { patch: true },
 	embed: { patch: true },
+	opped: { patch: true },
 	ticket_category: { patch: true },
 	ticket_message: { patch: true },
 	autodm: { patch: true },
@@ -82,14 +83,15 @@ class ConfigStore {
 				prefix,
 				reacts,
 				embed,
+				opped,
 				ticket_category,
 				ticket_message,
 				autodm,
 				autothread
-			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			[server, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
-			 data.embed ?? true, data.ticket_category,
+			 data.embed ?? true, cfg.opped ?? {roles: [], users: []}, data.ticket_category,
 			 data.ticket_message, data.autodm, data.autothread]);
 		} catch(e) {
 			console.log(e);
@@ -108,14 +110,15 @@ class ConfigStore {
 				prefix,
 				reacts,
 				embed,
+				opped,
 				ticket_category,
 				ticket_message,
 				autodm,
 				autothread
-			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			[server, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
-			 data.embed ?? true, data.ticket_category,
+			 data.embed ?? true, cfg.opped ?? {roles: [], users: []}, data.ticket_category,
 			 data.ticket_message, data.autodm, data.autothread]);
 		} catch(e) {
 			console.log(e);
