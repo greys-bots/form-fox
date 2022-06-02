@@ -878,7 +878,7 @@ class ResponseHandler {
 				return;
 		}
 
-		if(PGBTNS.find(pg => pg.custom_id == inter.customId)) {
+		if(PGBTNS(1, 1).find(pg => pg.custom_id == inter.customId)) {
 			await inter.deferUpdate();
 			var template = {
 				title: response.form.name,
