@@ -94,15 +94,17 @@ module.exports = {
 				bot.removeListener('messageReactionAdd', reactListener);
 				bot.removeListener('interactionCreate', intListener)
 
-				msg.edit({
-					components: [{
-						type: 1,
-						components: msg.components[0].components.map(b => ({
-							...b,
-							disabled: true
-						}))
-					}]
-				})
+				if(msg.components?.[0]) {
+					msg.edit({
+						components: [{
+							type: 1,
+							components: msg.components[0].components.map(b => ({
+								...b,
+								disabled: true
+							}))
+						}]
+					})
+				}
 
 				if(STRINGS[0].includes(message.content.toLowerCase())) return res({confirmed: true, message});
 				else return res({confirmed: false, message, msg: 'Action cancelled!'});
@@ -117,15 +119,17 @@ module.exports = {
 				bot.removeListener('messageReactionAdd', reactListener);
 				bot.removeListener('interactionCreate', intListener)
 
-				msg.edit({
-					components: [{
-						type: 1,
-						components: msg.components[0].components.map(b => ({
-							...b,
-							disabled: true
-						}))
-					}]
-				})
+				if(msg.components?.[0]) {
+					msg.edit({
+						components: [{
+							type: 1,
+							components: msg.components[0].components.map(b => ({
+								...b,
+								disabled: true
+							}))
+						}]
+					})
+				}
 
 				if(react.emoji.name == REACTS[0]) return res({confirmed: true, react});
 				else return res({confirmed: false, react, msg: 'Action cancelled!'});
