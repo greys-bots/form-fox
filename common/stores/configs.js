@@ -91,7 +91,7 @@ class ConfigStore {
 			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			[server, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
-			 data.embed ?? true, cfg.opped ?? {roles: [], users: []}, data.ticket_category,
+			 data.embed ?? true, data.opped ?? {roles: [], users: []}, data.ticket_category,
 			 data.ticket_message, data.autodm, data.autothread]);
 		} catch(e) {
 			console.log(e);
@@ -118,7 +118,7 @@ class ConfigStore {
 			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			[server, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
-			 data.embed ?? true, cfg.opped ?? {roles: [], users: []}, data.ticket_category,
+			 data.embed ?? true, data.opped ?? {roles: [], users: []}, data.ticket_category,
 			 data.ticket_message, data.autodm, data.autothread]);
 		} catch(e) {
 			console.log(e);

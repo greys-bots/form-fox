@@ -621,7 +621,7 @@ class ResponsePostStore {
                 }
         }
 
-        if(PGBTNS.find(pg => pg.custom_id == ctx.customId)) {
+        if(PGBTNS(1,1).find(pg => pg.custom_id == ctx.customId)) {
             var template = {
                 title: "Response",
                 description: [

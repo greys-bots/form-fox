@@ -303,7 +303,6 @@ class ResponseHandler {
 			});
 
 			var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
-			if(confirm.interaction) await confirm.interaction.deferUpdate();
 			await m.edit({
 				components: [{
 					type: 1, 
@@ -380,7 +379,6 @@ class ResponseHandler {
 		})
 
 		var confirm = await this.bot.utils.getConfirmation(this.bot, message, user);
-		if(confirm.interaction) await confirm.interaction.deferUpdate();
 		await m.edit({
 			components: [{
 				type: 1, 
@@ -444,7 +442,6 @@ class ResponseHandler {
 		});
 
 		var confirm = await this.bot.utils.getConfirmation(this.bot, m, user);
-		if(confirm.interaction) await confirm.interaction.deferUpdate();
 		await m.edit({
 			components: [{
 				type: 1, 
@@ -907,6 +904,7 @@ class ResponseHandler {
 			}
 
 			await inter.message.edit({embeds: [embeds[response.page - 1]]});
+			console.log(response, response.selection, response.answers)
 	        await response.save()
 	        return;
 		}
@@ -924,6 +922,7 @@ class ResponseHandler {
 		if(res2.send) var message = await this.sendQuestion(response, inter.message);
 
 		response.message_id = message?.id ?? inter.message.id;
+		console.log(response, response.selection, response.answers)
 		await response.save();
 
 		if(message) await inter.message.edit({

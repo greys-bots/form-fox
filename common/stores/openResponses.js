@@ -8,7 +8,9 @@ const KEYS = {
     user_id: { },
     form: { },
     questions: { },
-    answers: { patch: true }
+    answers: { patch: true },
+    selection: { patch: true },
+    page: { patch: true }
 }
 
 class OpenResponse {
