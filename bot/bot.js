@@ -1,14 +1,19 @@
+require('dotenv').config();
+
 const {
 	Client,
 	Intents,
 	Options
 } = require("discord.js");
+const {
+	FrameClient,
+	Utilities,
+	Handlers
+} = require('frame');
 const fs				  = require("fs");
 const path 				  = require("path");
 
-require('dotenv').config();
-
-const bot = new Client({
+const bot = new FrameClient({
 	intents: [
 		Intents.FLAGS.GUILDS,
 		Intents.FLAGS.GUILD_MESSAGES,
@@ -54,17 +59,24 @@ bot.updateStatus = async function(){
 }
 
 async function setup() {
-	bot.db = await require(__dirname + '/../common/stores/__db')(bot);
+	var { db, stores } = await Handlers.DatabaseHandler(bot, __dirname + '/../common/stores');
+	bot.db = db;
+	bot.stores = stores;
 
 	files = fs.readdirSync(__dirname + "/events");
 	files.forEach(f => bot.on(f.slice(0,-3), (...args) => require(__dirname + "/events/"+f)(...args,bot)));
 
 	bot.handlers = {};
+	bot.handlers.interaction = Handlers.InteractionHandler(bot, __dirname + '/../common/slashcommands');
+	bot.handlers.command = Handlers.CommandHandler(bot, __dirname + '/../common/commands');
 	files = fs.readdirSync(__dirname + "/handlers");
-	files.forEach(f => bot.handlers[f.slice(0,-3)] = require(__dirname + "/handlers/"+f)(bot));
+	for(var f of files) {
+		var n = f.slice(0, -3);
+		if(['interaction', 'command'].includes(n)) continue;
+		bot.handlers[n] = require(__dirname + "/handlers/"+f)(bot)
+	}
 
-	bot.utils = require(__dirname + "/utils");
-	Object.assign(bot.utils, require(__dirname + "/../common/utils"));
+	bot.utils = Utilities;
 }
 
 bot.writeLog = async (log) => {

@@ -79,14 +79,17 @@ class OpenResponseStore {
         Will send to a server or discard once done
     */
 
+    #db;
+    #bot;
+
     constructor(bot, db) {
-        this.db = db;
-        this.bot = bot;
+        this.#db = db;
+        this.#bot = bot;
     };
     
     async create(server, channel, message, data = {}) {
         try {
-            await this.db.query(`INSERT INTO open_responses (
+            await this.#db.query(`INSERT INTO open_responses (
                 server_id,
                 channel_id,
                 message_id,
@@ -106,7 +109,7 @@ class OpenResponseStore {
 
     async index(server, channel, message, data = {}) {
         try {
-            await this.db.query(`INSERT INTO open_responses (
+            await this.#db.query(`INSERT INTO open_responses (
                 server_id,
                 channel_id,
                 message_id,
@@ -126,7 +129,7 @@ class OpenResponseStore {
 
     async get(channel) {
         try {
-            var data = await this.db.query(`SELECT * FROM open_responses WHERE channel_id = $1`,[channel]);
+            var data = await this.#db.query(`SELECT * FROM open_responses WHERE channel_id = $1`,[channel]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -134,7 +137,7 @@ class OpenResponseStore {
         
         if(data.rows?.[0]) {
             var response = new OpenResponse(this, data.rows[0])
-            var form = await this.bot.stores.forms.get(response.server_id, response.form);
+            var form = await this.#bot.stores.forms.get(response.server_id, response.form);
             if(form?.id) response.form = form;
             return response;
         } else return new OpenResponse(this, { channel_id: channel });
@@ -142,7 +145,7 @@ class OpenResponseStore {
 
     async getID(id) {
         try {
-            var data = await this.db.query(`SELECT * FROM open_responses WHERE id = $1`,[id]);
+            var data = await this.#db.query(`SELECT * FROM open_responses WHERE id = $1`,[id]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -150,7 +153,7 @@ class OpenResponseStore {
         
         if(data.rows?.[0]) {
             var response = new OpenResponse(this, data.rows[0])
-            var form = await this.bot.stores.forms.get(response.server_id, response.form);
+            var form = await this.#bot.stores.forms.get(response.server_id, response.form);
             if(form?.id) response.form = form;
             return response;
         } else return new OpenResponse(this, { });
@@ -158,7 +161,7 @@ class OpenResponseStore {
 
     async update(id, data = {}) {
         try {
-            await this.db.query(`UPDATE open_responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+            await this.#db.query(`UPDATE open_responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -169,7 +172,7 @@ class OpenResponseStore {
 
     async delete(id) {
         try {
-            await this.db.query(`DELETE FROM open_responses WHERE id = $1`, [id]);
+            await this.#db.query(`DELETE FROM open_responses WHERE id = $1`, [id]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);

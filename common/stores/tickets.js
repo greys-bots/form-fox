@@ -61,13 +61,16 @@ class Ticket {
 }
 
 class TicketStore {
+	#db;
+	#bot;
+	
 	constructor(bot, db) {
-		this.db = db;
-		this.bot = bot;
+		this.#db = db;
+		this.#bot = bot;
 	};
 
 	init() {
-		this.bot.on('channelDelete', (channel) => {
+		this.#bot.on('channelDelete', (channel) => {
 			if(!channel.guild) return;
 
 			this.deleteByChannel(channel.guild.id, channel.id);
@@ -76,7 +79,7 @@ class TicketStore {
 
 	async create(server, channel, response) {
 		try {
-			await this.db.query(`INSERT INTO tickets (
+			await this.#db.query(`INSERT INTO tickets (
 				server_id,
 				channel_id,
 				response_id
@@ -92,7 +95,7 @@ class TicketStore {
 
 	async index(server, channel, response) {
 		try {
-			await this.db.query(`INSERT INTO tickets (
+			await this.#db.query(`INSERT INTO tickets (
 				server_id,
 				channel_id,
 				response_id
@@ -108,7 +111,7 @@ class TicketStore {
 
 	async get(server, response) {
 		try {
-			var data = await this.db.query(`SELECT * FROM tickets WHERE server_id = $1 AND response_id = $2`,[server, response]);
+			var data = await this.#db.query(`SELECT * FROM tickets WHERE server_id = $1 AND response_id = $2`,[server, response]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -120,7 +123,7 @@ class TicketStore {
 
 	async delete(id) {
 		try {
-			await this.db.query(`DELETE FROM tickets WHERE id = $1`, [id]);
+			await this.#db.query(`DELETE FROM tickets WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -131,7 +134,7 @@ class TicketStore {
 
 	async deleteByChannel(server, channel) {
 		try {
-			await this.db.query(`DELETE FROM tickets WHERE server_id = $1 AND channel_id = $2`, [server, channel]);
+			await this.#db.query(`DELETE FROM tickets WHERE server_id = $1 AND channel_id = $2`, [server, channel]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);

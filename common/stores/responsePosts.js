@@ -74,13 +74,16 @@ class ResponsePost {
 }
 
 class ResponsePostStore {
+	#db;
+	#bot;
+
     constructor(bot, db) {
-        this.db = db;
-        this.bot = bot;
+        this.#db = db;
+        this.#bot = bot;
     };
 
     async init() {
-        this.bot.on('messageReactionAdd', async (...args) => {
+        this.#bot.on('messageReactionAdd', async (...args) => {
             try {
                 this.handleReactions(...args);
             } catch(e) {
@@ -88,7 +91,7 @@ class ResponsePostStore {
             }
         })
 
-        this.bot.on('interactionCreate', async (...args) => {
+        this.#bot.on('interactionCreate', async (...args) => {
             try {
                 this.handleInteractions(...args);
             } catch(e) {
@@ -96,7 +99,7 @@ class ResponsePostStore {
             }
         })
 
-        this.bot.on('messageDelete', async ({ channel, id }) => {
+        this.#bot.on('messageDelete', async ({ channel, id }) => {
             if(!channel.guild) return;
             await this.deleteByMessage(channel.guild.id, channel.id, id);
         })
@@ -104,7 +107,7 @@ class ResponsePostStore {
 
     async create(server, channel, message, data = {}) {
         try {
-            await this.db.query(`INSERT INTO response_posts (
+            await this.#db.query(`INSERT INTO response_posts (
                 server_id,
                 channel_id,
                 message_id,
@@ -122,7 +125,7 @@ class ResponsePostStore {
 
     async index(server, channel, message, data = {}) {
         try {
-            await this.db.query(`INSERT INTO response_posts (
+            await this.#db.query(`INSERT INTO response_posts (
                 server_id,
                 channel_id,
                 message_id,
@@ -140,7 +143,7 @@ class ResponsePostStore {
 
     async get(server, channel, message) {
         try {
-            var data = await this.db.query(`
+            var data = await this.#db.query(`
                 SELECT * FROM response_posts WHERE
                 server_id = $1
                 AND channel_id = $2
@@ -153,7 +156,7 @@ class ResponsePostStore {
         
         if(data.rows?.[0]) {
             var post = new ResponsePost(this, data.rows[0]);
-            var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
+            var response = await this.#bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
             if(response) post.response = response;
             
             return post;
@@ -162,7 +165,7 @@ class ResponsePostStore {
 
     async getByResponse(server, hid) {
         try {
-            var data = await this.db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
+            var data = await this.#db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -170,7 +173,7 @@ class ResponsePostStore {
         
         if(data.rows?.[0]) {
             var post = new ResponsePost(this, data.rows[0]);
-            var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
+            var response = await this.#bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
             if(response) post.response = response;
             
             return post;
@@ -179,7 +182,7 @@ class ResponsePostStore {
 
     async update(id, data = {}) {
         try {
-            await this.db.query(`
+            await this.#db.query(`
                 UPDATE response_posts SET
                 ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")}
                 WHERE id = $1
@@ -194,7 +197,7 @@ class ResponsePostStore {
 
     async delete(id) {
         try {
-            await this.db.query(`
+            await this.#db.query(`
                 DELETE FROM response_posts
                 WHERE id = $1
             `, [id]);
@@ -208,7 +211,7 @@ class ResponsePostStore {
 
     async deleteByMessage(server, channel, message) {
         try {
-            await this.db.query(`
+            await this.#db.query(`
                 DELETE FROM response_posts
                 WHERE server_id = $1
                 AND channel_id = $2
@@ -223,7 +226,7 @@ class ResponsePostStore {
     }
 
     async handleReactions(reaction, user) {
-        if(this.bot.user.id == user.id) return;
+        if(this.#bot.user.id == user.id) return;
         if(user.bot) return;
 
         var msg;
@@ -231,9 +234,9 @@ class ResponsePostStore {
         else msg = reaction.message;
         if(!msg.channel.guild) return;
 
-		var cfg = await this.bot.stores.configs.get(msg.guild.id);
+		var cfg = await this.#bot.stores.configs.get(msg.guild.id);
         var mem = await msg.guild.members.fetch(user.id);
-        var check = await this.bot.handlers.interaction.checkPerms(
+        var check = await this.#bot.handlers.interaction.checkPerms(
         	{
         		permissions: ['MANAGE_MESSAGES'],
         		opPerms: ['MANAGE_RESPONSES']
@@ -262,7 +265,7 @@ class ResponsePostStore {
         	)
         }
 
-        var u2 = await this.bot.users.fetch(post.response.user_id);
+        var u2 = await this.#bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
 
         var template = {
@@ -279,9 +282,9 @@ class ResponsePostStore {
             footer: {text: 'Awaiting acceptance/denial...'}
         }
 
-        var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
+        var embeds = this.#bot.handlers.response.buildResponseEmbeds(post.response, template);
 
-       	var ticket = await this.bot.stores.tickets.get(msg.guild.id, post.response.hid);
+       	var ticket = await this.#bot.stores.tickets.get(msg.guild.id, post.response.hid);
         switch(reaction.emoji.name) {
             case '❌':
                 var reason;
@@ -330,7 +333,7 @@ class ResponsePostStore {
 			            tch.delete();
 			        }
 
-                    this.bot.emit('DENY', post.response);
+                    this.#bot.emit('DENY', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -379,7 +382,7 @@ class ResponsePostStore {
 			            tch.delete();
 			        }
 
-                    this.bot.emit('ACCEPT', post.response);
+                    this.#bot.emit('ACCEPT', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -432,7 +435,7 @@ class ResponsePostStore {
                         await ch2.send(tmsg);
                     }
 
-                    await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+                    await this.#bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
 
                     msg.channel.send(`Channel created: <#${ch2.id}>`);
                 } catch(e) {
@@ -452,10 +455,9 @@ class ResponsePostStore {
         if(!post?.id) return;
 
         var {message: msg, user} = ctx;
-        await ctx.deferUpdate();
 
-		var cfg = await this.bot.stores.configs.get(ctx.guild.id);
-        var check = await this.bot.handlers.interaction.checkPerms(
+		var cfg = await this.#bot.stores.configs.get(ctx.guild.id);
+        var check = await this.#bot.handlers.interaction.checkPerms(
         	{
         		permissions: ['MANAGE_MESSAGES'],
         		opPerms: ['MANAGE_RESPONSES']
@@ -464,10 +466,10 @@ class ResponsePostStore {
         )
         if(!check) return;
 
-        var u2 = await this.bot.users.fetch(post.response.user_id);
+        var u2 = await this.#bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
 
-		var ticket = await this.bot.stores.tickets.get(msg.guild.id, post.response.hid);
+		var ticket = await this.#bot.stores.tickets.get(msg.guild.id, post.response.hid);
 		var cmp = msg.components;
         switch(ctx.customId) {
             case 'deny':
@@ -520,7 +522,7 @@ class ResponsePostStore {
 			            tch?.delete();
 			        }
 
-                    this.bot.emit('DENY', post.response);
+                    this.#bot.emit('DENY', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -572,7 +574,7 @@ class ResponsePostStore {
 			            tch?.delete();
 			        }
 
-                    this.bot.emit('ACCEPT', post.response);
+                    this.#bot.emit('ACCEPT', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -613,7 +615,7 @@ class ResponsePostStore {
 					await msg.edit({
 						components: cmp
 					})
-                    await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+                    await this.#bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
                     await ctx.followUp(`Channel created! <#${ch2.id}>`);
                     return;
                 } catch(e) {
@@ -636,7 +638,7 @@ class ResponsePostStore {
                 footer: {text: 'Awaiting acceptance/denial...'}
             }
 
-            var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
+            var embeds = this.#bot.handlers.response.buildResponseEmbeds(post.response, template);
             switch(ctx.customId) {
                 case 'first':
                     post.page = 1;

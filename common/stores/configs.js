@@ -69,14 +69,17 @@ class Config {
 }
 
 class ConfigStore {
+	#db;
+	#bot;
+	
 	constructor(bot, db) {
-		this.db = db;
-		this.bot = bot;
+		this.#db = db;
+		this.#bot = bot;
 	};
 
 	async create(server, data = {}) {
 		try {
-			await this.db.query(`INSERT INTO configs (
+			await this.#db.query(`INSERT INTO configs (
 				server_id,
 				response_channel,
 				message,
@@ -103,7 +106,7 @@ class ConfigStore {
 
 	async index(server, data = {}) {
 		try {
-			await this.db.query(`INSERT INTO configs (
+			await this.#db.query(`INSERT INTO configs (
 				server_id,
 				response_channel,
 				message,
@@ -130,7 +133,7 @@ class ConfigStore {
 
 	async get(server) {
 		try {
-			var data = await this.db.query(`SELECT * FROM configs WHERE server_id = $1`,[server]);
+			var data = await this.#db.query(`SELECT * FROM configs WHERE server_id = $1`,[server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -143,7 +146,7 @@ class ConfigStore {
 
 	async getID(id) {
 		try {
-			var data = await this.db.query(`SELECT * FROM configs WHERE id = $1`,[id]);
+			var data = await this.#db.query(`SELECT * FROM configs WHERE id = $1`,[id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -156,7 +159,7 @@ class ConfigStore {
 
 	async update(id, data = {}) {
 		try {
-			await this.db.query(`UPDATE configs SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+			await this.#db.query(`UPDATE configs SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -167,7 +170,7 @@ class ConfigStore {
 
 	async delete(id) {
 		try {
-			await this.db.query(`DELETE FROM configs WHERE id = $1`, [id]);
+			await this.#db.query(`DELETE FROM configs WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);

@@ -79,14 +79,17 @@ class Form {
 }
 
 class FormStore {
+	#db;
+	#bot;
+	
 	constructor(bot, db) {
-		this.db = db;
-		this.bot = bot;
+		this.#db = db;
+		this.#bot = bot;
 	};
 
 	async create(server, data = {}) {
 		try {
-			var form = await this.db.query(`INSERT INTO forms (
+			var form = await this.#db.query(`INSERT INTO forms (
 				server_id,
 				hid,
 				name,
@@ -123,7 +126,7 @@ class FormStore {
 
 	async index(server, data = {}) {
 		try {
-			await this.db.query(`INSERT INTO forms (
+			await this.#db.query(`INSERT INTO forms (
 				server_id,
 				hid,
 				name,
@@ -159,7 +162,7 @@ class FormStore {
 
 	async get(server, hid) {
 		try {
-			var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
+			var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -187,7 +190,7 @@ class FormStore {
 
 	async getAll(server) {
 		try {
-			var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
+			var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -200,7 +203,7 @@ class FormStore {
 	async getByHids(server, ids) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = ANY($2)`,[server, ids]);
+				var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = ANY($2)`,[server, ids]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -215,7 +218,7 @@ class FormStore {
 	async getByApplyChannel(server, channel) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND apply_channel = $2`,
+				var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1 AND apply_channel = $2`,
 					[server, channel]);
 			} catch(e) {
 				console.log(e);
@@ -229,7 +232,7 @@ class FormStore {
 
 	async getID(id) {
 		try {
-			var data = await this.db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
+			var data = await this.#db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -250,7 +253,7 @@ class FormStore {
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
 		try {
-			await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+			await this.#db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -258,12 +261,12 @@ class FormStore {
 
 		var form = await this.getID(id);
 		if(!form) return undefined; //that's just silly
-		var responses = await this.bot.stores.responses.getByForm(form.server_id, form.hid);
-		var posts = await this.bot.stores.formPosts.getByForm(form.server_id, form.hid);
+		var responses = await this.#bot.stores.responses.getByForm(form.server_id, form.hid);
+		var posts = await this.#bot.stores.formPosts.getByForm(form.server_id, form.hid);
 
 		var errs = [];
 		if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
-			var guild = this.bot.guilds.resolve(form.server_id);
+			var guild = this.#bot.guilds.resolve(form.server_id);
 			if(posts) {
 				for(var post of posts) {
 					try {
@@ -318,9 +321,9 @@ class FormStore {
 		if(!form) return undefined; //that's just silly
 
 		var errs = [];
-		var responses = await this.bot.stores.responses.getByForm(server, hid);
-		var posts = await this.bot.stores.formPosts.getByForm(server, hid);
-		var guild = this.bot.guilds.resolve(server);
+		var responses = await this.#bot.stores.responses.getByForm(server, hid);
+		var posts = await this.#bot.stores.formPosts.getByForm(server, hid);
+		var guild = this.#bot.guilds.resolve(server);
 		if(posts) {
 			for(var post of posts) {
 				if(post.bound) continue;
@@ -329,7 +332,7 @@ class FormStore {
 					var chan = guild.channels.resolve(post.channel_id);
 					var msg = await chan.messages.fetch(post.message_id);
 					if(!msg) {
-						await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
+						await this.#bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
 						return rej('Message missing!');
 					}
 
@@ -357,7 +360,7 @@ class FormStore {
 
 	async delete(id) {
 		try {
-			await this.db.query(`DELETE FROM forms WHERE id = $1`, [id]);
+			await this.#db.query(`DELETE FROM forms WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -391,7 +394,7 @@ class FormStore {
 		if(!forms?.length) return;
 		if(ids?.length) forms = forms.filter(f => ids.includes(f.hid));
 		if(!forms?.length) return;
-		if(resp) r = await this.bot.stores.responses.getByForms(server, ids);
+		if(resp) r = await this.#bot.stores.responses.getByForms(server, ids);
 		
 		for(var form of forms) {
 			// remove server-specific data

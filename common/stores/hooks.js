@@ -65,15 +65,18 @@ class Hook {
 }
 
 class HookStore {
+	#db;
+	#bot;
+	
 	constructor(bot, db) {
-		this.db = db;
-		this.bot = bot;
+		this.#db = db;
+		this.#bot = bot;
 	};
 
 	init() {
 		// custom events
 		EVENTS.forEach(e => {
-			this.bot.on(e.toUpperCase(), async (response) => {
+			this.#bot.on(e.toUpperCase(), async (response) => {
 				var hooks = await this.getByForm(response.server_id, response.form.hid);
 				if(!hooks?.[0]) return;
 				hooks = hooks.filter(h => h.events.includes(e));
@@ -95,7 +98,7 @@ class HookStore {
 
 	async create(server, form, data = {}) {
 		try {
-			var data = await this.db.query(`INSERT INTO hooks (
+			var data = await this.#db.query(`INSERT INTO hooks (
 				server_id,
 				form,
 				hid,
@@ -115,7 +118,7 @@ class HookStore {
 
 	async index(server, form, data = {}) {
 		try {
-			await this.db.query(`INSERT INTO hooks (
+			await this.#db.query(`INSERT INTO hooks (
 				server_id,
 				form,
 				hid,
@@ -134,7 +137,7 @@ class HookStore {
 
 	async get(server, form, hid) {
 		try {
-			var data = await this.db.query(`
+			var data = await this.#db.query(`
 				SELECT * FROM hooks
 				WHERE server_id = $1
 				AND form = $2
@@ -152,7 +155,7 @@ class HookStore {
 
 	async getID(id) {
 		try {
-			var data = await this.db.query(`
+			var data = await this.#db.query(`
 				SELECT * FROM hooks
 				WHERE id = $1
 			`,[id]);
@@ -168,7 +171,7 @@ class HookStore {
 
 	async getByForm(server, form) {
 		try {
-			var data = await this.db.query(`
+			var data = await this.#db.query(`
 				SELECT * FROM hooks
 				WHERE server_id = $1
 				AND form = $2
@@ -185,7 +188,7 @@ class HookStore {
 
 	async update(id, data = {}) {
 		try {
-			await this.db.query(`UPDATE hooks SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE server = $1`,[id, ...Object.values(data)]);
+			await this.#db.query(`UPDATE hooks SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE server = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -196,7 +199,7 @@ class HookStore {
 
 	async delete(id) {
 		try {
-			await this.db.query(`
+			await this.#db.query(`
 				DELETE FROM hooks
 				WHERE id = $1
 			`, [id]);
@@ -210,7 +213,7 @@ class HookStore {
 
 	async deleteByForm(server, form) {
 		try {
-			await this.db.query(`
+			await this.#db.query(`
 				DELETE FROM hooks
 				WHERE server_id = $1
 				AND form = $2
