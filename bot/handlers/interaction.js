@@ -1,9 +1,9 @@
-const { Collection } = require('discord.js');
+const { Collection, Permissions } = require('discord.js');
 const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { Routes } = require('discord-api-types/v10');
 const { pageBtns: PAGE } = require('../../common/extras');
 
-const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
+const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
 class InteractionHandler {
 	menus = new Collection();
@@ -79,6 +79,12 @@ class InteractionHandler {
 							type: mod.data.type ?? 1
 						};
 
+						// if(mod.permissions?.length) {
+							// g2.default_member_permissions = "0";
+							// g2.default_permission = false;
+						// }
+						// if(mod.guildOnly) g2.dm_permission = false;
+
 						if(!curmod) {
 							// start of loop again, also means we can
 							// safely set this as a top-level command in our collections
@@ -103,10 +109,11 @@ class InteractionHandler {
 				command.opPerms = command.opPerms ?? curmod.opPerms;
 				command.guildOnly = command.guildOnly ?? curmod.guildOnly;
 
+				// if(command.guildOnly) command.data.dm_permission = false;
+				// if(command.permissions?.length) command.data.default_member_permissions = "0";
+				
 				curmod.options.push(command) // nest the command
 				if(curmod.dev) {
-					// okay not actually sure what to do about this part lol
-					// TODO: figure out how to handle dev commands before going live
 					var dg = devOnly.get(curmod.data.name);
 					dg.options.push({
 						...data,
