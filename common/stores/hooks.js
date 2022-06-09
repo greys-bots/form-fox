@@ -71,9 +71,18 @@ class HookStore {
 	constructor(bot, db) {
 		this.#db = db;
 		this.#bot = bot;
-	};
+	}
 
-	init() {
+	async init() {
+		await this.#db.query(`CREATE TABLE IF NOT EXISTS hooks (
+			id 			SERIAL PRIMARY KEY,
+			server_id	TEXT,
+			form 		TEXT,
+			hid 		TEXT,
+			url 		TEXT,
+			events 		TEXT[]
+		)`)
+		
 		// custom events
 		EVENTS.forEach(e => {
 			this.#bot.on(e.toUpperCase(), async (response) => {

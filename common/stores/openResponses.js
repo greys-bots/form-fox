@@ -85,7 +85,22 @@ class OpenResponseStore {
     constructor(bot, db) {
         this.#db = db;
         this.#bot = bot;
-    };
+    }
+
+    async init() {
+    	await this.#db.query(`CREATE TABLE IF NOT EXISTS open_responses (
+			id 			SERIAL PRIMARY KEY,
+			server_id 	TEXT,
+			channel_id 	TEXT,
+			message_id 	TEXT,
+			user_id 	TEXT,
+			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
+			questions   JSONB,
+			answers 	TEXT[],
+			selection   TEXT[],
+			page 		INTEGER
+		)`)
+    }
     
     async create(server, channel, message, data = {}) {
         try {
