@@ -1,7 +1,7 @@
 module.exports = {
 	help: ()=> 'Unbind a form reaction from the given message',
 	usage: ()=> [' [form id] [channel] [message id] - Unbinds a form react from a message'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[2]) return 'I need a form, channel, and message to work with!';
 
 		try {

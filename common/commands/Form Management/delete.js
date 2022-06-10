@@ -1,13 +1,31 @@
 const REACTS = require(__dirname + '/../../extras').confirmReacts;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> "Delete a form, and all its responses",
-	usage: ()=> [
-		' [form id] <form id> ... - Deletes given forms',
-		' all | * - Delete all forms',
-		' all | * -[form id] ... - Delete all except specific forms'
-	],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'delete',
+			description: "Delete a form, and all its responses",
+			usage: [
+				' [form id] <form id> ... - Deletes given forms',
+				' all | * - Delete all forms',
+				' all | * -[form id] ... - Delete all except specific forms'
+			],
+			alias: ['del', 'remove'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['DELETE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to delete!';
 		args = args.map(a => a.toLowerCase());
 		var message;
@@ -73,9 +91,7 @@ module.exports = {
 
 			return `Form${forms.length > 1 ? 's' : ''} deleted!`;
 		}
-	},
-	alias: ['del', 'remove'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['DELETE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

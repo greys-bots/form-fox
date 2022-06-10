@@ -3,7 +3,7 @@ const REACTS = require(__dirname + '/../../extras').confirmReacts;
 module.exports = {
 	help: ()=> 'Apply to a form',
 	usage: ()=> [' [form id] - Apply to the given form'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		var form;
 		if(!args[0]) {
 			form = await bot.stores.forms.getByApplyChannel(msg.guild.id, msg.channel.id);

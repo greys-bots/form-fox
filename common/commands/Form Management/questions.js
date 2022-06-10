@@ -15,7 +15,7 @@ module.exports = {
 		"the questions will NOT be updated for existing ones. The changes will only affect ",
 		"responses opened and finished after the fact!"
 	].join(""),
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
@@ -47,7 +47,7 @@ module.exports.subcommands.add = {
 		" [form id] - Runs a menu to add a new question to the given form",
 		" [form id] <question> - Adds the question to the given form"
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
@@ -124,7 +124,7 @@ module.exports.subcommands.remove = {
 	usage: ()=> [
 		" [form id] <question number> - Removes the question from the given form"
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
@@ -163,7 +163,7 @@ module.exports.subcommands.set = {
 	usage: ()=> [
 		" [form id] - Runs a menu to replace a form's questions"
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
@@ -225,7 +225,7 @@ module.exports.subcommands.rephrase = {
 		" [form id] - Runs a menu to rephrase the question",
 		" [form id] <question number> <new question> - Rephrases the given question"
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
@@ -270,7 +270,7 @@ module.exports.subcommands.reorder = {
 		" [form id] - Runs a menu to reorder a question",
 		" [form id] <question number> <new place> - Reorders a question on the given form"
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a form to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());

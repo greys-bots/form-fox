@@ -5,7 +5,7 @@ module.exports = {
 	usage: ()=> [
 		" - Imports an archive of your forms from a .json file attached to the message",
 		" [url] - Imports forms from a linked .json"],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		let file = msg.attachments.first();
 		if(!file) file = args[0];
 		if(!file) return "Please attach or link to a .json file to import when running this command!";

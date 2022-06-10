@@ -1,14 +1,32 @@
 const {qTypes:TYPES} = require(__dirname + '/../../extras');
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> `List existing forms`,
-	usage: ()=> [
-		' - List all forms',
-		' [form id] - View a specific form',
-		' open - List open forms',
-		' closed - List closed forms'
-	],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'forms',
+			description: `List existing forms`,
+			usage: [
+				' - List all forms',
+				' [form id] - View a specific form',
+				' open - List open forms',
+				' closed - List closed forms'
+			],
+			alias: ['list', 'l', 'f', 'form'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
 		if(!forms?.[0]) return "No forms created yet!";
 
@@ -89,9 +107,7 @@ module.exports = {
 				embeds[i].embed.title += ` (${i+1}/${embeds.length})`;
 
 		return embeds;
-	},
-	alias: ['list', 'l', 'f', 'form'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

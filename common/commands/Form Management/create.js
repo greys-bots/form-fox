@@ -1,15 +1,32 @@
 const {qTypes:TYPES, confirmReacts:REACTS} = require(__dirname + '/../../extras');
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: () => 'Create a new form',
-	usage: () => [' - Opens a menu to make a new form'],
-	desc: () => [
-		"Question types:",
-		"```",
-		Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}`).join("\n"),
-		"```"
-	].join("\n"),
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'create',
+			description: 'Create a new form',
+			usage: [' - Opens a menu to make a new form'],
+			extra:
+				"Question types:" +
+				"\n```\n" +
+				Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}`).join("\n") +
+				"\n```",
+			alias: ['new', 'add', 'n', '+'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		var data = {};
 		var message, confirm;
 
@@ -109,9 +126,7 @@ module.exports = {
 			`Use \`${bot.prefix}post ${fm.hid}\` with a channel to post your form!`,
 			`See \`${bot.prefix}h\` for more customization commands`	
 		].join('\n');
-	},
-	alias: ['new', 'add', 'n', '+'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

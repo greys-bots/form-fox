@@ -1,13 +1,37 @@
+const { Models: { TextCommand } } = require('frame');
 const {confirmReacts: REACTS } = require('../../extras');
 
-module.exports = {
-	help: ()=> "Change the bot's prefix in your server",
-	usage: ()=> [
-		" - Views and optionally clears the current prefix",
-		" [prefix] - Sets a new prefix"
-	],
-	execute: async (bot, msg, args) => {
-		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'prefix',
+			description: "Change the bot's prefix in your server",
+			arguments: {
+				prefix: {
+					type: 'string',
+					description: "The prefix to set",
+					optional: true
+				}
+			},
+			usage: [
+				" - Views and optionally clears the current prefix",
+				" [prefix] - Sets a new prefix"
+			],
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_CONFIG'],
+			module
+		});
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({bot, msg, args}) {
+		var cfg = await this.#stores.configs.get(msg.channel.guild.id);
 		if(!cfg) cfg = {prefix: "", new: true};
 
 		if(!args[0]) {
@@ -16,7 +40,7 @@ module.exports = {
 			var message = await msg.channel.send(`Current prefix: ${cfg.prefix}\nWould you like to clear it?`);
 			REACTS.forEach(r => message.react(r));
 
-			var conf = await bot.utils.getConfirmation(bot, message, msg.author);
+			var conf = await this.#bot.utils.getConfirmation(bot, message, msg.author);
 			if(conf.msg) return conf.msg;
 
 			cfg.prefix = undefined;
@@ -28,8 +52,7 @@ module.exports = {
 		await cfg.save()
 
 		return 'Prefix changed!';
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_CONFIG']
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

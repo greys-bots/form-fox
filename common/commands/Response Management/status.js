@@ -2,7 +2,7 @@ module.exports = {
 	help: ()=> 'Check a response\'s status',
 	usage: ()=> [' <guild id> [response id] - Check the given response\'s status'],
 	desc: () => 'Remember: The guild ID is needed if checking in DMs!',
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a response to check!';
 		if(msg.channel.type == 'dm' && !args[1]) return 'I need a guild to get the response from!';
 

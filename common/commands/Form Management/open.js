@@ -1,7 +1,7 @@
 module.exports = {
 	help: ()=> "Open a form for responses",
 	usage: ()=> [' [form id] - Open the given form for more responses'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
 		if(!form.id) return "Form not found!";
 		if(form.open) return "Form already open!";

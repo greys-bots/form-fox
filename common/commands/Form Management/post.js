@@ -1,7 +1,7 @@
 module.exports = {
 	help: ()=> 'Post a form to the given channel',
 	usage: ()=> [' [form id] [channel] - Post a form to a channel'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[1]) return 'I need a form and channel to work with!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());

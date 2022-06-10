@@ -1,13 +1,32 @@
-module.exports = {
-	help: ()=> "Export forms to import somewhere else",
-	usage: ()=> [
-		' - Exports all existing forms',
-		' [form id] <form id> ... - Export specific form(s)',
-		' resp - Export all forms and their responses',
-		' resp [form id] <form id> ... - Export specific forms and their responses'
-	],
-	desc: ()=> "NOTE: This doesn't save responses! Just forms",
-	execute: async (bot, msg, args) => {
+const { Models: { TextCommand } } = require('frame');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'export',
+			description: "Export forms to import somewhere else",
+			usage: [
+				' - Exports all existing forms',
+				' [form id] <form id> ... - Export specific form(s)',
+				' resp - Export all forms and their responses',
+				' resp [form id] <form id> ... - Export specific forms and their responses'
+			],
+			alias: ['exp'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			cooldown: 10,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		var resp;
 		if(['resp', 'responses', 'response'].includes(args[0]?.toLowerCase())) {
 			resp = true;
@@ -26,10 +45,7 @@ module.exports = {
 				}
 			]
 		};
-	},
-	alias: ['exp'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true,
-	cooldown: 10
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

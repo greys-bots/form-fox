@@ -8,7 +8,7 @@ const VARIABLES = {
 module.exports = {
 	help: ()=> "Manually accept a response, in case reactions aren't working",
 	usage: ()=> [' [response ID] - Manually accepts the response with the given ID'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a response to accept!';
 
 		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());

@@ -6,7 +6,7 @@ module.exports = {
 		' [form id] - View or clear required questions for a form',
 		' [form id] [question number] [question number] ... - Set certain questions as required'
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need at least a form!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());

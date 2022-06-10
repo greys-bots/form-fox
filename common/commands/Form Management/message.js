@@ -7,7 +7,7 @@ module.exports = {
 		'**$GUILD** - Names the guild!',
 		"Example acceptance message: `You've been accepted! Welcome to $GUILD, $USER!`"
 	].join('\n'),
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[1]) return 'I need a form and a message!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());

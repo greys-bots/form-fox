@@ -8,7 +8,7 @@ module.exports = {
 		' <form id> pending - List pending responses',
 		' <form id> from:[user id] - List responses from a certain user'
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		var responses = await bot.stores.responses.getAll(msg.channel.guild.id);
 		if(!responses?.[0]) return "No responses received yet!";
 

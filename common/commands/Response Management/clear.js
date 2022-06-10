@@ -6,7 +6,7 @@ module.exports = {
 		" - Deletes ALL responses across ALL forms",
 		" [form id] - Deletes all responses for the given form"
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(args[0]) {
 			var form = await bot.stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
 			if(!form.id) return 'Form not found!';

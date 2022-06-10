@@ -7,7 +7,7 @@ module.exports = {
 		' [form id] - View or clear a form\'s roles',
 		' [form id] [role] [role] ... - Set a form\'s roles. Best done with mentions or ids'
 	],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		switch(args.length) {
 			case 0:
 				var forms = await bot.stores.forms.getAll(msg.channel.guild.id);

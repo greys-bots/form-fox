@@ -1,7 +1,7 @@
 module.exports = {
 	help: ()=> 'Rename a form',
 	usage: ()=> [' [form id] [new name] - Rename the given form'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[1]) return 'I need a form and a new name!';
 
 		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());

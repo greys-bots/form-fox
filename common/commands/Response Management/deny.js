@@ -1,7 +1,7 @@
 module.exports = {
 	help: ()=> "Manually deny a response, in case reactions aren't working",
 	usage: ()=> [' [response ID] - Manually denies the response with the given ID'],
-	execute: async (bot, msg, args) => {
+	execute: async ({bot, msg, args}) => {
 		if(!args[0]) return 'I need a response to deny!';
 
 		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
