@@ -72,7 +72,21 @@ class ResponseStore {
 	constructor(bot, db) {
 		this.#db = db;
 		this.#bot = bot;
-	};
+	}
+
+	async init() {
+		await this.#db.query(`CREATE TABLE IF NOT EXISTS responses (
+			id 			SERIAL PRIMARY KEY,
+			server_id 	TEXT,
+			hid 		TEXT UNIQUE,
+			user_id 	TEXT,
+			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
+			questions 	JSONB,
+			answers 	TEXT[],
+			status 		TEXT,
+			received 	TIMESTAMPTZ
+		)`)
+	}
 
 	async create(server, data = {}) {
 		try {

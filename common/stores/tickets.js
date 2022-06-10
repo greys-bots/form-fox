@@ -67,9 +67,16 @@ class TicketStore {
 	constructor(bot, db) {
 		this.#db = db;
 		this.#bot = bot;
-	};
+	}
 
-	init() {
+	async init() {
+		await this.#db.query(`CREATE TABLE IF NOT EXISTS tickets (
+			id			SERIAL PRIMARY KEY,
+			server_id	TEXT,
+			channel_id	TEXT,
+			response_id	TEXT
+		)`)
+		
 		this.#bot.on('channelDelete', (channel) => {
 			if(!channel.guild) return;
 

@@ -75,7 +75,24 @@ class ConfigStore {
 	constructor(bot, db) {
 		this.#db = db;
 		this.#bot = bot;
-	};
+	}
+
+	async init() {
+		await this.#db.query(`CREATE TABLE IF NOT EXISTS configs (
+			id 					SERIAL PRIMARY KEY,
+			server_id 			TEXT,
+			response_channel 	TEXT,
+			message 			TEXT,
+			prefix 				TEXT,
+			reacts 				BOOLEAN,
+			embed 				BOOLEAN,
+			opped 				JSONB,
+			ticket_category 	TEXT,
+			ticket_message		TEXT,
+			autodm 				TEXT,
+			autothread			BOOLEAN
+		)`)
+	}
 
 	async create(server, data = {}) {
 		try {
