@@ -113,7 +113,6 @@ class Command extends TextCommand {
 
 		if(data.questions.length == 0) return 'No questions added! Aborting!';
 
-		var code = this.#bot.utils.genCode(this.#bot.chars);
 		try {
 			var fm = await this.#stores.forms.create(msg.channel.guild.id, data);
 		} catch(e) {

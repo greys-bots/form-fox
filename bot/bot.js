@@ -10,8 +10,8 @@ const {
 	Utilities,
 	Handlers
 } = require('frame');
-const fs				  = require("fs");
-const path 				  = require("path");
+const fs = require("fs");
+const path = require("path");
 
 const bot = new FrameClient({
 	intents: [
@@ -33,30 +33,14 @@ const bot = new FrameClient({
 		MessageManager: 0,
 		ThreadManager: 0
 	})
+}, {
+	prefix: process.env.PREFIX,
+	invite: process.env.INVITE,
+	statuses: [
+		(bot) => `${bot.prefix}!h | in ${bot.guilds.cache.size} guilds!`,
+		(bot) => `${bot.prefix}!h | serving ${bot.users.cache.size} users!`
+	]
 });
-
-bot.prefix = process.env.PREFIX;
-bot.chars = process.env.CHARS;
-bot.invite = process.env.INVITE;
-
-bot.tc = require('tinycolor2');
-
-bot.status = 0;
-bot.guildCount = 0;
-bot.statuses = [
-	() => `ff!h | in ${bot.guilds.cache.size} guilds!`,
-	() => `ff!h | serving ${bot.users.cache.size} users!`
-	// `ff!h | https://ff.greysdawn.com`
-];
-
-bot.updateStatus = async function(){
-	var target = bot.statuses[bot.status % bot.statuses.length];
-	if(typeof target == "function") bot.user.setActivity(await target());
-	else bot.user.setActivity(target);
-	bot.status++;
-		
-	setTimeout(()=> bot.updateStatus(), 60 * 1000) // 5 mins
-}
 
 async function setup() {
 	var { db, stores } = await Handlers.DatabaseHandler(bot, __dirname + '/../common/stores');
@@ -96,7 +80,6 @@ bot.writeLog = async (log) => {
 
 bot.on("ready", async ()=> {
 	console.log(`Logged in as ${bot.user.tag} (${bot.user.id})`);
-	await bot.updateStatus();
 })
 
 bot.on('error', (err)=> {

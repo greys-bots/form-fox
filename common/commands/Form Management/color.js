@@ -1,4 +1,5 @@
 const { Models: { TextCommand } } = require('frame');
+const tc = require('tinycolor2');
 
 class Command extends TextCommand {
 	#bot;
@@ -26,7 +27,7 @@ class Command extends TextCommand {
 		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
-		var color = this.#bot.tc(args.slice(1).join(''));
+		var color = tc(args.slice(1).join(''));
 		if(!color.isValid()) return 'That color is invalid!';
 
 		try {
