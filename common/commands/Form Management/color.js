@@ -23,10 +23,10 @@ class Command extends TextCommand {
 	async execute({msg, args}) {
 		if(!args[1]) return 'I need a form and a color!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
-		var color = bot.tc(args.slice(1).join(''));
+		var color = this.#bot.tc(args.slice(1).join(''));
 		if(!color.isValid()) return 'That color is invalid!';
 
 		try {

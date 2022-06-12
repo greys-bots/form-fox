@@ -29,7 +29,7 @@ class Command extends TextCommand {
 		if(!args[0]) return 'I need a form to delete!';
 		args = args.map(a => a.toLowerCase());
 		var message;
-		var forms = (await bot.stores.forms.getAll(msg.channel.guild.id) || []);
+		var forms = (await this.#stores.forms.getAll(msg.channel.guild.id) || []);
 		if(!forms?.[0]) return 'No forms to delete!';
 
 		if(args.length == 1) {
@@ -40,7 +40,7 @@ class Command extends TextCommand {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			} else {
 				var forms = forms.filter(f => f.hid == args[0]);
@@ -52,7 +52,7 @@ class Command extends TextCommand {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			}
 		} else {
@@ -67,7 +67,7 @@ class Command extends TextCommand {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			} else {
 				forms = forms.filter(f => args.includes(f.hid));
@@ -77,7 +77,7 @@ class Command extends TextCommand {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			}
 

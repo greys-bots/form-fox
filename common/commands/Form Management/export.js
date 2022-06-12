@@ -33,7 +33,7 @@ class Command extends TextCommand {
 			args.shift();
 		}
 
-		var data = await bot.stores.forms.export(msg.channel.guild.id, args?.[0] ? args : undefined, resp);
+		var data = await this.#stores.forms.export(msg.channel.guild.id, args?.[0] ? args : undefined, resp);
 		if(!data?.[0]) return 'No forms to export!';
 
 		return {

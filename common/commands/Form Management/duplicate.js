@@ -34,7 +34,7 @@ class Command extends TextCommand {
 	async execute({msg, args}) {
 		if(!args[0]) return "I need a form ID to duplicate!";
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return "Form not found!";
 
 		var resp;
@@ -67,15 +67,15 @@ class Command extends TextCommand {
 		data.questions = form.questions;
 
 		try {
-			var created = await bot.stores.forms.create(msg.channel.guild.id, data);
+			var created = await this.#stores.forms.create(msg.channel.guild.id, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		return [
 			`Form copied! ID: ${created.hid}`,
-			`Use \`${bot.prefix}channel ${created.hid}\` to change what channel this form's responses go to!`,
-			`See \`${bot.prefix}h\` for more customization commands`	
+			`Use \`${this.#bot.prefix}channel ${created.hid}\` to change what channel this form's responses go to!`,
+			`See \`${this.#bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	}
 }

@@ -27,7 +27,7 @@ class Command extends TextCommand {
 	async execute({msg, args}) {
 		if(!args[1]) return 'I need a form and a cooldown!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 		var num = parseInt(args[1]);
 		if(isNaN(num)) return 'I need a real number!';

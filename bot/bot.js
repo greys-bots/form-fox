@@ -95,8 +95,8 @@ bot.writeLog = async (log) => {
 }
 
 bot.on("ready", async ()=> {
-	console.log('fox ready!');
-	bot.updateStatus();
+	console.log(`Logged in as ${bot.user.tag} (${bot.user.id})`);
+	await bot.updateStatus();
 })
 
 bot.on('error', (err)=> {
@@ -106,6 +106,12 @@ bot.on('error', (err)=> {
 
 process.on("unhandledRejection", (e) => console.log(e));
 
-setup();
-bot.login(process.env.TOKEN)
-.catch(e => console.log("Trouble connecting...\n"+e));
+setup()
+.then(async () => {
+	try {
+		await bot.login(process.env.TOKEN);
+	} catch(e) {
+		console.log("Trouble connecting...\n"+e)
+	}
+})
+.catch(e => `Setup issue:\n` + e)

@@ -27,7 +27,7 @@ class Command extends TextCommand {
 	}
 
 	async execute({msg, args}) {
-		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
+		var forms = await this.#stores.forms.getAll(msg.channel.guild.id);
 		if(!forms?.[0]) return "No forms created yet!";
 
 		var query = args[0]?.toLowerCase();
@@ -39,7 +39,7 @@ class Command extends TextCommand {
 				if(!form?.id) return "Form not found!";
 
 				var channel = msg.channel.guild.channels.resolve(form.channel_id);
-				var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
+				var responses = await this.#stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 				var embeds = [{embed: {
 					title: `${form.name} (${form.hid}) ` +
@@ -55,7 +55,7 @@ class Command extends TextCommand {
 					footer: {text: 'See next page for questions' + (form.open ? '' : '| This form is closed!')}
 				}}];
 
-				var qembeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
+				var qembeds = await this.#bot.utils.genEmbeds(bot, form.questions, (data, i) => {
 					return {
 						name: `**${data.value}${data.required ? " (required)" : ""}**`,
 						value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
@@ -82,7 +82,7 @@ class Command extends TextCommand {
 
 		for(var form of forms) {
 			var channel = msg.channel.guild.channels.resolve(form.channel_id);
-			var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
+			var responses = await this.#stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 			var embed = {embed: {
 				title: `${form.name} (${form.hid}) ` +
@@ -93,7 +93,7 @@ class Command extends TextCommand {
 					{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
 					{name: "Response count", value: (responses?.length.toString() || '0')},
 					{name: "Roles", value: form.roles?.map(r => `<@&${r.id}>`).join('\n') || '*(not set)*'},
-					{name: "Questions", value: `Use \`${bot.prefix}form ${form.hid}\` to see questions`}
+					{name: "Questions", value: `Use \`${this.#bot.prefix}form ${form.hid}\` to see questions`}
 				],
 				color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 				footer: {text: form.open ? '' : 'This form is closed!'}

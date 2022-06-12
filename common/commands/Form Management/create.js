@@ -94,7 +94,7 @@ class Command extends TextCommand {
 			await message.edit(`Would you like this question to be required?`);
 			REACTS.forEach(r => message.react(r));
 
-			confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+			confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();
@@ -113,18 +113,18 @@ class Command extends TextCommand {
 
 		if(data.questions.length == 0) return 'No questions added! Aborting!';
 
-		var code = bot.utils.genCode(bot.chars);
+		var code = this.#bot.utils.genCode(this.#bot.chars);
 		try {
-			var fm = await bot.stores.forms.create(msg.channel.guild.id, data);
+			var fm = await this.#stores.forms.create(msg.channel.guild.id, data);
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		return [
 			`Form created! ID: ${fm.hid}`,
-			`Use \`${bot.prefix}channel ${fm.hid}\` to change what channel this form's responses go to!`,
-			`Use \`${bot.prefix}post ${fm.hid}\` with a channel to post your form!`,
-			`See \`${bot.prefix}h\` for more customization commands`	
+			`Use \`${this.#bot.prefix}channel ${fm.hid}\` to change what channel this form's responses go to!`,
+			`Use \`${this.#bot.prefix}post ${fm.hid}\` with a channel to post your form!`,
+			`See \`${this.#bot.prefix}h\` for more customization commands`	
 		].join('\n');
 	}
 }

@@ -26,7 +26,7 @@ class Command extends TextCommand {
 	async execute({msg, args}) {
 		if(!args[0]) return 'I need at least a form!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
 		var val;
@@ -38,7 +38,7 @@ class Command extends TextCommand {
 			);
 			REACTS.forEach(r => message.react(r));
 
-			var conf = await bot.utils.getConfirmation(bot, message, msg.author);
+			var conf = await this.#bot.utils.getConfirmation(bot, message, msg.author);
 			if(conf.msg) return conf.msg;
 
 			val = null;

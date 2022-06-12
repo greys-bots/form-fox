@@ -1,20 +1,39 @@
-module.exports = {
-	help: ()=> `List existing responses`,
-	usage: ()=> [
-		' - View all received responses',
-		' [form id] - View responses for a specific form',
-		' <form id> accepted - List accepted responses',
-		' <form id> denied - List denied responses',
-		' <form id> pending - List pending responses',
-		' <form id> from:[user id] - List responses from a certain user'
-	],
-	execute: async ({bot, msg, args}) => {
-		var responses = await bot.stores.responses.getAll(msg.channel.guild.id);
+const { Models: { TextCommand } } = require('frame');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'responses',
+			description: `List existing responses`,
+			usage: [
+				' - View all received responses',
+				' [form id] - View responses for a specific form',
+				' <form id> accepted - List accepted responses',
+				' <form id> denied - List denied responses',
+				' <form id> pending - List pending responses',
+				' <form id> from:[user id] - List responses from a certain user'
+			],
+			alias: ['resp', 'response', 'listresponses', 'listresponse', 'lr'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_RESPONSES'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
+		var responses = await this.#stores.responses.getAll(msg.channel.guild.id);
 		if(!responses?.[0]) return "No responses received yet!";
 
 		if(args[0]) {
 			if(!['accepted', 'denied', 'pending'].includes(args[0].toLowerCase())) {
-				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+				var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(form.id) {
 					responses = responses.filter(x => x.form.hid == form.hid);
 					if(args[1] && args[1].startsWith('from:')) responses = responses.filter(x => x.user_id == args[1].replace('from:', ''));
@@ -54,7 +73,7 @@ module.exports = {
 				timestamp: new Date(r.received).toISOString()
 			}
 
-			var tmp = bot.handlers.response.buildResponseEmbeds(r, template);
+			var tmp = this.#bot.handlers.response.buildResponseEmbeds(r, template);
 			if(tmp.length > 1)  {
 				for(var i = 0; i < tmp.length; i++) {
 					if(i == 0) {
@@ -73,9 +92,7 @@ module.exports = {
 				embeds[i].title += ` (${i+1}/${embeds.length})`;
 
 		return embeds;
-	},
-	alias: ['resp', 'response', 'listresponses', 'listresponse', 'lr'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_RESPONSES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

@@ -1,14 +1,31 @@
 const REACTS = require(__dirname + '/../../extras').confirmReacts;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> "Clears responses",
-	usage: ()=> [
-		" - Deletes ALL responses across ALL forms",
-		" [form id] - Deletes all responses for the given form"
-	],
-	execute: async ({bot, msg, args}) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'clear',
+			description: "Clears responses",
+			usage: [
+				" - Deletes ALL responses across ALL forms",
+				" [form id] - Deletes all responses for the given form"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['DELETE_RESPONSES'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(args[0]) {
-			var form = await bot.stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
+			var form = await this.#stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
 			if(!form.id) return 'Form not found!';
 
 			var message = await msg.channel.send([
@@ -19,12 +36,12 @@ module.exports = {
 
 			REACTS.forEach(r => message.react(r));
 
-			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+			var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 			if(confirm.msg) return confirm.msg;
 
 			try {
-				await bot.stores.responses.deleteByForm(msg.channel.guild.id, form.hid);
-				await bot.stores.forms.updateCount(msg.channel.guild.id, form.hid);
+				await this.#stores.responses.deleteByForm(msg.channel.guild.id, form.hid);
+				await this.#stores.forms.updateCount(msg.channel.guild.id, form.hid);
 			} catch(e) {
 				return 'ERR! '+e;
 			}
@@ -40,22 +57,21 @@ module.exports = {
 
 		REACTS.forEach(r => message.react(r));
 
-		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+		var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
 		if(confirm.msg) return confirm.msg;
 
-		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
+		var forms = await this.#stores.forms.getAll(msg.channel.guild.id);
 		for(var form of forms) {
 			try {
-				await bot.stores.responses.deleteByForm(msg.channel.guild.id, form.hid);
-				await bot.stores.forms.updateCount(msg.channel.guild.id, form.hid);
+				await this.#stores.responses.deleteByForm(msg.channel.guild.id, form.hid);
+				await this.#stores.forms.updateCount(msg.channel.guild.id, form.hid);
 			} catch(e) {
 				return 'ERR! '+e;
 			}
 		}
 
 		return 'Responses deleted!';
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['DELETE_RESPONSES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);
