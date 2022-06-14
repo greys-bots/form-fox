@@ -56,7 +56,6 @@ async function setup() {
 	files = fs.readdirSync(__dirname + "/handlers");
 	for(var f of files) {
 		var n = f.slice(0, -3);
-		if(['interaction', 'command'].includes(n)) continue;
 		bot.handlers[n] = require(__dirname + "/handlers/"+f)(bot)
 	}
 
