@@ -1,36 +1,46 @@
-module.exports = {
-	data: {
-		name: 'required',
-		description: "Manage required questions",
-		options: [
-			{
-				name: 'form_id',
-				description: "The form's ID",
-				type: 3,
-				required: true,
-				autocomplete: true
-			},
-			{
-				name: 'question',
-				description: "The number of the question to change",
-				type: 4,
-				required: false
-			},
-			{
-				name: 'value',
-				description: "Whether the question is required or not",
-				type: 5,
-				required: false
-			}
-		]
-	},
-	usage: [
-		"[form_id] - View all required questions on a form",
-		"[form_id] [question] [value] - Change if a question is required"
-	],
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'required',
+			description: "Manage required questions",
+			options: [
+				{
+					name: 'form_id',
+					description: "The form's ID",
+					type: 3,
+					required: true,
+					autocomplete: true
+				},
+				{
+					name: 'question',
+					description: "The number of the question to change",
+					type: 4,
+					required: false
+				},
+				{
+					name: 'value',
+					description: "Whether the question is required or not",
+					type: 5,
+					required: false
+				}
+			],
+			usage: [
+				"[form_id] - View all required questions on a form",
+				"[form_id] [question] [value] - Change if a question is required"
+			],
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
+		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
 		var p = ctx.options.getInteger('question');
@@ -61,9 +71,10 @@ module.exports = {
 			embeds: [e],
 			ephemeral: true
 		}
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -78,5 +89,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

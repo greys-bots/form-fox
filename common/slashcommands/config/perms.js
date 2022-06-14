@@ -4,37 +4,55 @@ const {
 	GuildMember,
 	Role
 } = require('discord.js');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'perms',
-		description: "Manage bot admin permissions for users and roles",
-		type: 2
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'perms',
+			description: "Manage bot admin permissions for users and roles",
+			type: 2
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
 	}
 }
 
-const opts = module.exports.options = [];
+class ViewCommand extends SlashCommand {
+	#bot;
+	#stores;
 
-opts.push({
-	data: {
-		name: 'view',
-		description: "View current opped users and roles",
-		type: 1,
-		options: [{
-			name: 'target',
-			description: "A user or role permissions for",
-			type: 9,
-			required: false
-		}]
-	},
-	usage: [
-		"- Views permissions for everything currently opped",
-		"[target] - Views permissions for a specific target"
-	],
+	constructor(bot, stores) {
+		super({
+			name: 'view',
+			description: "View current opped users and roles",
+			type: 1,
+			options: [{
+				name: 'target',
+				description: "A user or role permissions for",
+				type: 9,
+				required: false
+			}],
+			usage: [
+				"- Views permissions for everything currently opped",
+				"[target] - Views permissions for a specific target"
+			],
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_OPS']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var target = ctx.options.getMentionable('target');
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
-		console.log(cfg);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		if(!cfg?.opped || !Object.keys(cfg.opped).find(k => cfg.opped[k].length))
 			return "No ops to view!";
 
@@ -85,40 +103,49 @@ opts.push({
 		}
 
 		return embeds;
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_OPS']
-})
+	}
+}
 
-opts.push({
-	data: {
-		name: "op",
-		description: "Give a role or user access to admin commands",
-		type: 1,
-		options: [
-			{
-				name: 'target',
-				description: "A user or role to op",
-				type: 9,
-				required: true
-			}
-		]
-	},
-	usage: [
-		'[target] - Opens a menu for opping the target'
-	],
-	desc: 'Permission descriptions:\n' + 
-		Object.keys(PERMS).map(p => `${p} - ${PERMS[p]}`)
-		.join('\n') +
-		"NOTE: Users with the MANAGE_MESSAGES role permission " +
-		"server-wide will be able to use all admin commands " +
-		"regardless of permissions given here",
+class OpCommand extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: "op",
+			description: "Give a role or user access to admin commands",
+			type: 1,
+			options: [
+				{
+					name: 'target',
+					description: "A user or role to op",
+					type: 9,
+					required: true
+				}
+			],
+			usage: [
+				'[target] - Opens a menu for opping the target'
+			],
+			extra: 'Permission descriptions:\n' + 
+				Object.keys(PERMS).map(p => `${p} - ${PERMS[p]}`)
+				.join('\n') +
+				"NOTE: Users with the MANAGE_MESSAGES role permission " +
+				"server-wide will be able to use all admin commands " +
+				"regardless of permissions given here",
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_OPS']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var target = ctx.options.getMentionable('target');
 		if(target.id == ctx.user.id) return "You can't op yourself!";
 
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		var opped = cfg?.opped ?? {users: [], roles: []};
 		var obj = {};
 		if(!(
@@ -128,7 +155,7 @@ opts.push({
 		)) return "Invalid target! Please try again";
 		obj.id = target.id;
 
-		var sel = await ctx.client.utils.awaitSelection(
+		var sel = await this.#bot.utils.awaitSelection(
 			ctx,
 			Object.keys(PERMS).map(k => {
 				return {
@@ -155,34 +182,43 @@ opts.push({
 		await cfg.save();
 		
 		return "Target opped!";
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_OPS']
-})
+	}
+}
 
-opts.push({
-	data: {
-		name: "deop",
-		description: "Remove an existing op's access to admin commands",
-		type: 1,
-		options: [
-			{
-				name: 'target',
-				description: "A user or role to de-op",
-				type: 9,
-				required: true
-			}
-		]
-	},
-	usage: [
-		'[target] - De-ops the target'
-	],
+class DeopCommand extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: "deop",
+			description: "Remove an existing op's access to admin commands",
+			type: 1,
+			options: [
+				{
+					name: 'target',
+					description: "A user or role to de-op",
+					type: 9,
+					required: true
+				}
+			],
+			usage: [
+				'[target] - De-ops the target'
+			],
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_OPS']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var target = ctx.options.getMentionable('target');
 		if(target.id == ctx.user.id) return "You can't de-op yourself!";
 		
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		if(!cfg?.opped || !Object.keys(cfg.opped).find(k => cfg.opped[k].length))
 			return "No ops to remove!";
 
@@ -201,43 +237,52 @@ opts.push({
 		await cfg.save();
 		
 		return "Target de-opped!";
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_OPS']
-})
+	}
+}
 
-opts.push({
-	data: {
-		name: "add",
-		description: "Add permissions to an existing op",
-		type: 1,
-		options: [
-			{
-				name: 'target',
-				description: "A user or role to update",
-				type: 9,
-				required: true
-			},
-			{
-				name: 'perm',
-				description: "The permission to add",
-				type: 3,
-				required: true,
-				choices: Object.keys(PERMS).map(p => ({
-					name: p,
-					value: p
-				}))
-			}
-		]
-	},
-	usage: [
-		"[target] - Add a permission to the given target"
-	],
+class AddCommand extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: "add",
+			description: "Add permissions to an existing op",
+			type: 1,
+			options: [
+				{
+					name: 'target',
+					description: "A user or role to update",
+					type: 9,
+					required: true
+				},
+				{
+					name: 'perm',
+					description: "The permission to add",
+					type: 3,
+					required: true,
+					choices: Object.keys(PERMS).map(p => ({
+						name: p,
+						value: p
+					}))
+				}
+			],
+			usage: [
+				"[target] - Add a permission to the given target"
+			],
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_OPS']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var target = ctx.options.getMentionable('target');
 		var perm = ctx.options.getString('perm');
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		if(!cfg?.opped || !Object.keys(cfg.opped).find(k => cfg.opped[k].length))
 			return "No ops to change!";
 
@@ -257,43 +302,52 @@ opts.push({
 		
 		await cfg.save()
 		return "Target updated!"
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_OPS']
-})
+	}
+}
 
-opts.push({
-	data: {
-		name: "remove",
-		description: "Remove permissions from an existing op",
-		type: 1,
-		options: [
-			{
-				name: 'target',
-				description: "A user or role to update",
-				type: 9,
-				required: true
-			},
-			{
-				name: 'perm',
-				description: "The permission to remove",
-				type: 3,
-				required: true,
-				choices: Object.keys(PERMS).map(p => ({
-					name: p,
-					value: p
-				}))
-			}
-		]
-	},
-	usage: [
-		"[target] - Remove a permission from the given target"
-	],
+class RemoveCommand extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: "remove",
+			description: "Remove permissions from an existing op",
+			type: 1,
+			options: [
+				{
+					name: 'target',
+					description: "A user or role to update",
+					type: 9,
+					required: true
+				},
+				{
+					name: 'perm',
+					description: "The permission to remove",
+					type: 3,
+					required: true,
+					choices: Object.keys(PERMS).map(p => ({
+						name: p,
+						value: p
+					}))
+				}
+			],
+			usage: [
+				"[target] - Remove a permission from the given target"
+			],
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_OPS']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var target = ctx.options.getMentionable('target');
 		var perm = ctx.options.getString('perm');
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		if(!cfg?.opped || !Object.keys(cfg.opped).find(k => cfg.opped[k].length))
 			return "No ops to change!";
 
@@ -313,8 +367,15 @@ opts.push({
 
 		await cfg.save()
 		return "Target updated!"
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_OPS']
-})
+	}
+}
+
+module.exports = (bot, stores) => {
+	var cmd = new Command(bot, stores)
+		.addSubcommand(new ViewCommand(bot, stores))
+		.addSubcommand(new OpCommand(bot, stores))
+		.addSubcommand(new DeopCommand(bot, stores))
+		.addSubcommand(new AddCommand(bot, stores))
+		.addSubcommand(new RemoveCommand(bot, stores));
+	return cmd;
+}

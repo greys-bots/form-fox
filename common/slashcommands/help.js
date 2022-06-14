@@ -1,35 +1,46 @@
-module.exports = {
-	data: {
-		name: 'help',
-		description: "View command help",
-		options: [
-			{
-				name: 'module',
-				description: "View help for a specific group of commands",
-				type: 3,
-				required: false
-			},
-			{
-				name: 'command',
-				description: "View help for a specific command in a module",
-				type: 3,
-				required: false
-			},
-			{
-				name: 'subcommand',
-				description: "View help for a command's subcommand",
-				type: 3,
-				required: false
-			}
-		]
-	},
-	usage: [
-		"[module] - Get help for a module",
-		"[module] [command] - Get help for a command in a module",
-		"[module] [command] [subcommand] - Get help for a command's subcommand"	
-	],
-	extra: "Examples:\n"+
-		   "`/help module:form` - Shows form module help",
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'help',
+			description: "View command help",
+			options: [
+				{
+					name: 'module',
+					description: "View help for a specific group of commands",
+					type: 3,
+					required: false
+				},
+				{
+					name: 'command',
+					description: "View help for a specific command in a module",
+					type: 3,
+					required: false
+				},
+				{
+					name: 'subcommand',
+					description: "View help for a command's subcommand",
+					type: 3,
+					required: false
+				}
+			],
+			usage: [
+				"[module] - Get help for a module",
+				"[module] [command] - Get help for a command in a module",
+				"[module] [command] [subcommand] - Get help for a command's subcommand"	
+			],
+			extra: "Examples:\n"+
+				   "`/help module:form` - Shows form module help",
+			ephemeral: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var mod = ctx.options.getString('module')?.toLowerCase().trim();
 		var cmd = ctx.options.getString('command')?.toLowerCase().trim();
@@ -96,12 +107,12 @@ module.exports = {
 				],
 				color: parseInt('ee8833', 16),
 				footer: {
-					icon_url: ctx.client.user.avatarURL(),
+					icon_url: this.#bot.user.avatarURL(),
 					text: "Use the buttons below to flip pages!"
 				}
 			}]
-			var mods = ctx.client.slashCommands.map(m => m).filter(m => m.options);
-			var ug = ctx.client.slashCommands.map(m => m).filter(m => !m.options);
+			var mods = this.#bot.slashCommands.map(m => m).filter(m => m.options);
+			var ug = this.#bot.slashCommands.map(m => m).filter(m => !m.options);
 			for(var m of mods) {
 				var e = {
 					title: (m.data.name).toUpperCase(),
@@ -109,7 +120,7 @@ module.exports = {
 				}
 
 				cmds = m.options.map(o => o);
-				var tmp = await ctx.client.utils.genEmbeds(ctx.client, cmds, (c) => {
+				var tmp = await this.#bot.utils.genEmbeds(this.#bot, cmds, (c) => {
 					return {name: c.data.name, value: c.data.description}
 				}, e, 10, {addition: ""})
 				embeds = embeds.concat(tmp.map(e => e.embed))
@@ -129,12 +140,12 @@ module.exports = {
 			var name = "";
 			var cm;
 			if(mod) {
-				cm = ctx.client.slashCommands.get(mod);
+				cm = this.#bot.slashCommands.get(mod);
 				if(!cm) return "Module not found!";
 				cmds = cm.options.map(o => o);
 				name += (cm.name ?? cm.data.name) + " ";
 			} else {
-				cmds = ctx.client.slashCommands.map(c => c);
+				cmds = this.#bot.slashCommands.map(c => c);
 			}
 
 			if(cmd) {
@@ -174,6 +185,7 @@ module.exports = {
 			for(var i = 0; i < embeds.length; i++)
 				embeds[i].title += ` (${i+1}/${embeds.length})`
 		return embeds;
-	},
-	ephemeral: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

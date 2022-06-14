@@ -1,11 +1,22 @@
-module.exports = {
-	data: {
-		name: "about",
-		description: "Info about the bot"
-	},
-	usage: [
-		"- Gives info about the bot"
-	],
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: "about",
+			description: "Info about the bot",
+			usage: [
+				"- Gives info about the bot"
+			],
+			ephemeral: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		return {embeds: [{
 			title: '**About**',
@@ -15,10 +26,11 @@ module.exports = {
 				{name: "Invite", value: `[Clicky!](${process.env.INVITE})`,inline: true},
 				{name: "Support Server", value: "[Clicky!](https://discord.gg/EvDmXGt)", inline: true},
 				{name: "Other Links", value: "[Repo](https://github.com/greys-bots/form-fox)"},
-				{name: "Stats", value: `Guilds: ${ctx.client.guilds.cache.size} | Users: ${ctx.client.users.cache.size}`},
+				{name: "Stats", value: `Guilds: ${this.#bot.guilds.cache.size} | Users: ${this.#bot.users.cache.size}`},
 				{name: "Support my creators!", value: "[Ko-Fi](https://ko-fi.com/greysdawn) | [Patreon](https://patreon.com/greysdawn)"}
 			]
 		}]}
-	},
-	ephemeral: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

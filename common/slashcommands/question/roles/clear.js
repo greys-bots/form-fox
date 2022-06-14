@@ -1,31 +1,40 @@
 const { clearBtns } = require('../../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'clear',
-		description: "Clear all roles attached to questions on a form",
-		type: 1,
-		options: [
-			{
-				name: 'form',
-				description: "The form to change",
-				type: 3,
-				required: true,
-				autocomplete: true
-			},
-			{
-				name: 'question',
-				description: "The question number to clear roles from",
-				type: 4,
-				required: false
-			}
-		]
-	},
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'clear',
+			description: "Clear all roles attached to questions on a form",
+			type: 1,
+			options: [
+				{
+					name: 'form',
+					description: "The form to change",
+					type: 3,
+					required: true,
+					autocomplete: true
+				},
+				{
+					name: 'question',
+					description: "The question number to clear roles from",
+					type: 4,
+					required: false
+				}
+			],
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var f = ctx.options.getString('form')?.toLowerCase().trim();
 		var q = ctx.options.getInteger('question');
 
-		var form = await ctx.client.stores.forms.get(ctx.guild.id, f);
+		var form = await this.#stores.forms.get(ctx.guild.id, f);
 		if(!form) return 'Form not found!';
 
 		if(q === 0) q = 1;
@@ -44,7 +53,7 @@ module.exports = {
 			]
 		}
 		var reply = await ctx.reply({...rdata, fetchReply: true});
-		var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+		var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
 		var msg;
 		if(conf.msg) {
 			msg = conf.msg;
@@ -63,9 +72,10 @@ module.exports = {
 		}
 
 		return msg;
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -80,5 +90,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

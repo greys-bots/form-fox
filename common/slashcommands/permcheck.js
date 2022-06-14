@@ -1,20 +1,31 @@
 const { requiredPerms: REQUIRED } = require('../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: "permcheck",
-		description: "Check to see if the bot's permissions are set up correctly",
-		options: [{
-			name: 'channel',
-			description: "A channel to check permissions of",
-			type: 7,
-			channel_types: [0],
-			required: false
-		}]
-	},
-	usage: [
-		"[channel] - Check a specific channel for proper permissions"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: "permcheck",
+			description: "Check to see if the bot's permissions are set up correctly",
+			options: [{
+				name: 'channel',
+				description: "A channel to check permissions of",
+				type: 7,
+				channel_types: [0],
+				required: false
+			}],
+			usage: [
+				"[channel] - Check a specific channel for proper permissions"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var chan = ctx.options.getChannel('channel');
 
@@ -22,12 +33,12 @@ module.exports = {
 			return [{
 				title: "Check Results",
 				description: `Channel: <#${chan.id}>`,
-				fields: readout(ctx.client, chan)
+				fields: this.readout(this.#bot, chan)
 			}]
 		}
 		
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		if(!forms?.length && !cfg.response_channel) return "No forms or config to check! Provide a channel to check that";
 
 		var check = [];
@@ -52,39 +63,39 @@ module.exports = {
 			res.push({
 				title: "Check Results",
 				description: `Channel: <#${c}>`,
-				fields: readout(ctx.client, ch)
+				fields: this.readout(this.#bot, ch)
 			})
 		}
 
 		if(res.length > 1) for(var i = 0; i < res.length; i++)
 			res[i].title += ` (page ${i+1}/${res.length})`;
 		return res;
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
-}
-
-function readout(bot, chan) {
-	var perms = chan.permissionsFor(bot.user.id).serialize();
-	var fields = [
-		{
-			name: "Given permissions",
-			value: ""
-		},
-		{
-			name: "Missing permissions",
-			value: ""
-		}
-	]
-	
-	for(var k of REQUIRED) {
-		if(perms[k]) fields[0].value += `${k}\n`;
-		else fields[1].value += `${k}\n`;
 	}
 
-	fields = fields.map(f => {
-		f.value = f.value || "(none)";
-		return f;
-	})
-	return fields;
+	readout(bot, chan) {
+		var perms = chan.permissionsFor(bot.user.id).serialize();
+		var fields = [
+			{
+				name: "Given permissions",
+				value: ""
+			},
+			{
+				name: "Missing permissions",
+				value: ""
+			}
+		]
+		
+		for(var k of REQUIRED) {
+			if(perms[k]) fields[0].value += `${k}\n`;
+			else fields[1].value += `${k}\n`;
+		}
+
+		fields = fields.map(f => {
+			f.value = f.value || "(none)";
+			return f;
+		})
+		return fields;
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

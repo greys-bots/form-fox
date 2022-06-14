@@ -1,30 +1,41 @@
-module.exports = {
-	data: {
-		name: 'view',
-		description: 'View existing forms',
-		options: [
-			{
-				name: "form_id",
-				description: "The form's ID",
-				type: 3,
-				required: false,
-				autocomplete: true
-			}
-		]
-	},
-	usage: [
-		"- View all forms",
-		"[form_id] - View a specific form"
-	],
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'view',
+			description: 'View existing forms',
+			options: [
+				{
+					name: "form_id",
+					description: "The form's ID",
+					type: 3,
+					required: false,
+					autocomplete: true
+				}
+			],
+			usage: [
+				"- View all forms",
+				"[form_id] - View a specific form"
+			],
+			ephemeral: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var arg = ctx.options.get('form_id')?.value.toLowerCase().trim();
 		if(!arg) {
-			var forms = await ctx.client.stores.forms.getAll(ctx.guildId);
+			var forms = await this.#stores.forms.getAll(ctx.guildId);
 			if(!forms?.[0]) return 'No forms available';
 
 			var embeds = [];
 			for(var f of forms) {
-				var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, f.hid);
+				var responses = await this.#stores.responses.getByForm(ctx.guildId, f.hid);
 				embeds.push({
 					title: `${f.name} (${f.hid}) ` +
 						   `${f.emoji?.includes(':') ? '<' + f.emoji + '>' : f.emoji || '📝'}`,
@@ -43,10 +54,10 @@ module.exports = {
 			return embeds;
 		}
 
-		var form = await ctx.client.stores.forms.get(ctx.guildId, arg);
+		var form = await this.#stores.forms.get(ctx.guildId, arg);
 		if(!form.id) return 'Form not found!';
 		
-		var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, form.hid);
+		var responses = await this.#stores.responses.getByForm(ctx.guildId, form.hid);
 		return {embeds: [{
 			title: `${form.name} (${form.hid}) ` +
 				   `${form.emoji?.includes(':') ? '<' + form.emoji + '>' : form.emoji || '📝'}`,
@@ -59,9 +70,10 @@ module.exports = {
 			],
 			color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16)
 		}]}
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -76,6 +88,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	ephemeral: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

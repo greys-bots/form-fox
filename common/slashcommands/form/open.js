@@ -1,31 +1,44 @@
-module.exports = {
-	data: {
-		name: 'open',
-		description: 'Opens a form, turning on responses',
-		options: [
-			{
-				name: 'form_id',
-				description: 'The form\'s ID',
-				type: 3,
-				required: true,
-				autocomplete: true
-			}	
-		]
-	},
-	usage: [
-		"[form_id] - Open the given form"
-	],
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'open',
+			description: 'Opens a form, turning on responses',
+			options: [
+				{
+					name: 'form_id',
+					description: 'The form\'s ID',
+					type: 3,
+					required: true,
+					autocomplete: true
+				}	
+			],
+			usage: [
+				"[form_id] - Open the given form"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase();
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);
+		var form = await this.#stores.forms.get(ctx.guildId, id);
 		if(!form.id) return 'Form not found!';
 
 		form.open = true;
 		await form.save()
 		return 'Form updated!';
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -40,7 +53,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);
