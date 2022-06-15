@@ -1,3 +1,4 @@
+const { Models: { DataStore, DataObject } } = require('frame');
 const { qTypes: TYPES } = require('../extras');
 
 const KEYS = {
@@ -21,68 +22,21 @@ const KEYS = {
 	ticket_msg: { patch: true }
 }
 
-class Form {
+class Form extends DataObject {
 	#store;
 
-	constructor(store, data) {
+	constructor(store, keys, data) {
+		super(store, keys, data)
 		this.#store = store;
-		for(var k in KEYS) this[k] = data[k];
-		this.old = Object.assign({}, this);
-	}
-
-	async fetch() {
-		var data = await this.#store.getID(this.id);
-		for(var k in KEYS) this[k] = data[k];
-
-		return this;
-	}
-
-	async save() {
-		var obj = await this.verify();
-
-		var data;
-		if(this.id) data = await this.#store.update(this.id, obj, this.old);
-		else data = await this.#store.create(this.server_id, obj);
-		for(var k in KEYS) this[k] = data[k];
-		this.old = Object.assign({}, data);
-		return this;
-	}
-
-	async delete() {
-		await this.#store.delete(this.id);
-	}
-
-	async verify(patch = true /* generate patch-only object */) {
-		var obj = {};
-		var errors = []
-		for(var k in KEYS) {
-			if(!KEYS[k].patch && patch) continue;
-			if(this[k] === undefined) continue;
-			if(this[k] === null) {
-				obj[k] = null;
-				continue;
-			}
-
-			var test = true;
-			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-			if(!test) {
-				errors.push(KEYS[k].err);
-				continue;
-			}
-			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-			else obj[k] = this[k];
-		}
-
-		if(errors.length) throw new Error(errors.join("\n"));
-		return obj;
 	}
 }
 
-class FormStore {
+class FormStore extends DataStore {
 	#db;
 	#bot;
 	
 	constructor(bot, db) {
+		super()
 		this.#db = db;
 		this.#bot = bot;
 	}
@@ -132,7 +86,7 @@ class FormStore {
 				ticket_msg
 			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
 			RETURNING *`,
-			[server, data.name, data.description,
+			[data.server_id, data.name, data.description,
 			 JSON.stringify(data.questions ?? []),
 			 data.channel_id, JSON.stringify(data.roles ?? []),
 			 data.message, data.color, data.open || true,
@@ -144,7 +98,7 @@ class FormStore {
 	 		return Promise.reject(e.message);
 		}
 
-		return await this.get(server, form.rows[0].hid);
+		return await this.getID(form.rows[0].id);
 	}
 
 	async index(server, data = {}) {
@@ -192,7 +146,7 @@ class FormStore {
 		}
 		
 		if(data.rows?.[0]) {
-			var form = new Form(this, data.rows[0]);
+			var form = new Form(this, KEYS, data.rows[0]);
 			var qs = [];
 			var edited = false;
 			for(var q of form.questions) {
@@ -208,7 +162,7 @@ class FormStore {
 			if(edited || qs.length < form.questions.length)
 				form = await form.save();
 			return form;
-		} else return new Form(this, { server_id: server });
+		} else return new Form(this, KEYS, { server_id: server });
 	}
 
 	async getAll(server) {
@@ -219,7 +173,7 @@ class FormStore {
 			return Promise.reject(e.message);
 		}
 		
-		if(data.rows?.[0]) return data.rows.map(x => new Form(this, x));
+		if(data.rows?.[0]) return data.rows.map(x => new Form(this, KEYS, x));
 		else return undefined;
 	}
 
@@ -262,14 +216,14 @@ class FormStore {
 		}
 		
 		if(data.rows?.[0]) {
-			var form = new Form(this, data.rows[0]);
+			var form = new Form(this, KEYS, data.rows[0]);
 			if(form.questions.find(q => q == "")) {
 				form.questions = form.questions.filter(x => x != "");
 				form = await form.save();
 			}
 
 			return form;
-		} else return new Form(this, {});
+		} else return new Form(this, KEYS, {});
 	}
 
 	async update(id, data = {}, old) {

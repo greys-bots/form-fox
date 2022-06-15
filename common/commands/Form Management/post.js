@@ -42,7 +42,10 @@ class Command extends TextCommand {
 				}
 			}]});
 			message.react(form.emoji || '📝');
-			await this.#stores.formPosts.create(msg.channel.guild.id, channel.id, message.id, {
+			await this.#stores.formPosts.create({
+				server_id: msg.channel.guild.id,
+				channel_id: channel.id,
+				message_id: message.id,
 				form: form.hid
 			});
 		} catch(e) {

@@ -127,7 +127,10 @@ class ResponseHandler {
 
 			var message = await user.send(qemb);
 			
-			await this.bot.stores.openResponses.create(form.server_id, message.channel.id, message.id, {
+			await this.bot.stores.openResponses.create({
+				server_id: form.server_id,
+				channel_id: message.channel.id,
+				message_id: message.id,
 				user_id: user.id,
 				form: form.hid,
 				questions: JSON.stringify(form.questions)
@@ -313,7 +316,8 @@ class ResponseHandler {
 		}
 
 		try {
-			var created = await this.bot.stores.responses.create(response.server_id, {
+			var created = await this.bot.stores.responses.create({
+				server_id: response.server_id,
 				user_id: user.id,
 				form: response.form.hid,
 				questions: JSON.stringify(response.form.questions),
@@ -350,7 +354,10 @@ class ResponseHandler {
 			var rmsg = await channel.send(toSend);
 			if(config?.autothread) await rmsg.startThread({name: `Response ${created.hid}`})
 
-			await this.bot.stores.responsePosts.create(rmsg.channel.guild.id, channel.id, rmsg.id, {
+			await this.bot.stores.responsePosts.create({
+				server_id: rmsg.channel.guild.id,
+				channel_id: channel.id,
+				message_id: rmsg.id,
 				response: created.hid,
 				page: 1
 			})

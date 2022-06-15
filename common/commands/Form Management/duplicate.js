@@ -67,7 +67,10 @@ class Command extends TextCommand {
 		data.questions = form.questions;
 
 		try {
-			var created = await this.#stores.forms.create(msg.channel.guild.id, data);
+			var created = await this.#stores.forms.create({
+				server_id: msg.channel.guild.id,
+				...data
+			});
 		} catch(e) {
 			return 'ERR! '+e;
 		}

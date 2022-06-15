@@ -1,3 +1,4 @@
+const { Models: { DataStore, DataObject } } = require('frame');
 const KEYS = {
 	id: { },
 	server_id: { },
@@ -10,66 +11,21 @@ const KEYS = {
 	received: { }
 }
 
-class Response {
+class Response extends DataObject {
 	#store;
 
-	constructor(store, data) {
+	constructor(store, keys, data) {
+		super(store, keys, data);
 		this.#store = store;
-		for(var k in KEYS) this[k] = data[k];
-	}
-
-	async fetch() {
-		var data = await this.#store.getID(this.id);
-		for(var k in KEYS) this[k] = data[k];
-
-		return this;
-	}
-
-	async save() {
-		var obj = await this.verify();
-
-		var data;
-		if(this.id) data = await this.#store.update(this.id, obj);
-		else data = await this.#store.create(this.server_id, obj);
-		for(var k in KEYS) this[k] = data[k];
-		return this;
-	}
-
-	async delete() {
-		await this.#store.delete(this.id);
-	}
-
-	async verify(patch = true /* generate patch-only object */) {
-		var obj = {};
-		var errors = []
-		for(var k in KEYS) {
-			if(!KEYS[k].patch && patch) continue;
-			if(this[k] == undefined) continue;
-			if(this[k] == null) {
-				obj[k] = this[k];
-				continue;
-			}
-
-			var test = true;
-			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-			if(!test) {
-				errors.push(KEYS[k].err);
-				continue;
-			}
-			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-			else obj[k] = this[k];
-		}
-
-		if(errors.length) throw new Error(errors.join("\n"));
-		return obj;
 	}
 }
 
-class ResponseStore {
+class ResponseStore extends DataStore {
 	#db;
 	#bot;
 	
 	constructor(bot, db) {
+		super();
 		this.#db = db;
 		this.#bot = bot;
 	}
@@ -88,7 +44,7 @@ class ResponseStore {
 		)`)
 	}
 
-	async create(server, data = {}) {
+	async create(data = {}) {
 		try {
 			var resp = await this.#db.query(`INSERT INTO responses (
 				server_id,
@@ -101,14 +57,14 @@ class ResponseStore {
 				received
 			) VALUES ($1,find_unique('responses'),$2,$3,$4,$5,$6,$7)
 			RETURNING *`,
-			[server, data.user_id, data.form, data.questions || [],
+			[data.server_id, data.user_id, data.form, data.questions || [],
 			data.answers || [], data.status || 'pending', data.received || new Date()]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
 		}
 		
-		return await this.get(server, resp.rows[0].hid);
+		return await this.getID(resp.rows[0].id);
 	}
 
 	async index(server, data = {}) {
@@ -142,12 +98,12 @@ class ResponseStore {
 		}
 		
 		if(data.rows?.[0]) {
-			var resp = new Response(this, data.rows[0])
+			var resp = new Response(this, KEYS, data.rows[0])
 			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) resp.form = form;
 			
 			return resp;
-		} else return new Response(this, { server_id: server });
+		} else return new Response(this, KEYS, { server_id: server });
 	}
 
 	async getID(id) {
@@ -159,12 +115,12 @@ class ResponseStore {
 		}
 		
 		if(data.rows?.[0]) {
-			var resp = new Response(this, data.rows[0])
+			var resp = new Response(this, KEYS, data.rows[0])
 			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) resp.form = form;
 			
 			return resp;
-		} else return new Response(this, { });
+		} else return new Response(this, KEYS, { });
 	}
 
 	async getAll(server) {
@@ -179,7 +135,7 @@ class ResponseStore {
 			var responses = [];
 			var forms = {};
 			for(var r of data.rows) {
-				var resp = new Response(this, r)
+				var resp = new Response(this, KEYS, r)
 				var form = forms[r.form];
 				if(!form) form = await this.#bot.stores.forms.get(r.server_id, r.form);
 				if(form) {
@@ -206,7 +162,7 @@ class ResponseStore {
 			var responses = [];
 			var forms = {};
 			for(var r of data.rows) {
-				var resp = new Response(this, r)
+				var resp = new Response(this, KEYS, r)
 				var form = forms[r.form];
 				if(!form) form = await this.#bot.stores.forms.get(r.server_id, r.form);
 				if(form) {
@@ -233,7 +189,7 @@ class ResponseStore {
 			var form = await this.#bot.stores.forms.get(server, hid);
             
 			return data.rows.map( x => {
-				var r = new Response(this, x);
+				var r = new Response(this, KEYS, x);
 				r.form = form;
 				return r;
 			})

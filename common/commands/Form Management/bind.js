@@ -36,7 +36,10 @@ class Command extends TextCommand {
 				   ?.find(p => p.form.emoji == form.emoji);
 			if(post?.id) return 'Form with that emoji already bound to that message!';
 
-			await this.#stores.formPosts.create(msg.channel.guild.id, channel.id, message.id, {
+			await this.#stores.formPosts.create({
+				server_id: msg.channel.guild.id,
+				channel_id: channel.id,
+				message_id: message.id,
 				form: form.hid,
 				bound: true
 			});

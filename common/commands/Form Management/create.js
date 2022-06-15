@@ -114,7 +114,10 @@ class Command extends TextCommand {
 		if(data.questions.length == 0) return 'No questions added! Aborting!';
 
 		try {
-			var fm = await this.#stores.forms.create(msg.channel.guild.id, data);
+			var fm = await this.#stores.forms.create({
+				server_id: msg.channel.guild.id,
+				...data
+			});
 		} catch(e) {
 			return 'ERR! '+e;
 		}

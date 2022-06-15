@@ -1,3 +1,4 @@
+const { Models: { DataStore, DataObject } } = require('frame');
 const KEYS = {
 	id: { },
 	server_id: { },
@@ -5,66 +6,21 @@ const KEYS = {
 	response_id: { }
 }
 
-class Ticket {
+class Ticket extends DataObject {
 	#store;
 	
-	constructor(store, data) {
+	constructor(store, keys, data) {
+		super(store, keys, data);
 		this.#store = store;
-		for(var k in KEYS) this[k] = data[k];
-	}
-
-	async fetch() {
-		var data = await this.#store.getID(this.id);
-		for(var k in KEYS) this[k] = data[k];
-
-		return this;
-	}
-
-	async save() {
-		var obj = await this.verify();
-
-		var data;
-		if(this.id) data = await this.#store.update(this.id, obj);
-		else data = await this.#store.create(this.server_id, this.channel_id, this.response_id);
-		for(var k in KEYS) this[k] = data[k];
-		return this;
-	}
-
-	async delete() {
-		await this.#store.delete(this.id);
-	}
-
-	async verify(patch = true /* generate patch-only object */) {
-		var obj = {};
-		var errors = []
-		for(var k in KEYS) {
-			if(!KEYS[k].patch && patch) continue;
-			if(this[k] == undefined) continue;
-			if(this[k] == null) {
-				obj[k] = this[k];
-				continue;
-			}
-
-			var test = true;
-			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-			if(!test) {
-				errors.push(KEYS[k].err);
-				continue;
-			}
-			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-			else obj[k] = this[k];
-		}
-
-		if(errors.length) throw new Error(errors.join("\n"));
-		return obj;
 	}
 }
 
-class TicketStore {
+class TicketStore extends DataStore {
 	#db;
 	#bot;
 	
 	constructor(bot, db) {
+		super();
 		this.#db = db;
 		this.#bot = bot;
 	}
@@ -84,20 +40,21 @@ class TicketStore {
 		})
 	}
 
-	async create(server, channel, response) {
+	async create(data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO tickets (
+			var c = await this.#db.query(`INSERT INTO tickets (
 				server_id,
 				channel_id,
 				response_id
-			) VALUES ($1,$2,$3)`,
-			[server, channel, response]);
+			) VALUES ($1,$2,$3)
+			RETURNING id`,
+			[data.server_id, data.channel_id, data.response_id]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
 		}
 		
-		return await this.get(server, response);
+		return await this.getID(c.rows[0].id);
 	}
 
 	async index(server, channel, response) {
@@ -124,8 +81,8 @@ class TicketStore {
 			return Promise.reject(e.message);
 		}
 		
-		if(data.rows?.[0]) return new Ticket(this, data.rows[0]);
-		else return new Ticket(this, { server_id: server, response_id: response });
+		if(data.rows?.[0]) return new Ticket(this, KEYS, data.rows[0]);
+		else return new Ticket(this, KEYS, { server_id: server, response_id: response });
 	}
 
 	async delete(id) {

@@ -49,7 +49,9 @@ class Command extends SlashCommand {
 		})
 		if(typeof events == 'string') return events;
 		
-		var hook = await this.#stores.hooks.create(ctx.guild.id, form.hid, {
+		var hook = await this.#stores.hooks.create({
+			server_id: ctx.guild.id,
+			form: form.hid,
 			url,
 			events
 		});

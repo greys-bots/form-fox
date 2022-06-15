@@ -96,4 +96,4 @@ setup()
 		console.log("Trouble connecting...\n"+e)
 	}
 })
-.catch(e => `Setup issue:\n` + e)
+.catch(e => console.log(e))

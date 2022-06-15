@@ -50,7 +50,9 @@ class Command extends SlashCommand {
 		if(typeof events == 'string') return events;
 		
 		await this.#stores.hooks.deleteByForm(ctx.guildId, form.hid);
-		var hook = await this.#stores.hooks.create(ctx.guildId, form.hid, {
+		var hook = await this.#stores.hooks.create({
+			server_id: ctx.guildId,
+			form: form.hid,
 			url,
 			events
 		});

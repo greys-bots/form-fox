@@ -58,7 +58,9 @@ class Command extends TextCommand {
 
 		try {
 			await this.#stores.hooks.deleteByForm(msg.channel.guild.id, form.hid);
-			var hook = await this.#stores.hooks.create(msg.channel.guild.id, form.hid, {
+			var hook = await this.#stores.hooks.create({
+				server_id: msg.channel.guild.id,
+				form: form.hid,
 				url: args[1],
 				events: args.length > 2 ? args.slice(2).map(a => a.toLowerCase()) : ['submit', 'accept', 'deny']
 			})
@@ -102,7 +104,9 @@ class AddCommand extends TextCommand {
 			return 'Invalid events given! See command help for more info';
 
 		try {
-			var hook = await this.#stores.hooks.create(msg.channel.guild.id, form.hid, {
+			var hook = await this.#stores.hooks.create({
+				server_id: msg.channel.guild.id,
+				form: form.hid,
 				url: args[1],
 				events: args.length > 2 ? args.slice(2).map(a => a.toLowerCase()) : ['submit', 'accept', 'deny']
 			})

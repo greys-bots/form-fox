@@ -65,7 +65,10 @@ class Command extends SlashCommand {
 			?.find(p => p.form.emoji == form.emoji);
 		if(post) return 'Form with that emoji already bound to that message!';
 
-		await this.#stores.formPosts.create(ctx.guildId, channel.id, msg.id, {
+		await this.#stores.formPosts.create({
+			server_id: ctx.guildId,
+			channel_id: channel.id,
+			message_id: msg.id, 
 			form: form.hid,
 			bound: true
 		});

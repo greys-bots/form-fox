@@ -66,7 +66,10 @@ class Command extends SlashCommand {
 					}]
 				}]
 			});
-			var p = await this.#stores.formPosts.create(ctx.guildId, chan.id, message.id, {
+			var p = await this.#stores.formPosts.create({
+				server_id: ctx.guildId,
+				channel_id: chan.id,
+				message_id: message.id,
 				form: form.hid
 			});
 		} catch(e) {

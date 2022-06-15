@@ -49,7 +49,10 @@ class Command extends SlashCommand {
 		tocopy.forEach(v => data[v] = form[v]);
 
 		try {
-			var created = await this.#stores.forms.create(ctx.guildId, data);
+			var created = await this.#stores.forms.create({
+				server_id: ctx.guildId,
+				...data
+			});
 		} catch(e) {
 			return 'ERR! '+e;
 		}

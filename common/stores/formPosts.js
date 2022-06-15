@@ -1,3 +1,5 @@
+const { Models: { DataStore, DataObject } } = require('frame');
+
 const KEYS = {
 	id: { },
 	server_id: { },
@@ -7,66 +9,21 @@ const KEYS = {
 	bound: { }
 }
 
-class FormPost {
+class FormPost extends DataObject {
 	#store;
 
-	constructor(store, data) {
+	constructor(store, keys, data) {
+		super(store, keys, data);
 		this.#store = store;
-		for(var k in KEYS) this[k] = data[k];
-	}
-
-	async fetch() {
-		var data = await this.#store.getID(this.id);
-		for(var k in KEYS) this[k] = data[k];
-
-		return this;
-	}
-
-	async save() {
-		var obj = await this.verify();
-
-		var data;
-		if(this.id) data = await this.#store.update(this.id, obj);
-		else data = await this.#store.create(this.server_id, this.channel_id, this.message_id, obj);
-		for(var k in KEYS) this[k] = data[k];
-		return this;
-	}
-
-	async delete() {
-		await this.#store.delete(this.id);
-	}
-
-	async verify(patch = true /* generate patch-only object */) {
-		var obj = {};
-		var errors = []
-		for(var k in KEYS) {
-			if(!KEYS[k].patch && patch) continue;
-			if(this[k] == undefined) continue;
-			if(this[k] == null) {
-				obj[k] = this[k];
-				continue;
-			}
-
-			var test = true;
-			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-			if(!test) {
-				errors.push(KEYS[k].err);
-				continue;
-			}
-			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-			else obj[k] = this[k];
-		}
-
-		if(errors.length) throw new Error(errors.join("\n"));
-		return obj;
 	}
 }
 
-class FormPostStore {
+class FormPostStore extends DataStore {
 	#db;
 	#bot;
 
 	constructor(bot, db) {
+		super();
 		this.#db = db;
 		this.#bot = bot;
 	}
@@ -106,22 +63,23 @@ class FormPostStore {
 		})
 	}
 
-	async create(server, channel, message, data = {}) {
+	async create(data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO form_posts (
+			var c = await this.#db.query(`INSERT INTO form_posts (
 				server_id,
 				channel_id,
 				message_id,
 				form,
 				bound
-			) VALUES ($1,$2,$3,$4,$5)`,
-			[server, channel, message, data.form, data.bound || false]);
+			) VALUES ($1,$2,$3,$4,$5)
+			RETURNING id`,
+			[data.server_id, data.channel_id, data.message_id, data.form, data.bound || false]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
 		}
 		
-		return await this.get(server, message);
+		return await this.getID(c.rows[0].id);
 	}
 
 	async index(server, channel, message, data = {}) {
@@ -170,8 +128,8 @@ class FormPostStore {
 
 			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) data.rows[0].form = form;
-			return new FormPost(this, data.rows[0]);
-		} else return new FormPost(this, { server_id: server, message_id: message, bound: false });
+			return new FormPost(this, KEYS, data.rows[0]);
+		} else return new FormPost(this, KEYS, { server_id: server, message_id: message, bound: false });
 	}
 
 	async getBound(server, message, hid) {
@@ -203,8 +161,8 @@ class FormPostStore {
 
 			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) data.rows[0].form = form;
-			return new FormPost(this, data.rows[0])
-		} else return new FormPost(this, { server_id: server, message_id: message, form: hid, bound: true });
+			return new FormPost(this, KEYS, data.rows[0])
+		} else return new FormPost(this, KEYS, { server_id: server, message_id: message, form: hid, bound: true });
 	}
 
 	async getByMessage(server, message) {
@@ -229,7 +187,7 @@ class FormPostStore {
 				if(form) data.rows[i].form = form;
 			}
 			
-			return data.rows.map(x => new FormPost(this, x));
+			return data.rows.map(x => new FormPost(this, KEYS, x));
 		} else return undefined;
 	}
 
@@ -249,7 +207,7 @@ class FormPostStore {
 		if(data.rows?.[0]) {
 
 			return data.rows.map(x => {
-				var f = new FormPost(this, x);
+				var f = new FormPost(this, KEYS, x);
 				f.form = form;
 				return f;
 			});
@@ -270,8 +228,8 @@ class FormPostStore {
 		if(data.rows?.[0]) {
 			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) data.rows[0].form = form;
-			return new FormPost(this, data.rows[0]);
-		} else return new FormPost(this, {});
+			return new FormPost(this, KEYS, data.rows[0]);
+		} else return new FormPost(this, KEYS, {});
 	}
 
 	async update(id, data = {}) {

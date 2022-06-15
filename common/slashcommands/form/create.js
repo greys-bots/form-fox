@@ -34,7 +34,8 @@ class Command extends SlashCommand {
 		var name = ctx.options.getString('name').trim();
 		var description = ctx.options.getString('description').trim();
 
-		var form = await this.#stores.forms.create(ctx.guildId, {
+		var form = await this.#stores.forms.create({
+			server_id: ctx.guildId,
 			name,
 			description,
 			questions: []
