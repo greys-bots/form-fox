@@ -6,6 +6,7 @@ class Command extends TextCommand {
 
 	constructor(bot, stores, module) {
 		super({
+			name: 'about',
 			description: "A little about the bot",
 			usage: [" - Just what's on the tin"],
 			arguments: { },
