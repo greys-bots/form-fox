@@ -31,17 +31,28 @@ class ResponseStore extends DataStore {
 	}
 
 	async init() {
-		await this.#db.query(`CREATE TABLE IF NOT EXISTS responses (
-			id 			SERIAL PRIMARY KEY,
-			server_id 	TEXT,
-			hid 		TEXT UNIQUE,
-			user_id 	TEXT,
-			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
-			questions 	JSONB,
-			answers 	TEXT[],
-			status 		TEXT,
-			received 	TIMESTAMPTZ
-		)`)
+		await this.#db.query(`
+			CREATE TABLE IF NOT EXISTS responses (
+				id 			SERIAL PRIMARY KEY,
+				server_id 	TEXT,
+				hid 		TEXT UNIQUE,
+				user_id 	TEXT,
+				form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
+				questions 	JSONB,
+				answers 	TEXT[],
+				status 		TEXT,
+				received 	TIMESTAMPTZ
+			);
+
+			CREATE TABLE IF NOT EXISTS response_posts (
+				id 			SERIAL PRIMARY KEY,
+				server_id 	TEXT,
+				channel_id 	TEXT,
+				message_id 	TEXT,
+				response 	TEXT REFERENCES responses(hid) ON DELETE CASCADE,
+				page 		INTEGER
+			)
+		`)
 	}
 
 	async create(data = {}) {

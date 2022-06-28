@@ -42,26 +42,37 @@ class FormStore extends DataStore {
 	}
 
 	async init() {
-		await this.#db.query(`CREATE TABLE IF NOT EXISTS forms (
-			id 				SERIAL PRIMARY KEY,
-			server_id		TEXT,
-			hid 			TEXT UNIQUE,
-			name 			TEXT,
-			description 	TEXT,
-			questions 		JSONB,
-			channel_id 		TEXT,
-			roles 			JSONB,
-			message 		TEXT,
-			color 			TEXT,
-			open 			BOOLEAN,
-			cooldown 		INTEGER,
-			emoji 			TEXT,
-			reacts 			BOOLEAN,
-			embed 			BOOLEAN,
-			apply_channel 	TEXT,
-			tickets_id 		TEXT,
-			ticket_msg 		TEXT
-		)`)
+		await this.#db.query(`
+			CREATE TABLE IF NOT EXISTS forms (
+				id 				SERIAL PRIMARY KEY,
+				server_id		TEXT,
+				hid 			TEXT UNIQUE,
+				name 			TEXT,
+				description 	TEXT,
+				questions 		JSONB,
+				channel_id 		TEXT,
+				roles 			JSONB,
+				message 		TEXT,
+				color 			TEXT,
+				open 			BOOLEAN,
+				cooldown 		INTEGER,
+				emoji 			TEXT,
+				reacts 			BOOLEAN,
+				embed 			BOOLEAN,
+				apply_channel 	TEXT,
+				tickets_id 		TEXT,
+				ticket_msg 		TEXT
+			);
+
+			CREATE TABLE IF NOT EXISTS form_posts (
+				id 			SERIAL PRIMARY KEY,
+				server_id 	TEXT,
+				channel_id 	TEXT,
+				message_id 	TEXT,
+				form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
+				bound 		BOOLEAN
+			)
+		`)
 	}
 
 	async create(server, data = {}) {

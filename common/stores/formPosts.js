@@ -28,16 +28,7 @@ class FormPostStore extends DataStore {
 		this.#bot = bot;
 	}
 
-	async init() {
-		await this.#db.query(`CREATE TABLE IF NOT EXISTS form_posts (
-			id 			SERIAL PRIMARY KEY,
-			server_id 	TEXT,
-			channel_id 	TEXT,
-			message_id 	TEXT,
-			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
-			bound 		BOOLEAN
-		)`)
-		
+	async init() {		
 		this.#bot.on('messageReactionAdd', async (...args) => {
 			try {
 				this.handleReactions(...args);

@@ -39,15 +39,6 @@ class ResponsePostStore extends DataStore {
     }
 
     async init() {
-    	await this.#db.query(`CREATE TABLE IF NOT EXISTS response_posts (
-			id 			SERIAL PRIMARY KEY,
-			server_id 	TEXT,
-			channel_id 	TEXT,
-			message_id 	TEXT,
-			response 	TEXT REFERENCES responses(hid) ON DELETE CASCADE,
-			page 		INTEGER
-		)`)
-		
         this.#bot.on('messageReactionAdd', async (...args) => {
             try {
                 this.handleReactions(...args);
