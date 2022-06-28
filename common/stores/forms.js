@@ -75,7 +75,7 @@ class FormStore extends DataStore {
 		`)
 	}
 
-	async create(server, data = {}) {
+	async create(data = {}) {
 		try {
 			var form = await this.#db.query(`INSERT INTO forms (
 				server_id,
