@@ -37,8 +37,8 @@ const bot = new FrameClient({
 	prefix: process.env.PREFIX,
 	invite: process.env.INVITE,
 	statuses: [
-		(bot) => `${bot.prefix}!h | in ${bot.guilds.cache.size} guilds!`,
-		(bot) => `${bot.prefix}!h | serving ${bot.users.cache.size} users!`
+		(bot) => `${bot.prefix}h | in ${bot.guilds.cache.size} guilds!`,
+		(bot) => `${bot.prefix}h | serving ${bot.users.cache.size} users!`
 	]
 });
 
@@ -62,28 +62,12 @@ async function setup() {
 	bot.utils = Utilities;
 }
 
-bot.writeLog = async (log) => {
-	let now = new Date();
-	let ndt = `${(now.getMonth() + 1).toString().length < 2 ? "0"+ (now.getMonth() + 1) : now.getMonth()+1}.${now.getDate().toString().length < 2 ? "0"+ now.getDate() : now.getDate()}.${now.getFullYear()}`;
-	if(!fs.existsSync('./logs')) fs.mkdirSync('./logs');
-	if(!fs.existsSync(`./logs/${ndt}.log`)){
-		fs.writeFile(`./logs/${ndt}.log`,log+"\r\n",(err)=>{
-			if(err) console.log(`Error while attempting to write log ${ndt}\n`+err.stack);
-		});
-	} else {
-		fs.appendFile(`./logs/${ndt}.log`,log+"\r\n",(err)=>{
-			if(err) console.log(`Error while attempting to apend to log ${ndt}\n`+err);
-		});
-	}
-}
-
 bot.on("ready", async ()=> {
 	console.log(`Logged in as ${bot.user.tag} (${bot.user.id})`);
 })
 
 bot.on('error', (err)=> {
 	console.log(`Error:\n${err.stack}`);
-	bot.writeLog(`=====ERROR=====\r\nStack: ${err.stack}`)
 })
 
 process.on("unhandledRejection", (e) => console.log(e));

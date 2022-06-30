@@ -29,7 +29,6 @@ module.exports = async (msg, bot)=>{
 	if(!command) {
 		log.push('- Command not found -');
 		console.log(log.join('\r\n'));
-		bot.writeLog(log.join('\r\n'));
 		return await msg.channel.send("Command not found!");
 	}
 	
@@ -42,5 +41,4 @@ module.exports = async (msg, bot)=>{
 		await msg.channel.send('There was an error!')
 	}
 	console.log(log.join('\r\n'));
-	bot.writeLog(log.join('\r\n'));
 }
