@@ -476,8 +476,10 @@ class ResponsePostStore extends DataStore {
                     }]})
 
                     if(ticket?.id) {
-			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
-			            tch?.delete();
+			        	try {
+                            var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+                            await tch?.delete();
+                        } catch(e) { }
 			        }
 
                     this.#bot.emit('DENY', post.response);
@@ -528,8 +530,10 @@ class ResponsePostStore extends DataStore {
                     }]});
 
                     if(ticket?.id) {
-			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
-			            tch?.delete();
+                        try {
+                            var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+                            await tch?.delete();
+                        } catch(e) { }
 			        }
 
                     this.#bot.emit('ACCEPT', post.response);
@@ -541,12 +545,13 @@ class ResponsePostStore extends DataStore {
                 break;
             case 'ticket':
             	try {
+                    await ctx.deferReply({ephemeral: true});
                     var ch_id = post.response.form.tickets_id ?? cfg?.ticket_category;
-                    if(!ch_id) return await msg.channel.send('No ticket category set!');
+                    if(!ch_id) return await ctx.followUp('No ticket category set!');
                     var ch = msg.guild.channels.resolve(ch_id);
-                    if(!ch) return await msg.channel.send('Category not found!!');
+                    if(!ch) return await ctx.followUp('Category not found!!');
 
-                    if(ticket?.id) return await msg.channel.send(`Channel already opened! Link: <#${ticket.channel_id}>`)
+                    if(ticket?.id) return await ctx.followUp(`Channel already opened! Link: <#${ticket.channel_id}>`)
 
                     var ch2 = await msg.guild.channels.create(`ticket-${post.response.hid}`, {
                         parent: ch.id,
@@ -573,7 +578,11 @@ class ResponsePostStore extends DataStore {
 					await msg.edit({
 						components: cmp
 					})
-                    await this.#bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+                    await this.#bot.stores.tickets.create({
+                        server_id: msg.guild.id,
+                        channel_id: ch2.id,
+                        response_id: post.response.hid
+                    });
                     await ctx.followUp(`Channel created! <#${ch2.id}>`);
                     return;
                 } catch(e) {
