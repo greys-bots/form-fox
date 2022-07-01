@@ -92,6 +92,10 @@ class CommandHandler {
 
 		try {
 			var res = await command.execute(this.bot, msg, args);
+			await this.handleWarning({
+				user: msg.author,
+				channel: msg.channel
+			})
 		} catch(e) {
 			return Promise.reject(e);
 		}
@@ -162,6 +166,19 @@ class CommandHandler {
 			})
 		}
 		return command;
+	}
+
+	async handleWarning(ctx) {
+		if(!process.env.COMMAND_WARN) return;
+		if(this.warnings.has(ctx.user.id)) return;
+		this.warnings.add(ctx.user.id);
+		setTimeout(() => this.warnings.delete(ctx.user.id), 1000 * 60 * 60 * 6) // show warning again after 6 hours
+		await ctx.channel.send(
+			`⚠️ **Warning:** ⚠️\n` +
+			`Text commands will be removed soon! ` +
+			`For more information, please see this post: ` +
+			`<https://www.patreon.com/posts/68150511>`
+		)
 	}
 }
 
