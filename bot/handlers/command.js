@@ -2,6 +2,7 @@ const { Collection } = require('discord.js');
 
 class CommandHandler {
 	cooldowns = new Map();
+	warnings = new Set();
 
 	constructor(bot) {
 		this.bot = bot;
