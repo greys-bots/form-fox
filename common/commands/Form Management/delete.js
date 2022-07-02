@@ -62,17 +62,17 @@ module.exports = {
 				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			}
-
-			if(!forms?.[0]) return 'No forms to delete!';
-
-			try {
-				for(var form of forms) await form.delete();
-			} catch(e) {
-				return 'ERR! '+e;
-			}
-
-			return `Form${forms.length > 1 ? 's' : ''} deleted!`;
 		}
+
+		if(!forms?.[0]) return 'No forms to delete!';
+
+		try {
+			for(var form of forms) await form.delete();
+		} catch(e) {
+			return 'ERR! '+e;
+		}
+
+		return `Form${forms.length > 1 ? 's' : ''} deleted!`;
 	},
 	alias: ['del', 'remove'],
 	permissions: ['MANAGE_MESSAGES'],
