@@ -7,33 +7,25 @@ const KEYS = {
 }
 
 class Ticket extends DataObject {
-	#store;
-	
 	constructor(store, keys, data) {
 		super(store, keys, data);
-		this.#store = store;
 	}
 }
 
 class TicketStore extends DataStore {
-	#db;
-	#bot;
-	
 	constructor(bot, db) {
-		super();
-		this.#db = db;
-		this.#bot = bot;
+		super(bot, db);
 	}
 
 	async init() {
-		await this.#db.query(`CREATE TABLE IF NOT EXISTS tickets (
+		await this.db.query(`CREATE TABLE IF NOT EXISTS tickets (
 			id			SERIAL PRIMARY KEY,
 			server_id	TEXT,
 			channel_id	TEXT,
 			response_id	TEXT
 		)`)
 		
-		this.#bot.on('channelDelete', (channel) => {
+		this.bot.on('channelDelete', (channel) => {
 			if(!channel.guild) return;
 
 			this.deleteByChannel(channel.guild.id, channel.id);
@@ -42,7 +34,7 @@ class TicketStore extends DataStore {
 
 	async create(data = {}) {
 		try {
-			var c = await this.#db.query(`INSERT INTO tickets (
+			var c = await this.db.query(`INSERT INTO tickets (
 				server_id,
 				channel_id,
 				response_id
@@ -59,7 +51,7 @@ class TicketStore extends DataStore {
 
 	async index(server, channel, response) {
 		try {
-			await this.#db.query(`INSERT INTO tickets (
+			await this.db.query(`INSERT INTO tickets (
 				server_id,
 				channel_id,
 				response_id
@@ -75,7 +67,7 @@ class TicketStore extends DataStore {
 
 	async get(server, response) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM tickets WHERE server_id = $1 AND response_id = $2`,[server, response]);
+			var data = await this.db.query(`SELECT * FROM tickets WHERE server_id = $1 AND response_id = $2`,[server, response]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -87,7 +79,7 @@ class TicketStore extends DataStore {
 
 	async delete(id) {
 		try {
-			await this.#db.query(`DELETE FROM tickets WHERE id = $1`, [id]);
+			await this.db.query(`DELETE FROM tickets WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -98,7 +90,7 @@ class TicketStore extends DataStore {
 
 	async deleteByChannel(server, channel) {
 		try {
-			await this.#db.query(`DELETE FROM tickets WHERE server_id = $1 AND channel_id = $2`, [server, channel]);
+			await this.db.query(`DELETE FROM tickets WHERE server_id = $1 AND channel_id = $2`, [server, channel]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);

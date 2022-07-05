@@ -23,26 +23,18 @@ const KEYS = {
 }
 
 class Form extends DataObject {
-	#store;
-
 	constructor(store, keys, data) {
 		super(store, keys, data)
-		this.#store = store;
 	}
 }
 
 class FormStore extends DataStore {
-	#db;
-	#bot;
-	
 	constructor(bot, db) {
-		super()
-		this.#db = db;
-		this.#bot = bot;
+		super(bot, db)
 	}
 
 	async init() {
-		await this.#db.query(`
+		await this.db.query(`
 			CREATE TABLE IF NOT EXISTS forms (
 				id 				SERIAL PRIMARY KEY,
 				server_id		TEXT,
@@ -77,7 +69,7 @@ class FormStore extends DataStore {
 
 	async create(data = {}) {
 		try {
-			var form = await this.#db.query(`INSERT INTO forms (
+			var form = await this.db.query(`INSERT INTO forms (
 				server_id,
 				hid,
 				name,
@@ -114,7 +106,7 @@ class FormStore extends DataStore {
 
 	async index(server, data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO forms (
+			await this.db.query(`INSERT INTO forms (
 				server_id,
 				hid,
 				name,
@@ -150,7 +142,7 @@ class FormStore extends DataStore {
 
 	async get(server, hid) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
+			var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = $2`,[server, hid]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -178,7 +170,7 @@ class FormStore extends DataStore {
 
 	async getAll(server) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
+			var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1`,[server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -191,7 +183,7 @@ class FormStore extends DataStore {
 	async getByHids(server, ids) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = ANY($2)`,[server, ids]);
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND hid = ANY($2)`,[server, ids]);
 			} catch(e) {
 				console.log(e);
 				return rej(e.message);
@@ -206,7 +198,7 @@ class FormStore extends DataStore {
 	async getByApplyChannel(server, channel) {
 		return new Promise(async (res, rej) => {
 			try {
-				var data = await this.#db.query(`SELECT * FROM forms WHERE server_id = $1 AND apply_channel = $2`,
+				var data = await this.db.query(`SELECT * FROM forms WHERE server_id = $1 AND apply_channel = $2`,
 					[server, channel]);
 			} catch(e) {
 				console.log(e);
@@ -220,7 +212,7 @@ class FormStore extends DataStore {
 
 	async getID(id) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
+			var data = await this.db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -241,7 +233,7 @@ class FormStore extends DataStore {
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
 		try {
-			await this.#db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+			await this.db.query(`UPDATE forms SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -249,12 +241,12 @@ class FormStore extends DataStore {
 
 		var form = await this.getID(id);
 		if(!form) return undefined; //that's just silly
-		var responses = await this.#bot.stores.responses.getByForm(form.server_id, form.hid);
-		var posts = await this.#bot.stores.formPosts.getByForm(form.server_id, form.hid);
+		var responses = await this.bot.stores.responses.getByForm(form.server_id, form.hid);
+		var posts = await this.bot.stores.formPosts.getByForm(form.server_id, form.hid);
 
 		var errs = [];
 		if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
-			var guild = this.#bot.guilds.resolve(form.server_id);
+			var guild = this.bot.guilds.resolve(form.server_id);
 			if(posts) {
 				for(var post of posts) {
 					try {
@@ -309,9 +301,9 @@ class FormStore extends DataStore {
 		if(!form) return undefined; //that's just silly
 
 		var errs = [];
-		var responses = await this.#bot.stores.responses.getByForm(server, hid);
-		var posts = await this.#bot.stores.formPosts.getByForm(server, hid);
-		var guild = this.#bot.guilds.resolve(server);
+		var responses = await this.bot.stores.responses.getByForm(server, hid);
+		var posts = await this.bot.stores.formPosts.getByForm(server, hid);
+		var guild = this.bot.guilds.resolve(server);
 		if(posts) {
 			for(var post of posts) {
 				if(post.bound) continue;
@@ -320,7 +312,7 @@ class FormStore extends DataStore {
 					var chan = guild.channels.resolve(post.channel_id);
 					var msg = await chan.messages.fetch(post.message_id);
 					if(!msg) {
-						await this.#bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
+						await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
 						return rej('Message missing!');
 					}
 
@@ -348,7 +340,7 @@ class FormStore extends DataStore {
 
 	async delete(id) {
 		try {
-			await this.#db.query(`DELETE FROM forms WHERE id = $1`, [id]);
+			await this.db.query(`DELETE FROM forms WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -382,7 +374,7 @@ class FormStore extends DataStore {
 		if(!forms?.length) return;
 		if(ids?.length) forms = forms.filter(f => ids.includes(f.hid));
 		if(!forms?.length) return;
-		if(resp) r = await this.#bot.stores.responses.getByForms(server, ids);
+		if(resp) r = await this.bot.stores.responses.getByForms(server, ids);
 		
 		for(var form of forms) {
 			// remove server-specific data

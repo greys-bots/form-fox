@@ -12,26 +12,18 @@ const KEYS = {
 }
 
 class Response extends DataObject {
-	#store;
-
 	constructor(store, keys, data) {
 		super(store, keys, data);
-		this.#store = store;
 	}
 }
 
 class ResponseStore extends DataStore {
-	#db;
-	#bot;
-	
 	constructor(bot, db) {
-		super();
-		this.#db = db;
-		this.#bot = bot;
+		super(bot, db);
 	}
 
 	async init() {
-		await this.#db.query(`
+		await this.db.query(`
 			CREATE TABLE IF NOT EXISTS responses (
 				id 			SERIAL PRIMARY KEY,
 				server_id 	TEXT,
@@ -57,7 +49,7 @@ class ResponseStore extends DataStore {
 
 	async create(data = {}) {
 		try {
-			var resp = await this.#db.query(`INSERT INTO responses (
+			var resp = await this.db.query(`INSERT INTO responses (
 				server_id,
 				hid,
 				user_id,
@@ -80,7 +72,7 @@ class ResponseStore extends DataStore {
 
 	async index(server, data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO responses (
+			await this.db.query(`INSERT INTO responses (
 				server_id,
 				hid,
 				user_id,
@@ -102,7 +94,7 @@ class ResponseStore extends DataStore {
 
 	async get(server, hid) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM responses WHERE server_id = $1 AND hid = $2`,[server, hid]);
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND hid = $2`,[server, hid]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -110,7 +102,7 @@ class ResponseStore extends DataStore {
 		
 		if(data.rows?.[0]) {
 			var resp = new Response(this, KEYS, data.rows[0])
-			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) resp.form = form;
 			
 			return resp;
@@ -119,7 +111,7 @@ class ResponseStore extends DataStore {
 
 	async getID(id) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM responses WHERE id = $1`,[id]);
+			var data = await this.db.query(`SELECT * FROM responses WHERE id = $1`,[id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -127,7 +119,7 @@ class ResponseStore extends DataStore {
 		
 		if(data.rows?.[0]) {
 			var resp = new Response(this, KEYS, data.rows[0])
-			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) resp.form = form;
 			
 			return resp;
@@ -136,7 +128,7 @@ class ResponseStore extends DataStore {
 
 	async getAll(server) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM responses WHERE server_id = $1`,[server]);
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1`,[server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -148,7 +140,7 @@ class ResponseStore extends DataStore {
 			for(var r of data.rows) {
 				var resp = new Response(this, KEYS, r)
 				var form = forms[r.form];
-				if(!form) form = await this.#bot.stores.forms.get(r.server_id, r.form);
+				if(!form) form = await this.bot.stores.forms.get(r.server_id, r.form);
 				if(form) {
 					resp.form = form;
 					forms[form.hid] = form;
@@ -163,7 +155,7 @@ class ResponseStore extends DataStore {
 
 	async getByUser(server, user) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM responses WHERE server_id = $1 AND user_id = $2`,[server, user]);
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND user_id = $2`,[server, user]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -175,7 +167,7 @@ class ResponseStore extends DataStore {
 			for(var r of data.rows) {
 				var resp = new Response(this, KEYS, r)
 				var form = forms[r.form];
-				if(!form) form = await this.#bot.stores.forms.get(r.server_id, r.form);
+				if(!form) form = await this.bot.stores.forms.get(r.server_id, r.form);
 				if(form) {
 					resp.form = form;
 					forms[form.hid] = form;
@@ -190,14 +182,14 @@ class ResponseStore extends DataStore {
 
 	async getByForm(server, hid) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM responses WHERE server_id = $1 AND form = $2`,[server, hid]);
+			var data = await this.db.query(`SELECT * FROM responses WHERE server_id = $1 AND form = $2`,[server, hid]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
 		}
 		
 		if(data.rows?.[0]) {
-			var form = await this.#bot.stores.forms.get(server, hid);
+			var form = await this.bot.stores.forms.get(server, hid);
             
 			return data.rows.map( x => {
 				var r = new Response(this, KEYS, x);
@@ -209,7 +201,7 @@ class ResponseStore extends DataStore {
 
 	async getByForms(server, ids) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM responses
 				WHERE server_id = $1
 			`, [server]);
@@ -249,7 +241,7 @@ class ResponseStore extends DataStore {
 
 	async update(id, data = {}) {
 		try {
-			await this.#db.query(`UPDATE responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+			await this.db.query(`UPDATE responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -260,7 +252,7 @@ class ResponseStore extends DataStore {
 
 	async delete(id) {
 		try {
-			await this.#db.query(`DELETE FROM responses WHERE id = $1`, [id]);
+			await this.db.query(`DELETE FROM responses WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -271,7 +263,7 @@ class ResponseStore extends DataStore {
 
 	async deleteAll(server) {
 		try {
-			await this.#db.query(`DELETE FROM responses WHERE server_id = $1`, [server]);
+			await this.db.query(`DELETE FROM responses WHERE server_id = $1`, [server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -282,7 +274,7 @@ class ResponseStore extends DataStore {
 
 	async deleteByForm(server, form) {
 		try {
-			await this.#db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
+			await this.db.query(`DELETE FROM responses WHERE server_id = $1 AND form = $2`, [server, form]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);

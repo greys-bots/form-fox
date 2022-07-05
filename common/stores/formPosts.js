@@ -10,26 +10,18 @@ const KEYS = {
 }
 
 class FormPost extends DataObject {
-	#store;
-
 	constructor(store, keys, data) {
 		super(store, keys, data);
-		this.#store = store;
 	}
 }
 
 class FormPostStore extends DataStore {
-	#db;
-	#bot;
-
 	constructor(bot, db) {
-		super();
-		this.#db = db;
-		this.#bot = bot;
+		super(bot, db);
 	}
 
 	async init() {		
-		this.#bot.on('messageReactionAdd', async (...args) => {
+		this.bot.on('messageReactionAdd', async (...args) => {
 			try {
 				this.handleReactions(...args);
 			} catch(e) {
@@ -37,7 +29,7 @@ class FormPostStore extends DataStore {
 			}
 		})
 
-		this.#bot.on('messageDelete', async ({channel, id}) => {
+		this.bot.on('messageDelete', async ({channel, id}) => {
 			try {
 				await this.deleteByMessage(channel.guild.id, id);
 			} catch(e) {
@@ -45,7 +37,7 @@ class FormPostStore extends DataStore {
 			}
 		})
 
-		this.#bot.on('interactionCreate', (...args) => {
+		this.bot.on('interactionCreate', (...args) => {
 			try {
 				this.handleInteractions(...args);
 			} catch(e) {
@@ -56,7 +48,7 @@ class FormPostStore extends DataStore {
 
 	async create(data = {}) {
 		try {
-			var c = await this.#db.query(`INSERT INTO form_posts (
+			var c = await this.db.query(`INSERT INTO form_posts (
 				server_id,
 				channel_id,
 				message_id,
@@ -75,7 +67,7 @@ class FormPostStore extends DataStore {
 
 	async index(server, channel, message, data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO form_posts (
+			await this.db.query(`INSERT INTO form_posts (
 				server_id,
 				channel_id,
 				message_id,
@@ -93,7 +85,7 @@ class FormPostStore extends DataStore {
 
 	async get(server, message) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM form_posts WHERE
 				server_id = $1
 				AND message_id = $2
@@ -105,7 +97,7 @@ class FormPostStore extends DataStore {
 		}
 
 		if(data.rows?.[0]) {
-			var guild = this.#bot.guilds.resolve(server);
+			var guild = this.bot.guilds.resolve(server);
 			if(!guild) return Promise.reject("Couldn't get guild!");
 			guild = await guild.fetch();
 			try {
@@ -117,7 +109,7 @@ class FormPostStore extends DataStore {
 				return new FormPost(this, { server_id: server, message_id: message, bound: false });
 			}
 
-			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) data.rows[0].form = form;
 			return new FormPost(this, KEYS, data.rows[0]);
 		} else return new FormPost(this, KEYS, { server_id: server, message_id: message, bound: false });
@@ -125,7 +117,7 @@ class FormPostStore extends DataStore {
 
 	async getBound(server, message, hid) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM form_posts WHERE
 				server_id = $1
 				AND message_id = $2
@@ -138,7 +130,7 @@ class FormPostStore extends DataStore {
 		}
 
 		if(data.rows?.[0]) {
-			var guild = this.#bot.guilds.resolve(server);
+			var guild = this.bot.guilds.resolve(server);
 			if(!guild) return Promise.reject("Couldn't get guild!");
 			guild = await guild.fetch();
 			try {
@@ -150,7 +142,7 @@ class FormPostStore extends DataStore {
 				return new FormPost(this, { server_id: server, message_id: message, form: hid, bound: true });
 			}
 
-			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) data.rows[0].form = form;
 			return new FormPost(this, KEYS, data.rows[0])
 		} else return new FormPost(this, KEYS, { server_id: server, message_id: message, form: hid, bound: true });
@@ -158,7 +150,7 @@ class FormPostStore extends DataStore {
 
 	async getByMessage(server, message) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM form_posts WHERE
 				server_id = $1
 				AND message_id = $2
@@ -168,13 +160,13 @@ class FormPostStore extends DataStore {
 			return Promise.reject(e.message);
 		}
 
-		var guild = this.#bot.guilds.resolve(server);
+		var guild = this.bot.guilds.resolve(server);
 		if(!guild) return Promise.reject("Couldn't get guild!");
 		guild = await guild.fetch();
 		
 		if(data.rows?.[0]) {
 			for(var i = 0; i < data.rows.length; i++) {
-				var form = await this.#bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
+				var form = await this.bot.stores.forms.get(data.rows[i].server_id, data.rows[i].form);
 				if(form) data.rows[i].form = form;
 			}
 			
@@ -184,7 +176,7 @@ class FormPostStore extends DataStore {
 
 	async getByForm(server, form) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM form_posts WHERE
 				server_id = $1
 				AND form = $2
@@ -194,7 +186,7 @@ class FormPostStore extends DataStore {
 			return Promise.reject(e.message);
 		}
 
-		var form = await this.#bot.stores.forms.get(server, form);
+		var form = await this.bot.stores.forms.get(server, form);
 		if(data.rows?.[0]) {
 
 			return data.rows.map(x => {
@@ -207,7 +199,7 @@ class FormPostStore extends DataStore {
 
 	async getID(id) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM form_posts WHERE
 				id = $1
 			`, [id]);
@@ -217,7 +209,7 @@ class FormPostStore extends DataStore {
 		}
 
 		if(data.rows?.[0]) {
-			var form = await this.#bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
+			var form = await this.bot.stores.forms.get(data.rows[0].server_id, data.rows[0].form);
 			if(form) data.rows[0].form = form;
 			return new FormPost(this, KEYS, data.rows[0]);
 		} else return new FormPost(this, KEYS, {});
@@ -225,7 +217,7 @@ class FormPostStore extends DataStore {
 
 	async update(id, data = {}) {
 		try {
-			await this.#db.query(`
+			await this.db.query(`
 				UPDATE form_posts SET
 				${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")}
 				WHERE id = $1
@@ -240,7 +232,7 @@ class FormPostStore extends DataStore {
 
 	async delete(id) {
 		try {
-			await this.#db.query(`
+			await this.db.query(`
 				DELETE FROM form_posts
 				WHERE id = $1
 			`, [id]);
@@ -254,7 +246,7 @@ class FormPostStore extends DataStore {
 
 	async deleteByMessage(server, message) {
 		try {
-			await this.#db.query(`
+			await this.db.query(`
 				DELETE FROM form_posts
 				WHERE server_id = $1 AND
 				message_id = $2
@@ -268,7 +260,7 @@ class FormPostStore extends DataStore {
 	}
 
 	async handleReactions(reaction, user) {
-		if(this.#bot.user.id == user.id) return;
+		if(this.bot.user.id == user.id) return;
 		if(user.bot) return;
 
 		var msg;
@@ -281,11 +273,11 @@ class FormPostStore extends DataStore {
 		var post = posts.find(p => (p.form.emoji ?? '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
 		if(!post) return;
 
-		var cfg = await this.#bot.stores.configs.get(msg.channel.guild.id);
+		var cfg = await this.bot.stores.configs.get(msg.channel.guild.id);
 		if(cfg?.reacts || post.form.reacts) await reaction.users.remove(user.id);
 		if(!post.form.open) return await user.send("That form isn't accepting responses!");
 
-		var resp = await this.#bot.handlers.response.startResponse({
+		var resp = await this.bot.handlers.response.startResponse({
 			user,
 			form: post.form,
 			cfg
@@ -308,7 +300,7 @@ class FormPostStore extends DataStore {
 			ephemeral: true
 		});
 
-		var cfg = await this.#bot.stores.configs.get(intr.guildId);
+		var cfg = await this.bot.stores.configs.get(intr.guildId);
 
 		if(!post.form.channel_id && !cfg?.response_channel)
 			return await intr.reply({
@@ -316,7 +308,7 @@ class FormPostStore extends DataStore {
 				ephemeral: true
 			});
 
-		var resp = await this.#bot.handlers.response.startResponse({
+		var resp = await this.bot.handlers.response.startResponse({
 			user,
 			form: post.form,
 			cfg

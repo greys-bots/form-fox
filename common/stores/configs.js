@@ -15,27 +15,19 @@ const KEYS = {
 	autothread: { patch: true }
 }
 
-class Config extends DataObject {
-	#store;
-	
+class Config extends DataObject {	
 	constructor(store, keys, data) {
 		super(store, keys, data);
-		this.#store = store;
 	}
 }
 
 class ConfigStore extends DataStore {
-	#db;
-	#bot;
-	
 	constructor(bot, db) {
-		super()
-		this.#db = db;
-		this.#bot = bot;
+		super(bot, db)
 	}
 
 	async init() {
-		await this.#db.query(`CREATE TABLE IF NOT EXISTS configs (
+		await this.db.query(`CREATE TABLE IF NOT EXISTS configs (
 			id 					SERIAL PRIMARY KEY,
 			server_id 			TEXT,
 			response_channel 	TEXT,
@@ -53,7 +45,7 @@ class ConfigStore extends DataStore {
 
 	async create(data = {}) {
 		try {
-			var c = await this.#db.query(`INSERT INTO configs (
+			var c = await this.db.query(`INSERT INTO configs (
 				server_id,
 				response_channel,
 				message,
@@ -81,7 +73,7 @@ class ConfigStore extends DataStore {
 
 	async index(server, data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO configs (
+			await this.db.query(`INSERT INTO configs (
 				server_id,
 				response_channel,
 				message,
@@ -108,7 +100,7 @@ class ConfigStore extends DataStore {
 
 	async get(server) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM configs WHERE server_id = $1`,[server]);
+			var data = await this.db.query(`SELECT * FROM configs WHERE server_id = $1`,[server]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -121,7 +113,7 @@ class ConfigStore extends DataStore {
 
 	async getID(id) {
 		try {
-			var data = await this.#db.query(`SELECT * FROM configs WHERE id = $1`,[id]);
+			var data = await this.db.query(`SELECT * FROM configs WHERE id = $1`,[id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -134,7 +126,7 @@ class ConfigStore extends DataStore {
 
 	async update(id, data = {}) {
 		try {
-			await this.#db.query(`UPDATE configs SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+			await this.db.query(`UPDATE configs SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -145,7 +137,7 @@ class ConfigStore extends DataStore {
 
 	async delete(id) {
 		try {
-			await this.#db.query(`DELETE FROM configs WHERE id = $1`, [id]);
+			await this.db.query(`DELETE FROM configs WHERE id = $1`, [id]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);

@@ -20,26 +20,18 @@ const KEYS = {
 }
 
 class ResponsePost extends DataObject {
-    #store;
-
     constructor(store, keys, data) {
         super(store, keys, data)
-        this.#store = store;
     }
 }
 
 class ResponsePostStore extends DataStore {
-	#db;
-	#bot;
-
-    constructor(bot, db) {
-        super();
-        this.#db = db;
-        this.#bot = bot;
+	constructor(bot, db) {
+        super(bot, db);
     }
 
     async init() {
-        this.#bot.on('messageReactionAdd', async (...args) => {
+        this.bot.on('messageReactionAdd', async (...args) => {
             try {
                 this.handleReactions(...args);
             } catch(e) {
@@ -47,7 +39,7 @@ class ResponsePostStore extends DataStore {
             }
         })
 
-        this.#bot.on('interactionCreate', async (...args) => {
+        this.bot.on('interactionCreate', async (...args) => {
             try {
                 this.handleInteractions(...args);
             } catch(e) {
@@ -55,7 +47,7 @@ class ResponsePostStore extends DataStore {
             }
         })
 
-        this.#bot.on('messageDelete', async ({ channel, id }) => {
+        this.bot.on('messageDelete', async ({ channel, id }) => {
             if(!channel.guild) return;
             await this.deleteByMessage(channel.guild.id, channel.id, id);
         })
@@ -63,7 +55,7 @@ class ResponsePostStore extends DataStore {
 
     async create(data = {}) {
         try {
-            var c = await this.#db.query(`INSERT INTO response_posts (
+            var c = await this.db.query(`INSERT INTO response_posts (
                 server_id,
                 channel_id,
                 message_id,
@@ -83,7 +75,7 @@ class ResponsePostStore extends DataStore {
 
     async index(server, channel, message, data = {}) {
         try {
-            await this.#db.query(`INSERT INTO response_posts (
+            await this.db.query(`INSERT INTO response_posts (
                 server_id,
                 channel_id,
                 message_id,
@@ -101,7 +93,7 @@ class ResponsePostStore extends DataStore {
 
     async get(server, channel, message) {
         try {
-            var data = await this.#db.query(`
+            var data = await this.db.query(`
                 SELECT * FROM response_posts WHERE
                 server_id = $1
                 AND channel_id = $2
@@ -114,7 +106,7 @@ class ResponsePostStore extends DataStore {
         
         if(data.rows?.[0]) {
             var post = new ResponsePost(this, KEYS, data.rows[0]);
-            var response = await this.#bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
+            var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
             if(response) post.response = response;
             
             return post;
@@ -123,7 +115,7 @@ class ResponsePostStore extends DataStore {
 
     async getByResponse(server, hid) {
         try {
-            var data = await this.#db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
+            var data = await this.db.query(`SELECT * FROM response_posts WHERE server_id = $1 AND response = $2`,[server, hid]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -131,7 +123,7 @@ class ResponsePostStore extends DataStore {
         
         if(data.rows?.[0]) {
             var post = new ResponsePost(this, KEYS, data.rows[0]);
-            var response = await this.#bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
+            var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
             if(response) post.response = response;
             
             return post;
@@ -140,7 +132,7 @@ class ResponsePostStore extends DataStore {
 
     async update(id, data = {}) {
         try {
-            await this.#db.query(`
+            await this.db.query(`
                 UPDATE response_posts SET
                 ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")}
                 WHERE id = $1
@@ -155,7 +147,7 @@ class ResponsePostStore extends DataStore {
 
     async delete(id) {
         try {
-            await this.#db.query(`
+            await this.db.query(`
                 DELETE FROM response_posts
                 WHERE id = $1
             `, [id]);
@@ -169,7 +161,7 @@ class ResponsePostStore extends DataStore {
 
     async deleteByMessage(server, channel, message) {
         try {
-            await this.#db.query(`
+            await this.db.query(`
                 DELETE FROM response_posts
                 WHERE server_id = $1
                 AND channel_id = $2
@@ -184,7 +176,7 @@ class ResponsePostStore extends DataStore {
     }
 
     async handleReactions(reaction, user) {
-        if(this.#bot.user.id == user.id) return;
+        if(this.bot.user.id == user.id) return;
         if(user.bot) return;
 
         var msg;
@@ -192,9 +184,9 @@ class ResponsePostStore extends DataStore {
         else msg = reaction.message;
         if(!msg.channel.guild) return;
 
-		var cfg = await this.#bot.stores.configs.get(msg.guild.id);
+		var cfg = await this.bot.stores.configs.get(msg.guild.id);
         var mem = await msg.guild.members.fetch(user.id);
-        var check = await this.#bot.handlers.interaction.checkPerms(
+        var check = await this.bot.handlers.interaction.checkPerms(
         	{
         		permissions: ['MANAGE_MESSAGES'],
         		opPerms: ['MANAGE_RESPONSES']
@@ -223,7 +215,7 @@ class ResponsePostStore extends DataStore {
         	)
         }
 
-        var u2 = await this.#bot.users.fetch(post.response.user_id);
+        var u2 = await this.bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
 
         var template = {
@@ -240,9 +232,9 @@ class ResponsePostStore extends DataStore {
             footer: {text: 'Awaiting acceptance/denial...'}
         }
 
-        var embeds = this.#bot.handlers.response.buildResponseEmbeds(post.response, template);
+        var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
 
-       	var ticket = await this.#bot.stores.tickets.get(msg.guild.id, post.response.hid);
+       	var ticket = await this.bot.stores.tickets.get(msg.guild.id, post.response.hid);
         switch(reaction.emoji.name) {
             case '❌':
                 var reason;
@@ -291,7 +283,7 @@ class ResponsePostStore extends DataStore {
 			            tch.delete();
 			        }
 
-                    this.#bot.emit('DENY', post.response);
+                    this.bot.emit('DENY', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -340,7 +332,7 @@ class ResponsePostStore extends DataStore {
 			            tch.delete();
 			        }
 
-                    this.#bot.emit('ACCEPT', post.response);
+                    this.bot.emit('ACCEPT', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -393,7 +385,7 @@ class ResponsePostStore extends DataStore {
                         await ch2.send(tmsg);
                     }
 
-                    await this.#bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+                    await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
 
                     msg.channel.send(`Channel created: <#${ch2.id}>`);
                 } catch(e) {
@@ -414,8 +406,8 @@ class ResponsePostStore extends DataStore {
 
         var {message: msg, user} = ctx;
 
-		var cfg = await this.#bot.stores.configs.get(ctx.guild.id);
-        var check = await this.#bot.handlers.interaction.checkPerms(
+		var cfg = await this.bot.stores.configs.get(ctx.guild.id);
+        var check = await this.bot.handlers.interaction.checkPerms(
         	{
         		permissions: ['MANAGE_MESSAGES'],
         		opPerms: ['MANAGE_RESPONSES']
@@ -424,10 +416,10 @@ class ResponsePostStore extends DataStore {
         )
         if(!check) return;
 
-        var u2 = await this.#bot.users.fetch(post.response.user_id);
+        var u2 = await this.bot.users.fetch(post.response.user_id);
         if(!u2) return await msg.channel.send("ERR! Couldn't fetch that response's user!");
 
-		var ticket = await this.#bot.stores.tickets.get(msg.guild.id, post.response.hid);
+		var ticket = await this.bot.stores.tickets.get(msg.guild.id, post.response.hid);
 		var cmp = msg.components;
         switch(ctx.customId) {
             case 'deny':
@@ -482,7 +474,7 @@ class ResponsePostStore extends DataStore {
                         } catch(e) { }
 			        }
 
-                    this.#bot.emit('DENY', post.response);
+                    this.bot.emit('DENY', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -536,7 +528,7 @@ class ResponsePostStore extends DataStore {
                         } catch(e) { }
 			        }
 
-                    this.#bot.emit('ACCEPT', post.response);
+                    this.bot.emit('ACCEPT', post.response);
                     await post.delete();
                 } catch(e) {
                     console.log(e);
@@ -578,7 +570,7 @@ class ResponsePostStore extends DataStore {
 					await msg.edit({
 						components: cmp
 					})
-                    await this.#bot.stores.tickets.create({
+                    await this.bot.stores.tickets.create({
                         server_id: msg.guild.id,
                         channel_id: ch2.id,
                         response_id: post.response.hid
@@ -605,7 +597,7 @@ class ResponsePostStore extends DataStore {
                 footer: {text: 'Awaiting acceptance/denial...'}
             }
 
-            var embeds = this.#bot.handlers.response.buildResponseEmbeds(post.response, template);
+            var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
             switch(ctx.customId) {
                 case 'first':
                     post.page = 1;

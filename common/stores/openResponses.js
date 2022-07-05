@@ -15,11 +15,8 @@ const KEYS = {
 }
 
 class OpenResponse extends DataObject {
-    #store;
-
     constructor(store, keys, data) {
         super(store, keys, data);
-        this.#store = store;
     }
 }
 
@@ -34,17 +31,12 @@ class OpenResponseStore extends DataStore {
         Will send to a server or discard once done
     */
 
-    #db;
-    #bot;
-
     constructor(bot, db) {
-        super();
-        this.#db = db;
-        this.#bot = bot;
+        super(bot, db);
     }
 
     async init() {
-    	await this.#db.query(`CREATE TABLE IF NOT EXISTS open_responses (
+    	await this.db.query(`CREATE TABLE IF NOT EXISTS open_responses (
 			id 			SERIAL PRIMARY KEY,
 			server_id 	TEXT,
 			channel_id 	TEXT,
@@ -60,7 +52,7 @@ class OpenResponseStore extends DataStore {
     
     async create(data = {}) {
         try {
-            var c = await this.#db.query(`INSERT INTO open_responses (
+            var c = await this.db.query(`INSERT INTO open_responses (
                 server_id,
                 channel_id,
                 message_id,
@@ -83,7 +75,7 @@ class OpenResponseStore extends DataStore {
 
     async index(server, channel, message, data = {}) {
         try {
-            await this.#db.query(`INSERT INTO open_responses (
+            await this.db.query(`INSERT INTO open_responses (
                 server_id,
                 channel_id,
                 message_id,
@@ -103,7 +95,7 @@ class OpenResponseStore extends DataStore {
 
     async get(channel) {
         try {
-            var data = await this.#db.query(`SELECT * FROM open_responses WHERE channel_id = $1`,[channel]);
+            var data = await this.db.query(`SELECT * FROM open_responses WHERE channel_id = $1`,[channel]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -111,7 +103,7 @@ class OpenResponseStore extends DataStore {
         
         if(data.rows?.[0]) {
             var response = new OpenResponse(this, KEYS, data.rows[0])
-            var form = await this.#bot.stores.forms.get(response.server_id, response.form);
+            var form = await this.bot.stores.forms.get(response.server_id, response.form);
             if(form?.id) response.form = form;
             return response;
         } else return new OpenResponse(this, KEYS, { channel_id: channel });
@@ -119,7 +111,7 @@ class OpenResponseStore extends DataStore {
 
     async getID(id) {
         try {
-            var data = await this.#db.query(`SELECT * FROM open_responses WHERE id = $1`,[id]);
+            var data = await this.db.query(`SELECT * FROM open_responses WHERE id = $1`,[id]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -127,7 +119,7 @@ class OpenResponseStore extends DataStore {
         
         if(data.rows?.[0]) {
             var response = new OpenResponse(this, KEYS, data.rows[0])
-            var form = await this.#bot.stores.forms.get(response.server_id, response.form);
+            var form = await this.bot.stores.forms.get(response.server_id, response.form);
             if(form?.id) response.form = form;
             return response;
         } else return new OpenResponse(this, KEYS, { });
@@ -135,7 +127,7 @@ class OpenResponseStore extends DataStore {
 
     async update(id, data = {}) {
         try {
-            await this.#db.query(`UPDATE open_responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
+            await this.db.query(`UPDATE open_responses SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE id = $1`,[id, ...Object.values(data)]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -146,7 +138,7 @@ class OpenResponseStore extends DataStore {
 
     async delete(id) {
         try {
-            await this.#db.query(`DELETE FROM open_responses WHERE id = $1`, [id]);
+            await this.db.query(`DELETE FROM open_responses WHERE id = $1`, [id]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);

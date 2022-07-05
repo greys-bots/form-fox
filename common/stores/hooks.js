@@ -11,26 +11,18 @@ const KEYS = {
 }
 
 class Hook extends DataObject {
-	#store;
-
 	constructor(store, keys, data) {
 		super(store, keys, data);
-		this.#store = store;
 	}
 }
 
 class HookStore extends DataStore {
-	#db;
-	#bot;
-	
 	constructor(bot, db) {
-		super()
-		this.#db = db;
-		this.#bot = bot;
+		super(bot, db)
 	}
 
 	async init() {
-		await this.#db.query(`CREATE TABLE IF NOT EXISTS hooks (
+		await this.db.query(`CREATE TABLE IF NOT EXISTS hooks (
 			id 			SERIAL PRIMARY KEY,
 			server_id	TEXT,
 			form 		TEXT,
@@ -41,7 +33,7 @@ class HookStore extends DataStore {
 		
 		// custom events
 		EVENTS.forEach(e => {
-			this.#bot.on(e.toUpperCase(), async (response) => {
+			this.bot.on(e.toUpperCase(), async (response) => {
 				var hooks = await this.getByForm(response.server_id, response.form.hid);
 				if(!hooks?.[0]) return;
 				hooks = hooks.filter(h => h.events.includes(e));
@@ -63,7 +55,7 @@ class HookStore extends DataStore {
 
 	async create(data = {}) {
 		try {
-			var data = await this.#db.query(`INSERT INTO hooks (
+			var data = await this.db.query(`INSERT INTO hooks (
 				server_id,
 				form,
 				hid,
@@ -83,7 +75,7 @@ class HookStore extends DataStore {
 
 	async index(server, form, data = {}) {
 		try {
-			await this.#db.query(`INSERT INTO hooks (
+			await this.db.query(`INSERT INTO hooks (
 				server_id,
 				form,
 				hid,
@@ -102,7 +94,7 @@ class HookStore extends DataStore {
 
 	async get(server, form, hid) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM hooks
 				WHERE server_id = $1
 				AND form = $2
@@ -120,7 +112,7 @@ class HookStore extends DataStore {
 
 	async getID(id) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM hooks
 				WHERE id = $1
 			`,[id]);
@@ -136,7 +128,7 @@ class HookStore extends DataStore {
 
 	async getByForm(server, form) {
 		try {
-			var data = await this.#db.query(`
+			var data = await this.db.query(`
 				SELECT * FROM hooks
 				WHERE server_id = $1
 				AND form = $2
@@ -153,7 +145,7 @@ class HookStore extends DataStore {
 
 	async update(id, data = {}) {
 		try {
-			await this.#db.query(`UPDATE hooks SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE server = $1`,[id, ...Object.values(data)]);
+			await this.db.query(`UPDATE hooks SET ${Object.keys(data).map((k, i) => k+"=$"+(i+2)).join(",")} WHERE server = $1`,[id, ...Object.values(data)]);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject(e.message);
@@ -164,7 +156,7 @@ class HookStore extends DataStore {
 
 	async delete(id) {
 		try {
-			await this.#db.query(`
+			await this.db.query(`
 				DELETE FROM hooks
 				WHERE id = $1
 			`, [id]);
@@ -178,7 +170,7 @@ class HookStore extends DataStore {
 
 	async deleteByForm(server, form) {
 		try {
-			await this.#db.query(`
+			await this.db.query(`
 				DELETE FROM hooks
 				WHERE server_id = $1
 				AND form = $2
