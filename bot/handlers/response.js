@@ -134,6 +134,9 @@ class ResponseHandler {
 			})
 		} catch(e) {
 			console.log(e);
+			if (e.message === 'Cannot send messages to this user') {
+				return 'Please turn on Direct Messages from Server Members in your Privacy Settings at the top.';
+			}
 			return 'ERR! Couldn\'t start response process: '+(e.message || e);
 		}
 
