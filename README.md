@@ -13,7 +13,7 @@ You can invite Form Fox with [this link](https://discord.com/oauth2/authorize?cl
 - React to the post from before, or use `ff!apply` to open a response
 - Finish the response to make sure everything's working
 
-You're all set! The bot should not function properly.
+You're all set! The bot should now function properly.
 
 ## Features
 ### Several question types
