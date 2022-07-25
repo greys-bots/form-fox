@@ -8,7 +8,7 @@
     "url": "https://github.com/greys-bots/form-fox.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bot/bot"
   },
   "keywords": [],
   "author": "",
