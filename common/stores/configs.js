@@ -10,8 +10,7 @@ const KEYS = {
 	ticket_category: { patch: true },
 	ticket_message: { patch: true },
 	autodm: { patch: true },
-	autothread: { patch: true },
-	reactions: { patch: true }
+	autothread: { patch: true }
 }
 
 class Config {
@@ -88,13 +87,12 @@ class ConfigStore {
 				ticket_category,
 				ticket_message,
 				autodm,
-				autothread,
-				reactions
+				autothread
 			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			[server, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
 			 data.embed ?? true, data.opped ?? {roles: [], users: []}, data.ticket_category,
-			 data.ticket_message, data.autodm, data.autothread, data.reactions]);
+			 data.ticket_message, data.autodm, data.autothread]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
@@ -116,13 +114,12 @@ class ConfigStore {
 				ticket_category,
 				ticket_message,
 				autodm,
-				autothread,
-				reactions
+				autothread
 			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
 			[server, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
 			 data.embed ?? true, data.opped ?? {roles: [], users: []}, data.ticket_category,
-			 data.ticket_message, data.autodm, data.autothread, data.reactions]);
+			 data.ticket_message, data.autodm, data.autothread]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
