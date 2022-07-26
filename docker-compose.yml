@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   node:
+    image: $DOCKER_REGISTRY_URL
     build:
       context: .
     env_file: ./.env
@@ -9,9 +10,6 @@ services:
     command: npm start
     links:
       - db
-    volumes:
-      - .:/app/
-      - /app/node_modules
   db:
     image: postgres:14.4-alpine
     restart: always
