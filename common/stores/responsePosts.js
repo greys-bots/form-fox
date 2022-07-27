@@ -423,6 +423,7 @@ class ResponsePostStore extends DataStore {
 		var cmp = msg.components;
         switch(ctx.customId) {
             case 'deny':
+            	await ctx.deferUpdate();
                 var reason;
                 await msg.channel.send([
                     'Would you like to give a denial reason?\n',
