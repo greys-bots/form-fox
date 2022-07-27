@@ -31,7 +31,7 @@ class Command extends SlashCommand {
 		var form;
 		if(!id) {
 			form = await this.#stores.forms.getByApplyChannel(ctx.guild.id, ctx.channel.id);
-			if(!form.id) return "Please supply a form ID, or use this in a form's apply channel!";
+			if(!form?.id) return "Please supply a form ID, or use this in a form's apply channel!";
 		} else {
 			form = await this.#stores.forms.get(ctx.guildId, id);;
 			if(!form.id) return 'Form not found!';

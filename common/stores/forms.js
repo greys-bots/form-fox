@@ -26,6 +26,12 @@ class Form extends DataObject {
 	constructor(store, keys, data) {
 		super(store, keys, data)
 	}
+
+	toJSON() {
+		var {store, KEYS, ...rest} = this;
+
+		return rest;
+	}
 }
 
 class FormStore extends DataStore {
