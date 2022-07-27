@@ -51,7 +51,7 @@ class Command extends SlashCommand {
 		if(conf.msg) {
 			msg = conf.msg;
 		} else {
-			var results = await this.#stores.forms.import(ctx.guildId, data);
+			var results = await this.#stores.forms.import(ctx.guild.id, data);
 			msg = "Forms imported!\n" +
 				  `Updated: ${results.updated}\n` +
 				  `Created: ${results.created}\n` +

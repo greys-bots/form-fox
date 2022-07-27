@@ -422,13 +422,17 @@ class FormStore extends DataStore {
 					channel_id,
 					roles,
 					responses,
+					id,
 					...form
 				} = f;
 				if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
-					await this.update(server, form.hid, form);
+					await this.update(id, form);
 					updated++;
 				} else {
-					await this.create(server, form);
+					await this.create({
+						server_id: server,
+						...form
+					});
 					created++;
 				}
 			}
