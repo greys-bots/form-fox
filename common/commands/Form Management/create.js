@@ -85,7 +85,7 @@ class Command extends TextCommand {
 			await resp.delete();
 
 			if(TYPES[type].setup) {
-				var r = await TYPES[type].setup(bot, msg, message);
+				var r = await TYPES[type].setup(this.#bot, msg, message);
 				if(typeof r == "string") return r;
 
 				Object.assign(data.questions[i], r)
@@ -94,7 +94,7 @@ class Command extends TextCommand {
 			await message.edit(`Would you like this question to be required?`);
 			REACTS.forEach(r => message.react(r));
 
-			confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
+			confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();
