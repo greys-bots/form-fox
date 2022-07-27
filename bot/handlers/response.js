@@ -48,6 +48,9 @@ class ResponseHandler {
 	async startResponse(ctx) {
 		var {user, form, cfg} = ctx;
 
+		if(!form.open)
+			return "That form isn't accepting responses!";
+
 		if(!form.channel_id && !cfg?.response_channel)
 			return 'No response channel set for that form! Ask the mods to set one!';
 
