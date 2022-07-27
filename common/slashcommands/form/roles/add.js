@@ -52,8 +52,8 @@ class Command extends SlashCommand {
 		if(!form.id) return 'Form not found!';
 
 		if(!form.roles) form.roles = [];
-		roles = JSON.stringify(roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: [event]})));
-		form.roles = JSON.stringify(form.roles.concat(roles));
+		roles = roles.filter(r => !form.roles.find(x => x.id == r.id)).map(r => ({id: r.id, events: [event]}));
+		form.roles = form.roles.concat(roles);
 
 		await form.save();
 		return "Form updated!";

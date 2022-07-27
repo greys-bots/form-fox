@@ -35,6 +35,7 @@ class Command extends SlashCommand {
 
 			var embeds = [];
 			for(var f of forms) {
+				console.log(f.roles)
 				var responses = await this.#stores.responses.getByForm(ctx.guildId, f.hid);
 				embeds.push({
 					title: `${f.name} (${f.hid}) ` +
@@ -56,6 +57,8 @@ class Command extends SlashCommand {
 
 		var form = await this.#stores.forms.get(ctx.guildId, arg);
 		if(!form.id) return 'Form not found!';
+		console.log(form.roles)
+
 		
 		var responses = await this.#stores.responses.getByForm(ctx.guildId, form.hid);
 		return {embeds: [{

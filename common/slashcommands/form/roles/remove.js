@@ -41,7 +41,7 @@ class Command extends SlashCommand {
 		if(!form.id) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles to remove!";
-		form.roles = JSON.stringify(form.roles.filter(r => !roles.includes(r.id)));
+		form.roles = form.roles.filter(r => !roles.includes(r.id));
 
 		await form.save()
 		return "Form updated!";
