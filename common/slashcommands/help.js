@@ -121,7 +121,7 @@ class Command extends SlashCommand {
 
 				cmds = m.subcommands.map(o => o);
 				var tmp = await this.#bot.utils.genEmbeds(this.#bot, cmds, (c) => {
-					return {name: c.name, value: c.description}
+					return {name: `/${m.name} ${c.name}`, value: c.description}
 				}, e, 10, {addition: ""})
 				embeds = embeds.concat(tmp.map(e => e.embed))
 			}
@@ -133,7 +133,7 @@ class Command extends SlashCommand {
 					fields: []
 				}
 
-				for(var c of ug) e.fields.push({name: c.name, value: c.description});
+				for(var c of ug) e.fields.push({name: '/' + c.name, value: c.description});
 				embeds.push(e)
 			}
 		} else {
