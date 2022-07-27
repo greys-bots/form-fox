@@ -284,7 +284,16 @@ class FormStore extends DataStore {
 									  'this form is not accepting responses right now!' :
 									  'react below to apply to this form!')
 							}
-						}]})
+						}]}, components: [{
+							type: 1,
+							components: [{
+								type: 2,
+								label: 'Apply',
+								emoji: form.emoji || "📝",
+								style: 1,
+								custom_id: `${form.hid}-apply`
+							}]
+						}])
 					} catch(e) {
 						errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 					}
