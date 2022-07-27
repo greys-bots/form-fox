@@ -28,7 +28,7 @@ class Form extends DataObject {
 	}
 
 	toJSON() {
-		var {store, KEYS, ...rest} = this;
+		var {store, KEYS, old, ...rest} = this;
 
 		return rest;
 	}

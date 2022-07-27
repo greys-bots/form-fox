@@ -40,12 +40,15 @@ class HookStore extends DataStore {
 				if(!hooks[0]) return;
 
 				for(var hook of hooks) {
+					var data = {
+						action: e,
+						response
+					}
+
 					try {
-						await axios.post(hook.url, {
-							action: e,
-							response
-						})
+						await axios.post(hook.url, data)
 					} catch(e) {
+						console.log(e)
 						console.log(e.response)
 					}
 				}
