@@ -9,13 +9,26 @@ const WELCOMES = [
 module.exports = async (msg, bot)=>{
 	if(msg.author.bot) return;
 	var config = await bot.stores.configs.get(msg.channel.guild?.id);
-	var prefix = (config?.prefix ? config.prefix : bot.prefix).toLowerCase();
-	if(!msg.content.toLowerCase().startsWith(prefix)) {
+	var prefix; 
+	var match;
+	var content;
+	if(process.env.REQUIRE_MENTIONS) {
+		prefix = new RegExp(`^<@!?(?:${bot.user.id})>`);
+		match = msg.content.match(prefix);
+		content = msg.content.replace(prefix, '');
+	} else {
+		prefix = (config?.prefix ? config.prefix : bot.prefix).toLowerCase();
+		match = msg.content.startsWith(prefix);
+		content = msg.content.slice(prefix.length);
+	}
+		
+	if(!match?.length) {
 		var thanks = msg.content.match(/^(thanks? ?(you|u)?|ty),? ?(form )?fox/i);
 		if(thanks) return await msg.channel.send(WELCOMES[Math.floor(Math.random() * WELCOMES.length)]);
 		return;
 	}
-	if(msg.content.toLowerCase() == prefix) return msg.channel.send("Eee!");
+	
+	if(content == '') return msg.channel.send("Eee!");
 	
 	var log = [
 		`Guild: ${msg.channel.guild?.name || "DMs"} (${msg.channel.guild?.id || msg.channel.id})`,
@@ -24,7 +37,6 @@ module.exports = async (msg, bot)=>{
 		`--------------------`
 	];
 
-	var content = msg.content.slice(prefix.length);
 	let {command, args} = await bot.handlers.command.parse(content);
 	if(!command) {
 		log.push('- Command not found -');
