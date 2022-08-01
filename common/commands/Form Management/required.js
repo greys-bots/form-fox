@@ -51,7 +51,7 @@ class Command extends TextCommand {
 
 			REACTS.forEach(r => message.react(r));
 			
-			var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
+			var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 			if(confirm.msg) return confirm.msg;
 
 			form.questions = form.questions.map(q => {

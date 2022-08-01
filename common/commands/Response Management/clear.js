@@ -36,7 +36,7 @@ class Command extends TextCommand {
 
 			REACTS.forEach(r => message.react(r));
 
-			var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
+			var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 			if(confirm.msg) return confirm.msg;
 
 			try {
@@ -57,7 +57,7 @@ class Command extends TextCommand {
 
 		REACTS.forEach(r => message.react(r));
 
-		var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
+		var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 		if(confirm.msg) return confirm.msg;
 
 		var forms = await this.#stores.forms.getAll(msg.channel.guild.id);

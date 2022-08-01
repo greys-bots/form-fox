@@ -38,7 +38,7 @@ class Command extends TextCommand {
 		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
-		var embeds = await this.#bot.utils.genEmbeds(bot, form.questions, (data, i) => {
+		var embeds = await this.#bot.utils.genEmbeds(this.#bot, form.questions, (data, i) => {
 			return {
 				name: `**${data.value}${data.required ? " (required)" : ""}**`,
 				value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
@@ -109,7 +109,7 @@ class AddCommand extends TextCommand {
 		await resp.delete();
 
 		if(TYPES[type].setup) {
-			var r = await TYPES[type].setup(bot, msg, message);
+			var r = await TYPES[type].setup(this.#bot, msg, message);
 			if(typeof r == "string") return r;
 
 			Object.assign(question, r)
@@ -118,7 +118,7 @@ class AddCommand extends TextCommand {
 		message = await msg.channel.send(`Would you like this question to be required?`);
 		REACTS.forEach(r => message.react(r));
 
-		var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
+		var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 		if(confirm.confirmed) question.required = true;
 		
 		await msg.channel.send([
@@ -242,7 +242,7 @@ class SetCommand extends TextCommand {
 			await message.edit(`Would you like this question to be required?`);
 			REACTS.forEach(r => message.react(r));
 
-			var confirm = await this.#bot.utils.getConfirmation(bot, msg, msg.author);
+			var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();

@@ -55,7 +55,7 @@ class Command extends TextCommand {
 					footer: {text: 'See next page for questions' + (form.open ? '' : '| This form is closed!')}
 				}}];
 
-				var qembeds = await this.#bot.utils.genEmbeds(bot, form.questions, (data, i) => {
+				var qembeds = await this.#bot.utils.genEmbeds(this.#bot, form.questions, (data, i) => {
 					return {
 						name: `**${data.value}${data.required ? " (required)" : ""}**`,
 						value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +

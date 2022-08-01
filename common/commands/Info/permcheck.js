@@ -51,7 +51,7 @@ class Command extends TextCommand {
 				res.push({
 					title: "Check Results",
 					description: `Channel: <#${c}>`,
-					fields: this.readout(bot, chan)
+					fields: this.readout(this.#bot, chan)
 				})
 			}
 
@@ -74,7 +74,7 @@ class Command extends TextCommand {
 		return {
 			title: "Check Results",
 			description: `Channel: <#${chan.id}>`,
-			fields: this.readout(bot, chan)
+			fields: this.readout(this.#bot, chan)
 		}
 	}
 

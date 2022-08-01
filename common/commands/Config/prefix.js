@@ -31,6 +31,8 @@ class Command extends TextCommand {
 	}
 
 	async execute({bot, msg, args}) {
+		return 'This command has been deprecated!';
+		/*
 		var cfg = await this.#stores.configs.get(msg.channel.guild.id);
 		if(!cfg) cfg = {prefix: "", new: true};
 
@@ -40,7 +42,7 @@ class Command extends TextCommand {
 			var message = await msg.channel.send(`Current prefix: ${cfg.prefix}\nWould you like to clear it?`);
 			REACTS.forEach(r => message.react(r));
 
-			var conf = await this.#bot.utils.getConfirmation(bot, message, msg.author);
+			var conf = await this.#bot.utils.getConfirmation(this.#bot, message, msg.author);
 			if(conf.msg) return conf.msg;
 
 			cfg.prefix = undefined;
@@ -52,6 +54,7 @@ class Command extends TextCommand {
 		await cfg.save()
 
 		return 'Prefix changed!';
+		*/
 	}
 }
 
