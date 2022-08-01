@@ -1,29 +1,41 @@
 const { qTypes:TYPES, numbers: NUMS } = require('../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'view',
-		description: "View a form's questions",
-		options: [{
-			name: 'form_id',
-			description: "The form's ID",
-			type: 3,
-			required: true,
-			autocomplete: true
-		}]
-	},
-	usage: [
-		"[form_id] - View all questions on a form"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'view',
+			description: "View a form's questions",
+			options: [{
+				name: 'form_id',
+				description: "The form's ID",
+				type: 3,
+				required: true,
+				autocomplete: true
+			}],
+			usage: [
+				"[form_id] - View all questions on a form"
+			],
+			ephemeral: true,
+			guildOnly: true,
+			permissions: ['MANAGE_GUILD']
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
+		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
 		var color = parseInt(form.color, 16);
 		if(isNaN(color)) color = 0x55aa55;
 
-		var embeds = await ctx.client.utils.genEmbeds(ctx.client, form.questions, (data, i) => {
+		var embeds = await this.#bot.utils.genEmbeds(this.#bot, form.questions, (data, i) => {
 			var text;
 			if(!['mc', 'cb'].includes(data.type)) {
 				text = "Type: " + TYPES[data.type].alias[0];
@@ -71,9 +83,10 @@ module.exports = {
 		})
 
 		return embeds.map(e => e.embed);
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -88,8 +101,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	ephemeral: true,
-	guildOnly: true,
-	permissions: ['MANAGE_GUILD']
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

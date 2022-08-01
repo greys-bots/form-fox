@@ -1,28 +1,39 @@
 const OPTIONS = require(__dirname + '/../../extras').options;
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'copy',
-		description: 'Copy a form and its data',
-		options: [
-			{
-				name: 'form_id',
-				description: 'The ID of the form to copy',
-				type: 3,
-				required: true,
-				autocomplete: true
-			}
-		]
-	},
-	usage: [
-		"[form_id] - Runs a menu to copy a form"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'copy',
+			description: 'Copy a form and its data',
+			options: [
+				{
+					name: 'form_id',
+					description: 'The ID of the form to copy',
+					type: 3,
+					required: true,
+					autocomplete: true
+				}
+			],
+			usage: [
+				"[form_id] - Runs a menu to copy a form"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var farg = ctx.options.get('form_id')?.value.toLowerCase().trim();
-		var form = await ctx.client.stores.forms.get(ctx.guildId, farg);
+		var form = await this.#stores.forms.get(ctx.guildId, farg);
 		if(!form.id) return 'Form not found!';
 
-		var tocopy = await ctx.client.utils.awaitSelection(ctx, OPTIONS.map(o => {
+		var tocopy = await this.#bot.utils.awaitSelection(ctx, OPTIONS.map(o => {
 				return {
 					label: o.val,
 					value: o.val,
@@ -38,7 +49,10 @@ module.exports = {
 		tocopy.forEach(v => data[v] = form[v]);
 
 		try {
-			var created = await ctx.client.stores.forms.create(ctx.guildId, data);
+			var created = await this.#stores.forms.create({
+				server_id: ctx.guildId,
+				...data
+			});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
@@ -49,9 +63,10 @@ module.exports = {
 					 `See \`/help\` for more customization commands`
 		});
 		return;
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -66,7 +81,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

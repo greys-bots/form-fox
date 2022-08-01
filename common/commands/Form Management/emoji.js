@@ -1,15 +1,32 @@
 const REACTS = require(__dirname + '/../../extras').confirmReacts;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> 'Set emoji a form',
-	usage: ()=> [
-		' [form id] - Views and optionally clears an existing emote',
-		' [form id] [new emoji] - Sets emoji for the given form'
-	],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'emoji',
+			description: 'Set emoji a form',
+			usage: [
+				' [form id] - Views and optionally clears an existing emote',
+				' [form id] [new emoji] - Sets emoji for the given form'
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need at least a form!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
 		var val;
@@ -21,7 +38,7 @@ module.exports = {
 			);
 			REACTS.forEach(r => message.react(r));
 
-			var conf = await bot.utils.getConfirmation(bot, message, msg.author);
+			var conf = await this.#bot.utils.getConfirmation(bot, message, msg.author);
 			if(conf.msg) return conf.msg;
 
 			val = null;
@@ -42,8 +59,7 @@ module.exports = {
 		}
 
 		return 'Emoji updated!';
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

@@ -1,16 +1,33 @@
 const REACTS = require(__dirname + '/../../extras').confirmReacts;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> "Set what roles are added to users after completing specific forms",
-	usage: ()=> [
-		' - View current role configs',
-		' [form id] - View or clear a form\'s roles',
-		' [form id] [role] [role] ... - Set a form\'s roles. Best done with mentions or ids'
-	],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'roles',
+			description: "Set what roles are added to users after completing specific forms",
+			usage: [
+				' - View current role configs',
+				' [form id] - View or clear a form\'s roles',
+				' [form id] [role] [role] ... - Set a form\'s roles. Best done with mentions or ids'
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		switch(args.length) {
 			case 0:
-				var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
+				var forms = await this.#stores.forms.getAll(msg.channel.guild.id);
 				var embeds = []
 
 				for(var form of forms) {
@@ -28,7 +45,7 @@ module.exports = {
 				return embeds;
 				break;
 			case 1:
-				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+				var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(!form.id) return 'Form not found!';
 
 				await msg.channel.send({embeds: [{
@@ -41,7 +58,7 @@ module.exports = {
 					var message = await msg.channel.send('Would you like to clear these roles?');
 					REACTS.forEach(r => message.react(r));
 					
-					var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+					var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 					if(confirm.msg) return confirm.msg;
 
 					try {
@@ -56,7 +73,7 @@ module.exports = {
 				return;
 				break;
 			default:
-				var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+				var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 				if(!form.id) return 'Form not found!';
 
 				var roles = args.slice(1).map(a => {
@@ -77,8 +94,7 @@ module.exports = {
 				return 'Roles set!';
 				break;
 		}
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

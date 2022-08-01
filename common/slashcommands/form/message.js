@@ -1,39 +1,50 @@
 const { clearBtns } = require('../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'message',
-		description: "Changes a form's acceptance message",
-		options: [
-			{
-				name: 'form_id',
-				description: 'The form\'s ID',
-				type: 3,
-				required: true,
-				autocomplete: true
-			},
-			{
-				name: 'message',
-				description: 'The new acceptance message. Omit to view/clear current value',
-				type: 3,
-				required: false
-			}
-		]
-	},
-	usage: [
-		"[form_id] - View and optionally clear a form's message",
-		"[form_id] [message] - Set a form's message"
-	],
-	extra: 
-		"Variables available:\n" +
-		"$USER - ping the user who opened the response\n" +
-		"$GUILD - the guild's name\n" +
-		"$FORM - the form's name\n" +
-		"$FORMID - the form's ID",
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'message',
+			description: "Changes a form's acceptance message",
+			options: [
+				{
+					name: 'form_id',
+					description: 'The form\'s ID',
+					type: 3,
+					required: true,
+					autocomplete: true
+				},
+				{
+					name: 'message',
+					description: 'The new acceptance message. Omit to view/clear current value',
+					type: 3,
+					required: false
+				}
+			],
+			usage: [
+				"[form_id] - View and optionally clear a form's message",
+				"[form_id] [message] - Set a form's message"
+			],
+			extra: 
+				"Variables available:\n" +
+				"$USER - ping the user who opened the response\n" +
+				"$GUILD - the guild's name\n" +
+				"$FORM - the form's name\n" +
+				"$FORMID - the form's ID",
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var m = ctx.options.get('message')?.value;
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
+		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
 		if(!m) {
@@ -56,7 +67,7 @@ module.exports = {
 			await ctx.reply(rdata);
 
 			var reply = await ctx.fetchReply();
-			var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+			var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
 			var msg;
 			if(conf.msg) {
 				msg = conf.msg;
@@ -74,9 +85,10 @@ module.exports = {
 		form.message = m;
 		await form.save()
 		return 'Form updated!';
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -91,7 +103,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

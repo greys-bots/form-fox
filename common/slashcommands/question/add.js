@@ -1,57 +1,66 @@
 const { qTypes: TYPES } = require('../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'add',
-		description: "Add a question to a form",
-		type: 1,
-		options: [
-			{
-				name: 'form_id',
-				description: "The form's ID",
-				type: 3,
-				required: true,
-				autocomplete: true
-			},
-			{
-				name: 'question',
-				description: "The question to add",
-				type: 3,
-				required: true
-			},
-			{
-				name: 'type',
-				description: "The type of the question",
-				type: 3,
-				required: true,
-				choices: Object.keys(TYPES).map(t => {
-					return {
-						name: TYPES[t].alias[0],
-						value: t
-					}
-				})
-			},
-			{
-				name: 'required',
-				description: "If the question is required",
-				type: 5,
-				required: true
-			},
-			{
-				name: 'position',
-				description: "Where to put the question. Leave empty for last",
-				type: 4,
-				required: false
-			}
-		]
-	},
-	usage: [
-		"[form_id] [question] [type] [required] - Add a new question to a form",
-		"[form_id] [question] [type] [required] [position] - Add a new question to a form and set its position"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'add',
+			description: "Add a question to a form",
+			type: 1,
+			options: [
+				{
+					name: 'form_id',
+					description: "The form's ID",
+					type: 3,
+					required: true,
+					autocomplete: true
+				},
+				{
+					name: 'question',
+					description: "The question to add",
+					type: 3,
+					required: true
+				},
+				{
+					name: 'type',
+					description: "The type of the question",
+					type: 3,
+					required: true,
+					choices: Object.keys(TYPES).map(t => {
+						return {
+							name: TYPES[t].alias[0],
+							value: t
+						}
+					})
+				},
+				{
+					name: 'required',
+					description: "If the question is required",
+					type: 5,
+					required: true
+				},
+				{
+					name: 'position',
+					description: "Where to put the question. Leave empty for last",
+					type: 4,
+					required: false
+				}
+			],
+			usage: [
+				"[form_id] [question] [type] [required] - Add a new question to a form",
+				"[form_id] [question] [type] [required] [position] - Add a new question to a form and set its position"
+			],
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
+		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
 		var q = ctx.options.getString('question').trim();
@@ -96,7 +105,7 @@ module.exports = {
 					}
 				]
 			}
-			var m = await ctx.client.utils.awaitModal(ctx, mdata, ctx.user, false, 300000)
+			var m = await this.#bot.utils.awaitModal(ctx, mdata, ctx.user, false, 300000)
 			if(!m) return "No choices given!";
 			question.choices = m.fields.getField('answers').value.trim().split("\n").slice(0, 10);
 
@@ -123,7 +132,7 @@ module.exports = {
 				}],
 				fetchReply: true
 			});
-			var c = await ctx.client.utils.getConfirmation(ctx.client, rep, ctx.user);
+			var c = await this.#bot.utils.getConfirmation(this.#bot, rep, ctx.user);
 			if(c.confirmed) question.other = true;
 		}
 
@@ -131,9 +140,10 @@ module.exports = {
 		await form.save()
 
 		return "Question added!";
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -148,5 +158,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

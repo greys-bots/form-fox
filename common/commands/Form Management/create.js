@@ -1,15 +1,32 @@
 const {qTypes:TYPES, confirmReacts:REACTS} = require(__dirname + '/../../extras');
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: () => 'Create a new form',
-	usage: () => [' - Opens a menu to make a new form'],
-	desc: () => [
-		"Question types:",
-		"```",
-		Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}`).join("\n"),
-		"```"
-	].join("\n"),
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'create',
+			description: 'Create a new form',
+			usage: [' - Opens a menu to make a new form'],
+			extra:
+				"Question types:" +
+				"\n```\n" +
+				Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}`).join("\n") +
+				"\n```",
+			alias: ['new', 'add', 'n', '+'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		var data = {};
 		var message, confirm;
 
@@ -68,7 +85,7 @@ module.exports = {
 			await resp.delete();
 
 			if(TYPES[type].setup) {
-				var r = await TYPES[type].setup(bot, msg, message);
+				var r = await TYPES[type].setup(this.#bot, msg, message);
 				if(typeof r == "string") return r;
 
 				Object.assign(data.questions[i], r)
@@ -77,7 +94,7 @@ module.exports = {
 			await message.edit(`Would you like this question to be required?`);
 			REACTS.forEach(r => message.react(r));
 
-			confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+			confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();
@@ -96,22 +113,22 @@ module.exports = {
 
 		if(data.questions.length == 0) return 'No questions added! Aborting!';
 
-		var code = bot.utils.genCode(bot.chars);
 		try {
-			var fm = await bot.stores.forms.create(msg.channel.guild.id, data);
+			var fm = await this.#stores.forms.create({
+				server_id: msg.channel.guild.id,
+				...data
+			});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		return [
 			`Form created! ID: ${fm.hid}`,
-			`Use \`${bot.prefix}channel ${fm.hid}\` to change what channel this form's responses go to!`,
-			`Use \`${bot.prefix}post ${fm.hid}\` with a channel to post your form!`,
-			`See \`${bot.prefix}h\` for more customization commands`	
+			`Use \`${this.#bot.prefix}channel ${fm.hid}\` to change what channel this form's responses go to!`,
+			`Use \`${this.#bot.prefix}post ${fm.hid}\` with a channel to post your form!`,
+			`See \`${this.#bot.prefix}h\` for more customization commands`	
 		].join('\n');
-	},
-	alias: ['new', 'add', 'n', '+'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

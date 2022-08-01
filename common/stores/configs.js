@@ -1,3 +1,5 @@
+const { Models: { DataStore, DataObject } } = require('frame');
+
 const KEYS = {
 	id: { },
 	server_id: { },
@@ -13,70 +15,37 @@ const KEYS = {
 	autothread: { patch: true }
 }
 
-class Config {
-	#store;
-	
-	constructor(store, data) {
-		this.#store = store;
-		for(var k in KEYS) this[k] = data[k];
-	}
-
-	async fetch() {
-		var data = await this.#store.getID(this.id);
-		for(var k in KEYS) this[k] = data[k];
-
-		return this;
-	}
-
-	async save() {
-		var obj = await this.verify();
-
-		var data;
-		if(this.id) data = await this.#store.update(this.id, obj);
-		else data = await this.#store.create(this.server_id, obj);
-		for(var k in KEYS) this[k] = data[k];
-		return this;
-	}
-
-	async delete() {
-		await this.#store.delete(this.id);
-	}
-
-	async verify(patch = true /* generate patch-only object */) {
-		var obj = {};
-		var errors = []
-		for(var k in KEYS) {
-			if(!KEYS[k].patch && patch) continue;
-			if(this[k] === undefined) continue;
-			if(this[k] === null) {
-				obj[k] = null;
-				continue;
-			}
-
-			var test = true;
-			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-			if(!test) {
-				errors.push(KEYS[k].err);
-				continue;
-			}
-			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-			else obj[k] = this[k];
-		}
-
-		if(errors.length) throw new Error(errors.join("\n"));
-		return obj;
+class Config extends DataObject {	
+	constructor(store, keys, data) {
+		super(store, keys, data);
 	}
 }
 
-class ConfigStore {
+class ConfigStore extends DataStore {
 	constructor(bot, db) {
-		this.db = db;
-		this.bot = bot;
-	};
+		super(bot, db)
+	}
 
-	async create(server, data = {}) {
+	async init() {
+		await this.db.query(`CREATE TABLE IF NOT EXISTS configs (
+			id 					SERIAL PRIMARY KEY,
+			server_id 			TEXT,
+			response_channel 	TEXT,
+			message 			TEXT,
+			prefix 				TEXT,
+			reacts 				BOOLEAN,
+			embed 				BOOLEAN,
+			opped 				JSONB,
+			ticket_category 	TEXT,
+			ticket_message		TEXT,
+			autodm 				TEXT,
+			autothread			BOOLEAN
+		)`)
+	}
+
+	async create(data = {}) {
 		try {
-			await this.db.query(`INSERT INTO configs (
+			var c = await this.db.query(`INSERT INTO configs (
 				server_id,
 				response_channel,
 				message,
@@ -88,8 +57,9 @@ class ConfigStore {
 				ticket_message,
 				autodm,
 				autothread
-			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-			[server, data.response_channel,
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+			RETURNING id`,
+			[data.server_id, data.response_channel,
 			 data.message, data.prefix, data.reacts ?? true,
 			 data.embed ?? true, data.opped ?? {roles: [], users: []}, data.ticket_category,
 			 data.ticket_message, data.autodm, data.autothread]);
@@ -98,7 +68,7 @@ class ConfigStore {
 	 		return Promise.reject(e.message);
 		}
 		
-		return await this.get(server);
+		return await this.getID(c.rows[0].id);
 	}
 
 	async index(server, data = {}) {
@@ -137,8 +107,8 @@ class ConfigStore {
 		}
 		
 		if(data.rows?.[0]) {
-			return new Config(this, data.rows[0]);
-		} else return new Config(this, {server_id: server});
+			return new Config(this, KEYS, data.rows[0]);
+		} else return new Config(this, KEYS, {server_id: server});
 	}
 
 	async getID(id) {
@@ -150,8 +120,8 @@ class ConfigStore {
 		}
 		
 		if(data.rows?.[0]) {
-			return new Config(this, data.rows[0]);
-		} else return new Config(this, {});
+			return new Config(this, KEYS, data.rows[0]);
+		} else return new Config(this, KEYS, {});
 	}
 
 	async update(id, data = {}) {

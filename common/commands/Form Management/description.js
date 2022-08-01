@@ -1,10 +1,29 @@
-module.exports = {
-	help: ()=> 'Set the description of a form',
-	usage: ()=> [' [form id] [description] - Describe the given form'],
-	execute: async (bot, msg, args) => {
+const { Models: { TextCommand } } = require('frame');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'description',
+			description: 'Set the description of a form',
+			usage: [' [form id] [description] - Describe the given form'],
+			alias: ['describe', 'desc'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[1]) return 'I need a form and a description!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
 		try {
@@ -17,9 +36,7 @@ module.exports = {
 		}
 
 		return 'Form description set!';
-	},
-	alias: ['describe', 'desc'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

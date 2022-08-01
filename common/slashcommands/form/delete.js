@@ -1,25 +1,37 @@
 const { confBtns } = require('../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'delete',
-		description: "Deletes a form",
-		options: [
-			{
-				name: 'form_id',
-				description: 'The form\'s ID',
-				type: 3,
-				required: true,
-				autocomplete: true
-			}
-		]
-	},
-	usage: [
-		"[form_id] - Delete a form"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'delete',
+			description: "Deletes a form",
+			options: [
+				{
+					name: 'form_id',
+					description: 'The form\'s ID',
+					type: 3,
+					required: true,
+					autocomplete: true
+				}
+			],
+			usage: [
+				"[form_id] - Delete a form"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['DELETE_FORMS'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);;
+		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
 		var rdata = {
@@ -34,7 +46,7 @@ module.exports = {
 		await ctx.reply(rdata);
 
 		var reply = await ctx.fetchReply();
-		var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+		var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
 		var msg;
 		if(conf.msg) {
 			msg = conf.msg;
@@ -44,9 +56,10 @@ module.exports = {
 		}
 
 		return msg;
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -61,8 +74,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['DELETE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

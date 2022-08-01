@@ -1,15 +1,33 @@
 const {qTypes:TYPES} = require(__dirname + '/../../extras');
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> `List existing forms`,
-	usage: ()=> [
-		' - List all forms',
-		' [form id] - View a specific form',
-		' open - List open forms',
-		' closed - List closed forms'
-	],
-	execute: async (bot, msg, args) => {
-		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'forms',
+			description: `List existing forms`,
+			usage: [
+				' - List all forms',
+				' [form id] - View a specific form',
+				' open - List open forms',
+				' closed - List closed forms'
+			],
+			alias: ['list', 'l', 'f', 'form'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
+		var forms = await this.#stores.forms.getAll(msg.channel.guild.id);
 		if(!forms?.[0]) return "No forms created yet!";
 
 		var query = args[0]?.toLowerCase();
@@ -21,7 +39,7 @@ module.exports = {
 				if(!form?.id) return "Form not found!";
 
 				var channel = msg.channel.guild.channels.resolve(form.channel_id);
-				var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
+				var responses = await this.#stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 				var embeds = [{embed: {
 					title: `${form.name} (${form.hid}) ` +
@@ -37,7 +55,7 @@ module.exports = {
 					footer: {text: 'See next page for questions' + (form.open ? '' : '| This form is closed!')}
 				}}];
 
-				var qembeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
+				var qembeds = await this.#bot.utils.genEmbeds(this.#bot, form.questions, (data, i) => {
 					return {
 						name: `**${data.value}${data.required ? " (required)" : ""}**`,
 						value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
@@ -64,7 +82,7 @@ module.exports = {
 
 		for(var form of forms) {
 			var channel = msg.channel.guild.channels.resolve(form.channel_id);
-			var responses = await bot.stores.responses.getByForm(msg.channel.guild.id, form.hid);
+			var responses = await this.#stores.responses.getByForm(msg.channel.guild.id, form.hid);
 
 			var embed = {embed: {
 				title: `${form.name} (${form.hid}) ` +
@@ -75,7 +93,7 @@ module.exports = {
 					{name: "Channel", value: `${channel ? channel : '*(not set)*'}`},
 					{name: "Response count", value: (responses?.length.toString() || '0')},
 					{name: "Roles", value: form.roles?.map(r => `<@&${r.id}>`).join('\n') || '*(not set)*'},
-					{name: "Questions", value: `Use \`${bot.prefix}form ${form.hid}\` to see questions`}
+					{name: "Questions", value: `Use \`${this.#bot.prefix}form ${form.hid}\` to see questions`}
 				],
 				color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
 				footer: {text: form.open ? '' : 'This form is closed!'}
@@ -89,9 +107,7 @@ module.exports = {
 				embeds[i].embed.title += ` (${i+1}/${embeds.length})`;
 
 		return embeds;
-	},
-	alias: ['list', 'l', 'f', 'form'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

@@ -1,18 +1,49 @@
-module.exports = {
-	help: ()=> "Displays help embed",
-	usage: ()=> [
-		" - Displays help for all commands",
-		" [command] - Displays help for specfic command",
-		" [command] [subcommand] - Displays help for a command's subcommands"
-	],
-	execute: async (bot, msg, args) => {
-		var cfg;
-		if(msg.channel.guild) cfg = await bot.stores.configs.get(msg.channel.guild.id);
+const { Models: { TextCommand } } = require('frame');
 
-		var prefix = cfg?.prefix || bot.prefix;
+class Command extends TextCommand {
+	#bot;
+	#stores;
+			
+	constructor(bot, stores, module) {
+		super({
+			name: 'help',
+			description: "Displays command help info",
+			arguments: {
+				command: {
+					type: 'string',
+					description: "The command to view help for",
+					optional: true
+				},
+				subcommand: {
+					type: 'string',
+					description: 'A subcommand to view help for',
+					optional: true
+				}
+			},
+			usage: [
+				" - Displays help for all commands",
+				" [command] - Displays help for specfic command",
+				" [command] [subcommand] - Displays help for a command's subcommands"
+			],
+
+			alias: [ "h", "?"],
+			permissions: [ ],
+			guildOnly: false,
+			module
+		});
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
+		var cfg;
+		if(msg.channel.guild) cfg = await this.#stores.configs.get(msg.channel.guild.id);
+
+		var prefix = cfg?.prefix ?? this.#bot.prefix;
 		if(!args[0]) {
 			//setup
-			var modules = bot.modules.map(m => m);
+			var modules = this.#bot.modules.map(m => m);
 			modules.forEach(m => m.commands = m.commands.map(c => c));
 
 			var embeds = [{embed: {
@@ -73,19 +104,19 @@ module.exports = {
 				],
 				color: parseInt('ee8833', 16),
 				footer: {
-					icon_url: bot.user.avatarURL(),
+					icon_url: this.#bot.user.avatarURL(),
 					text: "Use the reactions below to flip pages!"
 				}
 			}}];
 			for(var i = 0; i < modules.length; i++) {
-				var tmp_embeds = await bot.utils.genEmbeds(bot, modules[i].commands, c => {
-					return {name:  `**${prefix + c.name}**`, value: c.help()}
+				var tmp_embeds = await this.#bot.utils.genEmbeds(this.#bot, modules[i].commands, c => {
+					return {name:  `**${prefix + c.name}**`, value: c.help ? c.help() : c.description}
 				}, {
 					title: `**${modules[i].name}**`,
 					description: modules[i].description,
 					color: parseInt(modules[i].color, 16) || parseInt("555555", 16),
 					footer: {
-						icon_url: bot.user.avatarURL(),
+						icon_url: this.#bot.user.avatarURL(),
 						text: "I'm Fox! I help you handle forms!"
 					}
 				}, 10, {addition: ""})
@@ -94,35 +125,36 @@ module.exports = {
 			}
 
 			for(let i=0; i<embeds.length; i++) {
-				if(embeds.length > 1) embeds[i].embed.title += ` (page ${i+1}/${embeds.length}, ${bot.commands.size} commands total)`;
+				if(embeds.length > 1) embeds[i].embed.title += ` (page ${i+1}/${embeds.length}, ${this.#bot.commands.size} commands total)`;
 			}
 
 			return embeds;
 		}
 
-		let {command} = await bot.handlers.command.parse(args.join(" "));
+		let {command} = await this.#bot.handlers.command.parse(args.join(" "));
 		if(command) {
 			var embed = {embed: {
 				title: `Help | ${command.name.toLowerCase()}`,
-				description: command.help(),
+				description: command.help ? command.help() : command.description,
 				fields: [
-					{name: "**Usage**", value: `${command.usage().map(c => `**${prefix + command.name}**${c}`).join("\n")}`},
-					{name: "**Aliases**", value: `${command.alias ? command.alias.join(", ") : "(none)"}`},
-					{name: "**Subcommands**", value: `${command.subcommands ?
-							command.subcommands.map(sc => `**${prefix}${sc.name}** - ${sc.help()}`).join("\n") : 
+					{name: "**Usage**", value: `${command.usage.map(c => `**${prefix + command.name}**${c}`).join("\n")}`},
+					{name: "**Aliases**", value: `${command.alias?.length ? command.alias.join(", ") : "(none)"}`},
+					{name: "**Subcommands**", value: `${command.subcommands?.first() ?
+							command.subcommands.map(sc => `**${prefix}${sc.name}** - ${sc.description}`).join("\n") : 
 							"(none)"}`}
 				],
 				color: parseInt(command.module.color, 16) || parseInt("555555", 16),
 				footer: {
-					icon_url: bot.user.avatarURL(),
+					icon_url: this.#bot.user.avatarURL(),
 					text: "Arguments like [this] are required, arguments like <this> are optional!"
 				}
 			}};
-			if(command.desc) embed.embed.fields.push({name: "**Extra Info**", value: command.desc()});
-			if(command.permissions) embed.embed.fields.push({name: "**Permissions**", value: command.permissions.join(", ")});
+			if(command.extra) embed.embed.fields.push({name: "**Extra Info**", value: command.extra});
+			if(command.permissions?.length) embed.embed.fields.push({name: "**Permissions**", value: command.permissions.join(", ")});
 
 			return embed;
 		} else return "Command not found!";
-	},
-	alias: ["h", "halp", "?"]
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

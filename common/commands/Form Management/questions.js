@@ -1,27 +1,44 @@
 const {confirmReacts:REACTS, qTypes:TYPES} = require(__dirname + '/../../extras');
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: () => 'View and manage questions for a form',
-	usage: () => [
-		" [form id] - View questions for a form",
-		" add [form id] <question> - Add a new question to a form",
-		" remove [form id] <question number> - Remove a question from a form",
-		" set [form id] - Set new questions for a form",
-		" rephrase [form id] <question number> <new question> - Rephrase or set a specific question",
-		" reorder [form id] <question number> <new place> - Reorder a form's questions"
-	],
-	desc: ()=> [
-		"Using this command will not invalidate any responses; however, ",
-		"the questions will NOT be updated for existing ones. The changes will only affect ",
-		"responses opened and finished after the fact!"
-	].join(""),
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'questions',
+			description: 'View and manage questions for a form',
+			usage: [
+				" [form id] - View questions for a form",
+				" add [form id] <question> - Add a new question to a form",
+				" remove [form id] <question number> - Remove a question from a form",
+				" set [form id] - Set new questions for a form",
+				" rephrase [form id] <question number> <new question> - Rephrase or set a specific question",
+				" reorder [form id] <question number> <new place> - Reorder a form's questions"
+			],
+			extra: [
+				"Using this command will not invalidate any responses; however, ",
+				"the questions will NOT be updated for existing ones. The changes will only affect ",
+				"responses opened and finished after the fact!"
+			].join(""),
+			alias: ['q'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
-		var embeds = await bot.utils.genEmbeds(bot, form.questions, (data, i) => {
+		var embeds = await this.#bot.utils.genEmbeds(this.#bot, form.questions, (data, i) => {
 			return {
 				name: `**${data.value}${data.required ? " (required)" : ""}**`,
 				value: `**Type:** ${TYPES[data.type].alias[0]}\n\n` +
@@ -34,23 +51,32 @@ module.exports = {
 		})
 
 		return embeds;
-	},
-	alias: ['q'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	subcommands: {}
+	}
 }
 
-module.exports.subcommands.add = {
-	help: ()=> "Add a new question to a form",
-	usage: ()=> [
-		" [form id] - Runs a menu to add a new question to the given form",
-		" [form id] <question> - Adds the question to the given form"
-	],
-	execute: async (bot, msg, args) => {
+class AddCommand extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'add',
+			description: "Add a new question to a form",
+			usage: [
+				" [form id] - Runs a menu to add a new question to the given form",
+				" [form id] <question> - Adds the question to the given form"
+			],
+			alias: ['a', '+']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 		if(form.questions.length >= 20) return 'That form already has 20 questions!';
 
@@ -83,7 +109,7 @@ module.exports.subcommands.add = {
 		await resp.delete();
 
 		if(TYPES[type].setup) {
-			var r = await TYPES[type].setup(bot, msg, message);
+			var r = await TYPES[type].setup(this.#bot, msg, message);
 			if(typeof r == "string") return r;
 
 			Object.assign(question, r)
@@ -92,7 +118,7 @@ module.exports.subcommands.add = {
 		message = await msg.channel.send(`Would you like this question to be required?`);
 		REACTS.forEach(r => message.react(r));
 
-		var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+		var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 		if(confirm.confirmed) question.required = true;
 		
 		await msg.channel.send([
@@ -115,19 +141,31 @@ module.exports.subcommands.add = {
 		}
 
 		return 'Question added!';
-	},
-	alias: ['a', '+']
+	}
 }
 
-module.exports.subcommands.remove = {
-	help: ()=> "Remove a question from a form",
-	usage: ()=> [
-		" [form id] <question number> - Removes the question from the given form"
-	],
-	execute: async (bot, msg, args) => {
+class RemoveCommand extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'remove',
+			description: "Remove a question from a form",
+			usage: [
+				" [form id] <question number> - Removes the question from the given form"
+			],
+			alias: ['r', 'rem', 'rmv', 'rv', '-']			
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 		if(form.questions.length <= 1)
 			return "That form can't have any more questions removed!";
@@ -154,19 +192,31 @@ module.exports.subcommands.remove = {
 		}
 
 		return 'Question removed!';
-	},
-	alias: ['r', 'rem', 'rmv', 'rv', '-']
+	}
 }
 
-module.exports.subcommands.set = {
-	help: ()=> "Sets all questions on a form",
-	usage: ()=> [
-		" [form id] - Runs a menu to replace a form's questions"
-	],
-	execute: async (bot, msg, args) => {
+class SetCommand extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'set',
+			description: "Sets all questions on a form",
+			usage: [
+				" [form id] - Runs a menu to replace a form's questions"
+			],
+			alias: ['s', 'replace']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
 		var data = {};
@@ -192,7 +242,7 @@ module.exports.subcommands.set = {
 			await message.edit(`Would you like this question to be required?`);
 			REACTS.forEach(r => message.react(r));
 
-			var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+			var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 			if(confirm.confirmed) data.questions[i].required = true;
 			
 			if(confirm.message) await confirm.message.delete();
@@ -215,20 +265,32 @@ module.exports.subcommands.set = {
 		}
 
 		return 'Questions set!';
-	},
-	alias: ['s', 'replace']
+	}
 }
 
-module.exports.subcommands.rephrase = {
-	help: ()=> "Rephrase an existing question on a form",
-	usage: ()=> [
-		" [form id] - Runs a menu to rephrase the question",
-		" [form id] <question number> <new question> - Rephrases the given question"
-	],
-	execute: async (bot, msg, args) => {
+class RephraseCommand extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'rephrase',
+			description: "Rephrase an existing question on a form",
+			usage: [
+				" [form id] - Runs a menu to rephrase the question",
+				" [form id] <question number> <new question> - Rephrases the given question"
+			],
+			alias: ['change', 'update', 'upd8']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
 		var resp;
@@ -260,20 +322,32 @@ module.exports.subcommands.rephrase = {
 		}
 
 		return 'Question updated!';
-	},
-	alias: ['change', 'update', 'upd8']
+	}
 }
 
-module.exports.subcommands.reorder = {
-	help: ()=> "Reorders a question on a form",
-	usage: ()=> [
-		" [form id] - Runs a menu to reorder a question",
-		" [form id] <question number> <new place> - Reorders a question on the given form"
-	],
-	execute: async (bot, msg, args) => {
+class ReorderCommand extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'reorder',
+			description: "Reorders a question on a form",
+			usage: [
+				" [form id] - Runs a menu to reorder a question",
+				" [form id] <question number> <new place> - Reorders a question on the given form"
+			],
+			alias: ['ro', 'position', 'pos']
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to work with!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
 		var resp;
@@ -314,6 +388,16 @@ module.exports.subcommands.reorder = {
 		}
 
 		return 'Question reordered!';
-	},
-	alias: ['ro', 'position', 'pos']
+	}
+}
+
+module.exports = (bot, stores, mod) => {
+	var cmd = new Command(bot, stores, mod)
+		.addSubcommand(new AddCommand(bot, stores))
+		.addSubcommand(new RemoveCommand(bot, stores))
+		.addSubcommand(new SetCommand(bot, stores))
+		.addSubcommand(new RephraseCommand(bot, stores))
+		.addSubcommand(new ReorderCommand(bot, stores));
+
+	return cmd;
 }

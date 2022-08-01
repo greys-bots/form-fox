@@ -1,3 +1,4 @@
+const { Models: { DataStore, DataObject } } = require('frame');
 const { qTypes: TYPES } = require('../extras');
 
 const KEYS = {
@@ -21,70 +22,58 @@ const KEYS = {
 	ticket_msg: { patch: true }
 }
 
-class Form {
-	#store;
-
-	constructor(store, data) {
-		this.#store = store;
-		for(var k in KEYS) this[k] = data[k];
-		this.old = Object.assign({}, this);
+class Form extends DataObject {
+	constructor(store, keys, data) {
+		super(store, keys, data)
 	}
 
-	async fetch() {
-		var data = await this.#store.getID(this.id);
-		for(var k in KEYS) this[k] = data[k];
+	toJSON() {
+		var {store, KEYS, old, ...rest} = this;
 
-		return this;
-	}
-
-	async save() {
-		var obj = await this.verify();
-
-		var data;
-		if(this.id) data = await this.#store.update(this.id, obj, this.old);
-		else data = await this.#store.create(this.server_id, obj);
-		for(var k in KEYS) this[k] = data[k];
-		this.old = Object.assign({}, data);
-		return this;
-	}
-
-	async delete() {
-		await this.#store.delete(this.id);
-	}
-
-	async verify(patch = true /* generate patch-only object */) {
-		var obj = {};
-		var errors = []
-		for(var k in KEYS) {
-			if(!KEYS[k].patch && patch) continue;
-			if(this[k] === undefined) continue;
-			if(this[k] === null) {
-				obj[k] = null;
-				continue;
-			}
-
-			var test = true;
-			if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-			if(!test) {
-				errors.push(KEYS[k].err);
-				continue;
-			}
-			if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-			else obj[k] = this[k];
-		}
-
-		if(errors.length) throw new Error(errors.join("\n"));
-		return obj;
+		return rest;
 	}
 }
 
-class FormStore {
+class FormStore extends DataStore {
 	constructor(bot, db) {
-		this.db = db;
-		this.bot = bot;
-	};
+		super(bot, db)
+	}
 
-	async create(server, data = {}) {
+	async init() {
+		await this.db.query(`
+			CREATE TABLE IF NOT EXISTS forms (
+				id 				SERIAL PRIMARY KEY,
+				server_id		TEXT,
+				hid 			TEXT UNIQUE,
+				name 			TEXT,
+				description 	TEXT,
+				questions 		JSONB,
+				channel_id 		TEXT,
+				roles 			JSONB,
+				message 		TEXT,
+				color 			TEXT,
+				open 			BOOLEAN,
+				cooldown 		INTEGER,
+				emoji 			TEXT,
+				reacts 			BOOLEAN,
+				embed 			BOOLEAN,
+				apply_channel 	TEXT,
+				tickets_id 		TEXT,
+				ticket_msg 		TEXT
+			);
+
+			CREATE TABLE IF NOT EXISTS form_posts (
+				id 			SERIAL PRIMARY KEY,
+				server_id 	TEXT,
+				channel_id 	TEXT,
+				message_id 	TEXT,
+				form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
+				bound 		BOOLEAN
+			)
+		`)
+	}
+
+	async create(data = {}) {
 		try {
 			var form = await this.db.query(`INSERT INTO forms (
 				server_id,
@@ -106,7 +95,7 @@ class FormStore {
 				ticket_msg
 			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
 			RETURNING *`,
-			[server, data.name, data.description,
+			[data.server_id, data.name, data.description,
 			 JSON.stringify(data.questions ?? []),
 			 data.channel_id, JSON.stringify(data.roles ?? []),
 			 data.message, data.color, data.open || true,
@@ -118,7 +107,7 @@ class FormStore {
 	 		return Promise.reject(e.message);
 		}
 
-		return await this.get(server, form.rows[0].hid);
+		return await this.getID(form.rows[0].id);
 	}
 
 	async index(server, data = {}) {
@@ -166,7 +155,7 @@ class FormStore {
 		}
 		
 		if(data.rows?.[0]) {
-			var form = new Form(this, data.rows[0]);
+			var form = new Form(this, KEYS, data.rows[0]);
 			var qs = [];
 			var edited = false;
 			for(var q of form.questions) {
@@ -182,7 +171,7 @@ class FormStore {
 			if(edited || qs.length < form.questions.length)
 				form = await form.save();
 			return form;
-		} else return new Form(this, { server_id: server });
+		} else return new Form(this, KEYS, { server_id: server });
 	}
 
 	async getAll(server) {
@@ -193,7 +182,7 @@ class FormStore {
 			return Promise.reject(e.message);
 		}
 		
-		if(data.rows?.[0]) return data.rows.map(x => new Form(this, x));
+		if(data.rows?.[0]) return data.rows.map(x => new Form(this, KEYS, x));
 		else return undefined;
 	}
 
@@ -236,17 +225,18 @@ class FormStore {
 		}
 		
 		if(data.rows?.[0]) {
-			var form = new Form(this, data.rows[0]);
+			var form = new Form(this, KEYS, data.rows[0]);
 			if(form.questions.find(q => q == "")) {
 				form.questions = form.questions.filter(x => x != "");
 				form = await form.save();
 			}
 
 			return form;
-		} else return new Form(this, {});
+		} else return new Form(this, KEYS, {});
 	}
 
 	async update(id, data = {}, old) {
+		console.log(data.roles)
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
 		try {
@@ -301,6 +291,15 @@ class FormStore {
 									  'this form is not accepting responses right now!' :
 									  'react below to apply to this form!')
 							}
+						}], components: [{
+							type: 1,
+							components: [{
+								type: 2,
+								label: 'Apply',
+								emoji: form.emoji || "📝",
+								style: 1,
+								custom_id: `${form.hid}-apply`
+							}]
 						}]})
 					} catch(e) {
 						errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
@@ -424,13 +423,17 @@ class FormStore {
 					channel_id,
 					roles,
 					responses,
+					id,
 					...form
 				} = f;
 				if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
-					await this.update(server, form.hid, form);
+					await this.update(id, form);
 					updated++;
 				} else {
-					await this.create(server, form);
+					await this.create({
+						server_id: server,
+						...form
+					});
 					created++;
 				}
 			}

@@ -1,33 +1,45 @@
 const { clearBtns } = require('../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'autodm',
-		description: "Sets a form to automatically DM to a user when they join",
-		options: [
-			{
-				name: 'form_id',
-				description: 'The form\'s ID',
-				type: 3,
-				required: false,
-				autocomplete: true
-			}
-		]
-	},
-	usage: [
-		"- View and optionally clear the auto-DM'd form",
-		"[form_id] - Set the form to auto-DM"
-	],
-	extra: "NOTE: This feature may not work until the bot " +
-		   "has been whitelisted for the members intent!",
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'autodm',
+			description: "Sets a form to automatically DM to a user when they join",
+			options: [
+				{
+					name: 'form_id',
+					description: 'The form\'s ID',
+					type: 3,
+					required: false,
+					autocomplete: true
+				}
+			],
+			usage: [
+				"- View and optionally clear the auto-DM'd form",
+				"[form_id] - Set the form to auto-DM"
+			],
+			extra: "NOTE: This feature may not work until the bot " +
+				   "has been whitelisted for the members intent!",
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		var id = ctx.options.getString('form_id')?.toLowerCase().trim();
 
 		var form;
 		if(!id) {
 			if(!cfg?.autodm) return 'No form set!';
-			form = await ctx.client.stores.forms.get(ctx.guildId, cfg.autodm);
+			form = await this.#stores.forms.get(ctx.guildId, cfg.autodm);
 			if(!form.id) return `Currently set form (${cfg.autodm}) is invalid or no longer exists!`;
 
 			var rdata = {
@@ -46,7 +58,7 @@ module.exports = {
 			await ctx.reply(rdata);
 
 			var reply = await ctx.fetchReply();
-			var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+			var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
 			var msg;
 			if(conf.msg) {
 				msg = conf.msg;
@@ -59,15 +71,16 @@ module.exports = {
 			return msg;
 		}
 		
-		form = await ctx.client.stores.forms.get(ctx.guildId, id);
+		form = await this.#stores.forms.get(ctx.guildId, id);
 		if(!form.id) return 'Form not found!';
 
 		cfg.autodm = form.hid;
 		await cfg.save()
 		return 'Config updated!';
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -82,7 +95,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

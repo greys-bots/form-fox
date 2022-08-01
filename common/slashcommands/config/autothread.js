@@ -1,23 +1,34 @@
 const { clearBtns } = require('../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'autothread',
-		description: "Sets whether to create a thread on each received response",
-		options: [
-			{
-				name: 'value',
-				description: 'The value to set',
-				type: 5
-			}
-		]
-	},
-	usage: [
-		"- View the current auto-threading status",
-		"[value] - Set whether to automatically add threads to responses"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'autothread',
+			description: "Sets whether to create a thread on each received response",
+			options: [
+				{
+					name: 'value',
+					description: 'The value to set',
+					type: 5
+				}
+			],
+			usage: [
+				"- View the current auto-threading status",
+				"[value] - Set whether to automatically add threads to responses"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
-		var cfg = await ctx.client.stores.configs.get(ctx.guild.id);
+		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		var val = ctx.options.getBoolean('value');
 
 		if(val == null || val == undefined) {
@@ -27,7 +38,7 @@ module.exports = {
 		cfg.autothread = val;
 		await cfg.save();
 		return 'Config updated!';
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

@@ -1,20 +1,29 @@
 const fetch = require('node-fetch');
 const { confBtns } = require(__dirname + '/../../extras');
+const { Models: { SlashCommand } } = require('frame');
 
-module.exports = {
-	data: {
-		name: 'import',
-		description: "Import forms",
-		options: [{
-			name: 'url',
-			description: "The .json URL to import",
-			type: 3,
-			required: true
-		}]
-	},
-	usage: [
-		"[url] - Import forms using the file provided"
-	],
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'import',
+			description: "Import forms",
+			options: [{
+				name: 'url',
+				description: "The .json URL to import",
+				type: 3,
+				required: true
+			}],
+			usage: [
+				"[url] - Import forms using the file provided"
+			],
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var url = ctx.options.get('url').value.trim();
 		var data;
@@ -37,13 +46,12 @@ module.exports = {
 			]
 		}
 		var reply = await ctx.reply({...rdata, fetchReply: true});
-		var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+		var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
 		var msg;
 		if(conf.msg) {
 			msg = conf.msg;
 		} else {
-			if(conf.interaction) await conf.interaction.deferUpdate();
-			var results = await ctx.client.stores.forms.import(ctx.guildId, data);
+			var results = await this.#stores.forms.import(ctx.guild.id, data);
 			msg = "Forms imported!\n" +
 				  `Updated: ${results.updated}\n` +
 				  `Created: ${results.created}\n` +
@@ -54,3 +62,5 @@ module.exports = {
 		return msg;
 	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

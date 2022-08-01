@@ -1,15 +1,31 @@
 const REACTS = require(__dirname + '/../../extras').confirmReacts;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> 'Apply to a form',
-	usage: ()=> [' [form id] - Apply to the given form'],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'apply',
+			description: 'Apply to a form',
+			usage: [' [form id] - Apply to the given form'],
+			alias: ['app', 'start', 'respond'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		var form;
 		if(!args[0]) {
-			form = await bot.stores.forms.getByApplyChannel(msg.guild.id, msg.channel.id);
+			form = await this.#stores.forms.getByApplyChannel(msg.guild.id, msg.channel.id);
 			if(!form.id) return "Please supply a form ID, or use this in a form's apply channel!";
 		} else {
-			form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+			form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 			if(!form.id) return 'Form not found!';
 		}
 
@@ -23,9 +39,9 @@ module.exports = {
 		// 	return;
 		// }
 
-		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
+		var cfg = await this.#stores.configs.get(msg.channel.guild.id);
 
-		var resp = await bot.handlers.response.startResponse({
+		var resp = await this.#bot.handlers.response.startResponse({
 			user: msg.author,
 			form,
 			cfg
@@ -33,7 +49,7 @@ module.exports = {
 		
 		if(resp) return resp;
 		else return;
-	},
-	alias: ['app', 'start', 'respond'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

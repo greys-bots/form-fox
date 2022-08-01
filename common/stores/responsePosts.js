@@ -1,3 +1,4 @@
+const { Models: { DataStore, DataObject } } = require('frame');
 const {
     pageBtns: PGBTNS
 } = require('../extras');
@@ -6,7 +7,7 @@ const VARIABLES = {
     '$USER': (user, guild) => user,
     '$GUILD': (user, guild) => guild.name,
     '$FORM': (user, guild, form) => form.name,
-    '$FORMID': (user, guild, form) => form.id,
+    '$FORMID': (user, guild, form) => form.hid,
 }
 
 const KEYS = {
@@ -18,66 +19,16 @@ const KEYS = {
     page: { patch: true }
 }
 
-class ResponsePost {
-    #store;
-
-    constructor(store, data) {
-        this.#store = store;
-        for(var k in KEYS) this[k] = data[k];
-    }
-
-    async fetch() {
-        var data = await this.#store.getID(this.id);
-        for(var k in KEYS) this[k] = data[k];
-
-        return this;
-    }
-
-    async save() {
-        var obj = await this.verify();
-
-        var data;
-        if(this.id) data = await this.#store.update(this.id, obj);
-        else data = await this.#store.create(this.server_id, this.channel_id, this.message_id, obj);
-        for(var k in KEYS) this[k] = data[k];
-        return this;
-    }
-
-    async delete() {
-        await this.#store.delete(this.id);
-    }
-
-    async verify(patch = true /* generate patch-only object */) {
-        var obj = {};
-        var errors = []
-        for(var k in KEYS) {
-            if(!KEYS[k].patch && patch) continue;
-            if(this[k] == undefined) continue;
-            if(this[k] == null) {
-                obj[k] = this[k];
-                continue;
-            }
-
-            var test = true;
-            if(KEYS[k].test) test = await KEYS[k].test(this[k]);
-            if(!test) {
-                errors.push(KEYS[k].err);
-                continue;
-            }
-            if(KEYS[k].transform) obj[k] = KEYS[k].transform(this[k]);
-            else obj[k] = this[k];
-        }
-
-        if(errors.length) throw new Error(errors.join("\n"));
-        return obj;
+class ResponsePost extends DataObject {
+    constructor(store, keys, data) {
+        super(store, keys, data)
     }
 }
 
-class ResponsePostStore {
-    constructor(bot, db) {
-        this.db = db;
-        this.bot = bot;
-    };
+class ResponsePostStore extends DataStore {
+	constructor(bot, db) {
+        super(bot, db);
+    }
 
     async init() {
         this.bot.on('messageReactionAdd', async (...args) => {
@@ -102,22 +53,24 @@ class ResponsePostStore {
         })
     }
 
-    async create(server, channel, message, data = {}) {
+    async create(data = {}) {
         try {
-            await this.db.query(`INSERT INTO response_posts (
+            var c = await this.db.query(`INSERT INTO response_posts (
                 server_id,
                 channel_id,
                 message_id,
                 response,
                 page
-            ) VALUES ($1,$2,$3,$4,$5)`,
-            [server, channel, message, data.response, data.page ?? 1]);
+            ) VALUES ($1,$2,$3,$4,$5)
+            RETURNING id`,
+            [data.server_id, data.channel_id, data.message_id, 
+             data.response, data.page ?? 1]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
         }
         
-        return await this.get(server, channel, message);
+        return await this.getID(c.rows[0].id);
     }
 
     async index(server, channel, message, data = {}) {
@@ -152,12 +105,12 @@ class ResponsePostStore {
         }
         
         if(data.rows?.[0]) {
-            var post = new ResponsePost(this, data.rows[0]);
+            var post = new ResponsePost(this, KEYS, data.rows[0]);
             var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
             if(response) post.response = response;
             
             return post;
-        } else return new ResponsePost(this, { server_id: server, channel_id: channel, message_id: message });
+        } else return new ResponsePost(this, KEYS, { server_id: server, channel_id: channel, message_id: message });
     }
 
     async getByResponse(server, hid) {
@@ -169,12 +122,12 @@ class ResponsePostStore {
         }
         
         if(data.rows?.[0]) {
-            var post = new ResponsePost(this, data.rows[0]);
+            var post = new ResponsePost(this, KEYS, data.rows[0]);
             var response = await this.bot.stores.responses.get(data.rows[0].server_id, data.rows[0].response);
             if(response) post.response = response;
             
             return post;
-        } else return new ResponsePost(this, { server_id: server, response: hid });
+        } else return new ResponsePost(this, KEYS, { server_id: server, response: hid });
     }
 
     async update(id, data = {}) {
@@ -452,7 +405,6 @@ class ResponsePostStore {
         if(!post?.id) return;
 
         var {message: msg, user} = ctx;
-        await ctx.deferUpdate();
 
 		var cfg = await this.bot.stores.configs.get(ctx.guild.id);
         var check = await this.bot.handlers.interaction.checkPerms(
@@ -471,6 +423,7 @@ class ResponsePostStore {
 		var cmp = msg.components;
         switch(ctx.customId) {
             case 'deny':
+            	await ctx.deferUpdate();
                 var reason;
                 await msg.channel.send([
                     'Would you like to give a denial reason?\n',
@@ -516,8 +469,10 @@ class ResponsePostStore {
                     }]})
 
                     if(ticket?.id) {
-			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
-			            tch?.delete();
+			        	try {
+                            var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+                            await tch?.delete();
+                        } catch(e) { }
 			        }
 
                     this.bot.emit('DENY', post.response);
@@ -568,8 +523,10 @@ class ResponsePostStore {
                     }]});
 
                     if(ticket?.id) {
-			        	var tch = ctx.guild.channels.resolve(ticket.channel_id);
-			            tch?.delete();
+                        try {
+                            var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+                            await tch?.delete();
+                        } catch(e) { }
 			        }
 
                     this.bot.emit('ACCEPT', post.response);
@@ -581,12 +538,13 @@ class ResponsePostStore {
                 break;
             case 'ticket':
             	try {
+                    await ctx.deferReply({ephemeral: true});
                     var ch_id = post.response.form.tickets_id ?? cfg?.ticket_category;
-                    if(!ch_id) return await msg.channel.send('No ticket category set!');
+                    if(!ch_id) return await ctx.followUp('No ticket category set!');
                     var ch = msg.guild.channels.resolve(ch_id);
-                    if(!ch) return await msg.channel.send('Category not found!!');
+                    if(!ch) return await ctx.followUp('Category not found!!');
 
-                    if(ticket?.id) return await msg.channel.send(`Channel already opened! Link: <#${ticket.channel_id}>`)
+                    if(ticket?.id) return await ctx.followUp(`Channel already opened! Link: <#${ticket.channel_id}>`)
 
                     var ch2 = await msg.guild.channels.create(`ticket-${post.response.hid}`, {
                         parent: ch.id,
@@ -613,7 +571,11 @@ class ResponsePostStore {
 					await msg.edit({
 						components: cmp
 					})
-                    await this.bot.stores.tickets.create(msg.guild.id, ch2.id, post.response.hid);
+                    await this.bot.stores.tickets.create({
+                        server_id: msg.guild.id,
+                        channel_id: ch2.id,
+                        response_id: post.response.hid
+                    });
                     await ctx.followUp(`Channel created! <#${ch2.id}>`);
                     return;
                 } catch(e) {

@@ -1,15 +1,32 @@
+const { Models: { TextCommand } } = require('frame');
 const { requiredPerms: REQUIRED } = require('../../extras');
 
-module.exports = {
-	help: () => "Check to see if the bot's permissions are set up correctly",
-	usage: () => [
-		" - Check all forms' channels for proper permissions",
-		" [channel] - Check a specific channel for proper permissions"
-	],
-	async execute(bot, msg, args) {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'permcheck',
+			description: "Check to see if the bot's permissions are set up correctly",
+			usage: [
+				" - Check all forms' channels for proper permissions",
+				" [channel] - Check a specific channel for proper permissions"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_CONFIG'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = bot;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) {
-			var forms = await bot.stores.forms.getAll(msg.guild.id);
-			var cfg = await bot.stores.configs.get(msg.guild.id);
+			var forms = await this.#stores.forms.getAll(msg.guild.id);
+			var cfg = await this.#stores.configs.get(msg.guild.id);
 			if(!forms?.length && !cfg.response_channel) return "No forms or config to check! Provide a channel to check that";
 
 			var check = [];
@@ -34,7 +51,7 @@ module.exports = {
 				res.push({
 					title: "Check Results",
 					description: `Channel: <#${c}>`,
-					fields: readout(bot, chan)
+					fields: this.readout(this.#bot, chan)
 				})
 			}
 
@@ -57,35 +74,34 @@ module.exports = {
 		return {
 			title: "Check Results",
 			description: `Channel: <#${chan.id}>`,
-			fields: readout(bot, chan)
+			fields: this.readout(this.#bot, chan)
 		}
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_CONFIG'],
-	guildOnly: true
-}
-
-function readout(bot, chan) {
-	var perms = chan.permissionsFor(bot.user.id).serialize();
-	var fields = [
-		{
-			name: "Given permissions",
-			value: ""
-		},
-		{
-			name: "Missing permissions",
-			value: ""
-		}
-	]
-	
-	for(var k of REQUIRED) {
-		if(perms[k]) fields[0].value += `${k}\n`;
-		else fields[1].value += `${k}\n`;
 	}
 
-	fields = fields.map(f => {
-		f.value = f.value || "(none)";
-		return f;
-	})
-	return fields;
+	readout(chan) {
+		var perms = chan.permissionsFor(this.#bot.user.id).serialize();
+		var fields = [
+			{
+				name: "Given permissions",
+				value: ""
+			},
+			{
+				name: "Missing permissions",
+				value: ""
+			}
+		]
+		
+		for(var k of REQUIRED) {
+			if(perms[k]) fields[0].value += `${k}\n`;
+			else fields[1].value += `${k}\n`;
+		}
+
+		fields = fields.map(f => {
+			f.value = f.value || "(none)";
+			return f;
+		})
+		return fields;
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

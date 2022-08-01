@@ -1,17 +1,35 @@
 const REACTS = require(__dirname + '/../../extras').confirmReacts;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> "Delete a form, and all its responses",
-	usage: ()=> [
-		' [form id] <form id> ... - Deletes given forms',
-		' all | * - Delete all forms',
-		' all | * -[form id] ... - Delete all except specific forms'
-	],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'delete',
+			description: "Delete a form, and all its responses",
+			usage: [
+				' [form id] <form id> ... - Deletes given forms',
+				' all | * - Delete all forms',
+				' all | * -[form id] ... - Delete all except specific forms'
+			],
+			alias: ['del', 'remove'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['DELETE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a form to delete!';
 		args = args.map(a => a.toLowerCase());
 		var message;
-		var forms = (await bot.stores.forms.getAll(msg.channel.guild.id) || []);
+		var forms = (await this.#stores.forms.getAll(msg.channel.guild.id) || []);
 		if(!forms?.[0]) return 'No forms to delete!';
 
 		if(args.length == 1) {
@@ -22,7 +40,7 @@ module.exports = {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			} else {
 				var forms = forms.filter(f => f.hid == args[0]);
@@ -34,7 +52,7 @@ module.exports = {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			}
 		} else {
@@ -49,7 +67,7 @@ module.exports = {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			} else {
 				forms = forms.filter(f => args.includes(f.hid));
@@ -59,7 +77,7 @@ module.exports = {
 				].join(''));
 				REACTS.forEach(r => message.react(r));
 
-				var confirm = await bot.utils.getConfirmation(bot, msg, msg.author);
+				var confirm = await this.#bot.utils.getConfirmation(this.#bot, msg, msg.author);
 				if(confirm.msg) return confirm.msg;
 			}
 		}
@@ -73,9 +91,7 @@ module.exports = {
 		}
 
 		return `Form${forms.length > 1 ? 's' : ''} deleted!`;
-	},
-	alias: ['del', 'remove'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['DELETE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

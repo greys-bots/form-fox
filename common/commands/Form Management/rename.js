@@ -1,10 +1,29 @@
-module.exports = {
-	help: ()=> 'Rename a form',
-	usage: ()=> [' [form id] [new name] - Rename the given form'],
-	execute: async (bot, msg, args) => {
+const { Models: { TextCommand } } = require('frame');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'rename',
+			description: 'Rename a form',
+			usage: [' [form id] [new name] - Rename the given form'],
+			alias: ['name', 'rn'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[1]) return 'I need a form and a new name!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form) return 'Form not found!';
 
 		try {
@@ -17,9 +36,7 @@ module.exports = {
 		}
 
 		return 'Form renamed!';
-	},
-	alias: ['name', 'rn'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

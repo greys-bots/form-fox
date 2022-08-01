@@ -1,22 +1,40 @@
 const OPTIONS = require(__dirname + '/../../extras').options;
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: () => 'Duplicates an existing form',
-	usage: () => [
-		' [form id] - Runs menu to duplicate the given form',
-		' [form id] [options list] - Specifies what to copy between the forms'
-	],
-	desc: ()=> [
-		"Options list:",
-		'```',
-		OPTIONS.map(o => `${o.alias.join(" | ")} - ${o.desc}`).join(""),
-		'```',
-		"(Questions are always copied!)"
-	].join("\n"),
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'duplicate',
+			description: 'Duplicates an existing form',
+			usage: [
+				' [form id] - Runs menu to duplicate the given form',
+				' [form id] [options list] - Specifies what to copy between the forms'
+			],
+			extra: [
+				"Options list:",
+				'```',
+				OPTIONS.map(o => `${o.alias.join(" | ")} - ${o.desc}`).join(""),
+				'```',
+				"(Questions are always copied!)"
+			].join("\n"),
+			alias: ['copy', 'dup', 'cp'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return "I need a form ID to duplicate!";
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return "Form not found!";
 
 		var resp;
@@ -49,19 +67,20 @@ module.exports = {
 		data.questions = form.questions;
 
 		try {
-			var created = await bot.stores.forms.create(msg.channel.guild.id, data);
+			var created = await this.#stores.forms.create({
+				server_id: msg.channel.guild.id,
+				...data
+			});
 		} catch(e) {
 			return 'ERR! '+e;
 		}
 
 		return [
 			`Form copied! ID: ${created.hid}`,
-			`Use \`${bot.prefix}channel ${created.hid}\` to change what channel this form's responses go to!`,
-			`See \`${bot.prefix}h\` for more customization commands`	
+			`Use \`${this.#bot.prefix}channel ${created.hid}\` to change what channel this form's responses go to!`,
+			`See \`${this.#bot.prefix}h\` for more customization commands`	
 		].join('\n');
-	},
-	alias: ['copy', 'dup', 'cp'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

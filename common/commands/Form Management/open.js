@@ -1,8 +1,26 @@
-module.exports = {
-	help: ()=> "Open a form for responses",
-	usage: ()=> [' [form id] - Open the given form for more responses'],
-	execute: async (bot, msg, args) => {
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
+const { Models: { TextCommand } } = require('frame');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'open',
+			description: "Open a form for responses",
+			usage: [' [form id] - Open the given form for more responses'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0]?.toLowerCase());
 		if(!form.id) return "Form not found!";
 		if(form.open) return "Form already open!";
 
@@ -16,8 +34,7 @@ module.exports = {
 		}
 
 		return 'Form opened!';
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

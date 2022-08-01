@@ -1,55 +1,66 @@
-module.exports = {
-	data: {
-		name: 'view',
-		description: "View received responses",
-		options: [
-			{
-				name: 'response_id',
-				description: "The response's ID",
-				type: 3,
-				required: false
-			},
-			{
-				name: 'form_id',
-				description: "The form's ID",
-				type: 3,
-				required: false,
-				autocomplete: true
-			},
-			{
-				name: 'status_filter',
-				description: "The status to filter by",
-				type: 3,
-				required: false,
-				choices: [
-					{ name: 'accepted', value: 'accepted' },
-					{ name: 'denied', value: 'denied' },
-					{ name: 'pending', value: 'pending' }
-				]
-			},
-			{
-				name: 'from',
-				description: "The user to filter by",
-				type: 6,
-				required: false
-			}
-		]
-	},
-	usage: [
-		"- View all responses received",
-		"[response_id] - View a specific response",
-		"[form_id] - View responses from a specific form",
-		"[status_filter] - View responses with a specific status",
-		"[from] - View responses from a given user",
-		"(combination of form\_id, status\_filter, and/or from) - Filter responses further"
-	],
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'view',
+			description: "View received responses",
+			options: [
+				{
+					name: 'response_id',
+					description: "The response's ID",
+					type: 3,
+					required: false
+				},
+				{
+					name: 'form_id',
+					description: "The form's ID",
+					type: 3,
+					required: false,
+					autocomplete: true
+				},
+				{
+					name: 'status_filter',
+					description: "The status to filter by",
+					type: 3,
+					required: false,
+					choices: [
+						{ name: 'accepted', value: 'accepted' },
+						{ name: 'denied', value: 'denied' },
+						{ name: 'pending', value: 'pending' }
+					]
+				},
+				{
+					name: 'from',
+					description: "The user to filter by",
+					type: 6,
+					required: false
+				}
+			],
+			usage: [
+				"- View all responses received",
+				"[response_id] - View a specific response",
+				"[form_id] - View responses from a specific form",
+				"[status_filter] - View responses with a specific status",
+				"[from] - View responses from a given user",
+				"(combination of form\_id, status\_filter, and/or from) - Filter responses further"
+			],
+			ephemeral: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var fid = ctx.options.getString('form_id', false)?.toLowerCase().trim();
 		var rid = ctx.options.getString('response_id', false)?.toLowerCase().trim();
 		var status = ctx.options.getString('status_filter', false);
 		var fu = ctx.options.getUser('from', false);
 
-		var responses = await ctx.client.stores.responses.getAll(ctx.guildId);
+		var responses = await this.#stores.responses.getAll(ctx.guildId);
 		if(!responses?.[0]) return "No responses received!";
 
 		if(rid) {
@@ -87,7 +98,7 @@ module.exports = {
 				timestamp: new Date(r.received).toISOString()
 			}
 
-			var tmp = ctx.client.handlers.response.buildResponseEmbeds(r, template);
+			var tmp = this.#bot.handlers.response.buildResponseEmbeds(r, template);
 			if(tmp.length > 1)  {
 				for(var i = 0; i < tmp.length; i++) {
 					if(i == 0) {
@@ -106,9 +117,10 @@ module.exports = {
 				embeds[i].title += ` (page ${i +1}/${embeds.length})`;
 
 		return embeds;
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -123,6 +135,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	ephemeral: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

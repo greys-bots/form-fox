@@ -1,13 +1,33 @@
-module.exports = {
-	help: ()=> 'Set the color for a form',
-	usage: ()=> [' [form id] [color] - Sets the given form\'s color'],
-	execute: async (bot, msg, args) => {
+const { Models: { TextCommand } } = require('frame');
+const tc = require('tinycolor2');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'color',
+			description: 'Set the color for a form',
+			usage: [" [form id] [color] - Sets the given form's color"],
+			alias: ['col', 'colour'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_FORMS'],
+			guildOnly: true,
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[1]) return 'I need a form and a color!';
 
-		var form = await bot.stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
+		var form = await this.#stores.forms.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!form.id) return 'Form not found!';
 
-		var color = bot.tc(args.slice(1).join(''));
+		var color = tc(args.slice(1).join(''));
 		if(!color.isValid()) return 'That color is invalid!';
 
 		try {
@@ -20,9 +40,7 @@ module.exports = {
 		}
 
 		return 'Form color set!';
-	},
-	alias: ['col', 'colour'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_FORMS'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

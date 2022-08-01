@@ -4,20 +4,38 @@ const VARIABLES = {
     '$FORM': (user, guild, form) => form.name,
     '$FORMID': (user, guild, form) => form.id,
 }
+const { Models: { TextCommand } } = require('frame');
 
-module.exports = {
-	help: ()=> "Manually accept a response, in case reactions aren't working",
-	usage: ()=> [' [response ID] - Manually accepts the response with the given ID'],
-	execute: async (bot, msg, args) => {
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'accept',
+			description: "Manually accept a response, in case reactions aren't working",
+			usage: [' [response ID] - Manually accepts the response with the given ID'],
+			alias: ['acc', 'pass'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_RESPONSES'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a response to accept!';
 
-		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
+		var response = await this.#stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!response.id) return 'Response not found!';
 
-		var user = await bot.users.fetch(response.user_id);
+		var user = await this.#bot.users.fetch(response.user_id);
 		if(!user) return "Couldn't get that response's user!";
 
-		var post = await bot.stores.responsePosts.getByResponse(msg.channel.guild.id, response.hid);
+		var post = await this.#stores.responsePosts.getByResponse(msg.channel.guild.id, response.hid);
 		var chan = msg.channel.guild.channels.resolve(post?.channel_id);
 		var message = await chan?.messages.fetch(post?.message_id);
 
@@ -56,7 +74,7 @@ module.exports = {
                 color: parseInt('55aa55', 16),
                 timestamp: new Date().toISOString()
             }]});
-            bot.emit('ACCEPT', response)
+            this.#bot.emit('ACCEPT', response)
 
 			if(response.form.roles) {
 				var member = msg.channel.guild.members.resolve(user.id);
@@ -73,9 +91,7 @@ module.exports = {
 		}
 
 		return 'Response accepted!';
-	},
-	alias: ['acc', 'pass'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_RESPONSES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

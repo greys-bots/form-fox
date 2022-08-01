@@ -1,19 +1,30 @@
-module.exports = {
-	data: {
-		name: 'deny',
-		description: '',
-		type: 3
-	},
-	description: "Deny a response",
-	usage: [
-		'Right click a message -> `deny`'
-	],
-	async execute(ctx) {
-		var msg = ctx.options.getMessage('message');
-		var post = await ctx.client.stores.responsePosts.get(ctx.guild.id, msg.channel.id, msg.id);
-		if(!post) return "Only use this for a pending response message!";
+const { Models: { SlashCommand } } = require('frame');
 
-		var u2 = await ctx.client.users.fetch(post.response.user_id);
+class Command extends SlashCommand {
+    #bot;
+    #stores;
+
+    constructor(bot, stores) {
+        super({
+            name: 'deny',
+            description: "Deny a response",
+            type: 3,
+            usage: [
+                'Right click a message -> `deny`'
+            ],
+            permissions: ['MANAGE_MESSAGES'],
+            opPerms: ['MANAGE_RESPONSES']
+        })
+        this.#bot = bot;
+        this.#stores = stores;
+    }
+
+    async execute(ctx) {
+        var msg = ctx.options.getMessage('message');
+        var post = await this.#stores.responsePosts.get(ctx.guild.id, msg.channel.id, msg.id);
+        if(!post) return "Only use this for a pending response message!";
+
+        var u2 = await this.#bot.users.fetch(post.response.user_id);
         if(!u2) return "ERR! Couldn't fetch that response's user!";
 
         var reason;
@@ -29,7 +40,7 @@ module.exports = {
         if(resp.toLowerCase() == 'skip') reason = '*(no reason given)*';
         else reason = resp;
 
-		var embed = msg.embeds[0];
+        var embed = msg.embeds[0];
         embed.color = parseInt('aa5555', 16);
         embed.footer = {text: 'Response denied!'};
         embed.timestamp = new Date().toISOString();
@@ -57,15 +68,15 @@ module.exports = {
                 timestamp: new Date().toISOString()
             }]})
 
-            ctx.client.emit('DENY', post.response);
+            this.#bot.emit('DENY', post.response);
             await post.delete();
         } catch(e) {
             console.log(e);
             return 'ERR! Response denied, but couldn\'t message the user!';
         }
 
-		return "Response denied!";
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_RESPONSES']
+        return "Response denied!";
+    }
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

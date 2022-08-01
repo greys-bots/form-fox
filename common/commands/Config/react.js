@@ -1,16 +1,45 @@
+const { Models: { TextCommand } } = require('frame');
 const { confirmReacts: REACTS } = require('../../extras');
 const VALS = ["1", "true", "y", "yes", "enable", "✅"];
 
-module.exports = {
-	help: () => "Set if the bot should remove form reacts",
-	usage: () =>[
-		" - Views current values",
-		" [true|false] - Sets the global value",
-		" [form id] [val] - Sets the value for a form"
-	],
-	execute: async (bot, msg, args) => {
-		var cfg = await bot.stores.configs.get(msg.channel.guild.id);
-		var forms = await bot.stores.forms.getAll(msg.channel.guild.id);
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			name: 'react',
+			description: "Set if the bot should remove form reacts",
+			arguments: {
+				value: {
+					type: 'boolean',
+					description: 'The value to set (true or false)',
+					optional: true
+				},
+				"form id": {
+					type: 'string',
+					description: 'The ID of a form to change',
+					optional: true
+				}
+			},
+			usage: [
+				" - Views current values",
+				" [true|false] - Sets the global value",
+				" [form id] [val] - Sets the value for a form"
+			],
+			guildOnly: true,
+			permissions: ['MANAGE_MESSAGES'],
+			alias: ['reactremove', 'reaction', 'reacts', 'reactions', 'rr'],
+			module
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
+		var cfg = await this.#stores.configs.get(msg.channel.guild.id);
+		var forms = await this.#stores.forms.getAll(msg.channel.guild.id);
 		switch(args.length) {
 			case 0:
 				var embeds = [{embed: {
@@ -64,9 +93,7 @@ module.exports = {
 				return "Form config set!";
 				break;
 		}
-	},
-	guildOnly: true,
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_CONFIG'],
-	alias: ['reactremove', 'reaction', 'reacts', 'reactions', 'rr']
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

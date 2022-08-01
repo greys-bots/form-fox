@@ -1,34 +1,46 @@
-module.exports = {
-	data: {
-		name: 'post',
-		description: 'Posts a form in the given channel',
-		options: [
-			{
-				name: 'form_id',
-				description: 'The form\'s ID',
-				type: 3,
-				required: true,
-				autocomplete: true
-			},
-			{
-				name: 'channel',
-				description: 'The channel to post in',
-				type: 7,
-				required: true,
-				channel_types: [0, 5, 10, 11, 12]
-			}
-		]
-	},
-	usage: [
-		"[form_id] [channel] - Post a form embed in a channel"
-	],
+const { Models: { SlashCommand } } = require('frame');
+
+class Command extends SlashCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores) {
+		super({
+			name: 'post',
+			description: 'Posts a form in the given channel',
+			options: [
+				{
+					name: 'form_id',
+					description: 'The form\'s ID',
+					type: 3,
+					required: true,
+					autocomplete: true
+				},
+				{
+					name: 'channel',
+					description: 'The channel to post in',
+					type: 7,
+					required: true,
+					channel_types: [0, 5, 10, 11, 12]
+				}
+			],
+			usage: [
+				"[form_id] [channel] - Post a form embed in a channel"
+			],
+			permissions: ['MANAGE_MESSAGES'],
+			guildOnly: true
+		})
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
 	async execute(ctx) {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var chan = ctx.options.getChannel('channel');
-		var form = await ctx.client.stores.forms.get(ctx.guildId, id);
+		var form = await this.#stores.forms.get(ctx.guildId, id);
 		if(!form.id) return 'Form not found!';
 
-		var responses = await ctx.client.stores.responses.getByForm(ctx.guildId, form.hid);
+		var responses = await this.#stores.responses.getByForm(ctx.guildId, form.hid);
 		try {
 			var message = await chan.send({
 				embeds: [{
@@ -54,16 +66,20 @@ module.exports = {
 					}]
 				}]
 			});
-			var p = await ctx.client.stores.formPosts.create(ctx.guildId, chan.id, message.id, {
+			var p = await this.#stores.formPosts.create({
+				server_id: ctx.guildId,
+				channel_id: chan.id,
+				message_id: message.id,
 				form: form.hid
 			});
 		} catch(e) {
 			return 'ERR! '+(e.message || e);
 		}
 		return 'Posted!';
-	},
+	}
+
 	async auto(ctx) {
-		var forms = await ctx.client.stores.forms.getAll(ctx.guild.id);
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
 		var foc = ctx.options.getFocused();
 		if(!foc) return forms.map(f => ({ name: f.name, value: f.hid }));
 		foc = foc.toLowerCase()
@@ -78,7 +94,7 @@ module.exports = {
 			name: f.name,
 			value: f.hid
 		}))
-	},
-	permissions: ['MANAGE_MESSAGES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores) => new Command(bot, stores);

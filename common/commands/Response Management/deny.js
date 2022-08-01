@@ -1,16 +1,35 @@
-module.exports = {
-	help: ()=> "Manually deny a response, in case reactions aren't working",
-	usage: ()=> [' [response ID] - Manually denies the response with the given ID'],
-	execute: async (bot, msg, args) => {
+const { Models: { TextCommand } } = require('frame');
+
+class Command extends TextCommand {
+	#bot;
+	#stores;
+
+	constructor(bot, stores, module) {
+		super({
+			module,
+			name: 'deny',
+			description: "Manually deny a response, in case reactions aren't working",
+			usage: [' [response ID] - Manually denies the response with the given ID'],
+			alias: ['fail'],
+			permissions: ['MANAGE_MESSAGES'],
+			opPerms: ['MANAGE_RESPONSES'],
+			guildOnly: true
+		})
+
+		this.#bot = bot;
+		this.#stores = stores;
+	}
+
+	async execute({msg, args}) {
 		if(!args[0]) return 'I need a response to deny!';
 
-		var response = await bot.stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
+		var response = await this.#stores.responses.get(msg.channel.guild.id, args[0].toLowerCase());
 		if(!response.id) return 'Response not found!';
 
-		var user = await bot.users.fetch(response.user_id);
+		var user = await this.#bot.users.fetch(response.user_id);
 		if(!user) return "Couldn't get that response's user!";
 
-		var post = await bot.stores.responsePosts.getByResponse(msg.channel.guild.id, response.hid);
+		var post = await this.#stores.responsePosts.getByResponse(msg.channel.guild.id, response.hid);
 		var chan = msg.channel.guild.channels.resolve(post?.channel_id);
 		var message = await chan?.messages.fetch(post?.message_id);
 
@@ -55,7 +74,7 @@ module.exports = {
 				color: parseInt('aa5555', 16),
 				timestamp: new Date().toISOString()
 			}]})
-			bot.emit('DENY', response)
+			this.#bot.emit('DENY', response)
 			await post.delete()
 		} catch(e) {
 			console.log(e);
@@ -63,9 +82,7 @@ module.exports = {
 		}
 
 		return 'Response denied!';
-	},
-	alias: ['fail'],
-	permissions: ['MANAGE_MESSAGES'],
-	opPerms: ['MANAGE_RESPONSES'],
-	guildOnly: true
+	}
 }
+
+module.exports = (bot, stores, mod) => new Command(bot, stores, mod);

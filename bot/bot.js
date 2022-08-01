@@ -1,14 +1,19 @@
+require('dotenv').config();
+
 const {
 	Client,
 	Intents,
 	Options
 } = require("discord.js");
-const fs				  = require("fs");
-const path 				  = require("path");
+const {
+	FrameClient,
+	Utilities,
+	Handlers
+} = require('frame');
+const fs = require("fs");
+const path = require("path");
 
-require('dotenv').config();
-
-const bot = new Client({
+const bot = new FrameClient({
 	intents: [
 		Intents.FLAGS.GUILDS,
 		Intents.FLAGS.GUILD_MESSAGES,
@@ -28,72 +33,51 @@ const bot = new Client({
 		MessageManager: 0,
 		ThreadManager: 0
 	})
+}, {
+	prefix: process.env.PREFIX,
+	invite: process.env.INVITE,
+	statuses: [
+		(bot) => `${bot.prefix}h | in ${bot.guilds.cache.size} guilds!`,
+		(bot) => `${bot.prefix}h | serving ${bot.users.cache.size} users!`
+	]
 });
 
-bot.prefix = process.env.PREFIX;
-bot.chars = process.env.CHARS;
-bot.invite = process.env.INVITE;
-
-bot.tc = require('tinycolor2');
-
-bot.status = 0;
-bot.guildCount = 0;
-bot.statuses = [
-	() => `ff!h | in ${bot.guilds.cache.size} guilds!`,
-	() => `ff!h | serving ${bot.users.cache.size} users!`
-	// `ff!h | https://ff.greysdawn.com`
-];
-
-bot.updateStatus = async function(){
-	var target = bot.statuses[bot.status % bot.statuses.length];
-	if(typeof target == "function") bot.user.setActivity(await target());
-	else bot.user.setActivity(target);
-	bot.status++;
-		
-	setTimeout(()=> bot.updateStatus(), 60 * 1000) // 5 mins
-}
-
 async function setup() {
-	bot.db = await require(__dirname + '/../common/stores/__db')(bot);
+	var { db, stores } = await Handlers.DatabaseHandler(bot, __dirname + '/../common/stores');
+	bot.db = db;
+	bot.stores = stores;
 
 	files = fs.readdirSync(__dirname + "/events");
 	files.forEach(f => bot.on(f.slice(0,-3), (...args) => require(__dirname + "/events/"+f)(...args,bot)));
 
 	bot.handlers = {};
+	bot.handlers.interaction = Handlers.InteractionHandler(bot, __dirname + '/../common/slashcommands');
+	bot.handlers.command = Handlers.CommandHandler(bot, __dirname + '/../common/commands');
 	files = fs.readdirSync(__dirname + "/handlers");
-	files.forEach(f => bot.handlers[f.slice(0,-3)] = require(__dirname + "/handlers/"+f)(bot));
-
-	bot.utils = require(__dirname + "/utils");
-	Object.assign(bot.utils, require(__dirname + "/../common/utils"));
-}
-
-bot.writeLog = async (log) => {
-	let now = new Date();
-	let ndt = `${(now.getMonth() + 1).toString().length < 2 ? "0"+ (now.getMonth() + 1) : now.getMonth()+1}.${now.getDate().toString().length < 2 ? "0"+ now.getDate() : now.getDate()}.${now.getFullYear()}`;
-	if(!fs.existsSync('./logs')) fs.mkdirSync('./logs');
-	if(!fs.existsSync(`./logs/${ndt}.log`)){
-		fs.writeFile(`./logs/${ndt}.log`,log+"\r\n",(err)=>{
-			if(err) console.log(`Error while attempting to write log ${ndt}\n`+err.stack);
-		});
-	} else {
-		fs.appendFile(`./logs/${ndt}.log`,log+"\r\n",(err)=>{
-			if(err) console.log(`Error while attempting to apend to log ${ndt}\n`+err);
-		});
+	for(var f of files) {
+		var n = f.slice(0, -3);
+		bot.handlers[n] = require(__dirname + "/handlers/"+f)(bot)
 	}
+
+	bot.utils = Utilities;
 }
 
 bot.on("ready", async ()=> {
-	console.log('fox ready!');
-	bot.updateStatus();
+	console.log(`Logged in as ${bot.user.tag} (${bot.user.id})`);
 })
 
 bot.on('error', (err)=> {
 	console.log(`Error:\n${err.stack}`);
-	bot.writeLog(`=====ERROR=====\r\nStack: ${err.stack}`)
 })
 
 process.on("unhandledRejection", (e) => console.log(e));
 
-setup();
-bot.login(process.env.TOKEN)
-.catch(e => console.log("Trouble connecting...\n"+e));
+setup()
+.then(async () => {
+	try {
+		await bot.login(process.env.TOKEN);
+	} catch(e) {
+		console.log("Trouble connecting...\n"+e)
+	}
+})
+.catch(e => console.log(e))
