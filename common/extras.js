@@ -856,6 +856,23 @@ module.exports = {
 		]
 	},
 
+	createButtons: [
+		{
+			type: 2,
+			emoji: '➕',
+			style: 2,
+			label: 'Add question',
+			custom_id: 'add'
+		},
+		{
+			type: 2,
+			emoji: '✅',
+			style: 1,
+			label: 'Finish',
+			custom_id: 'end'
+		}
+	],
+
 	requiredPerms: [
 		'ADD_REACTIONS',
 		'MANAGE_MESSAGES',
