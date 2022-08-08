@@ -23,7 +23,8 @@ const MODALS = {
 					label: 'Form Name',
 					style: TIS.Short,
 					min_length: 1,
-					max_length: 100
+					max_length: 100,
+					required: true
 				}]
 			},
 			{
@@ -34,7 +35,32 @@ const MODALS = {
 					label: 'Form Description',
 					style: TIS.Paragraph,
 					min_length: 1,
-					max_length: 2000
+					max_length: 2000,
+					required: true
+				}]
+			},
+			{
+				type: CT.ActionRow,
+				components: [{
+					type: CT.TextInput,
+					custom_id: 'section-name',
+					label: 'First Section Name',
+					style: TIS.Short,
+					min_length: 1,
+					max_length: 100,
+					required: true
+				}]
+			},
+			{
+				type: CT.ActionRow,
+				components: [{
+					type: CT.TextInput,
+					custom_id: 'section-description',
+					label: 'First Section Description',
+					style: TIS.Paragraph,
+					min_length: 1,
+					max_length: 2000,
+					required: false
 				}]
 			}
 		]
@@ -91,11 +117,6 @@ const EMBEDS = {
 	form: (f) => ({
 		title: f.name,
 		description: f.description,
-		fields: (
-			f.questions.length ?
-			f.questions.map(transform) :
-			[]
-		),
 		footer: { text: `Form ID: ${f.hid}` },
 		color: 0xee8833
 	}),
@@ -198,30 +219,44 @@ class FormHandler {
 			5 * 60_000
 		)
 		if(!m) return "No data given!";
-		var name = m.fields.getField('name').value.trim();
-		var description = m.fields.getField('description').value.trim();
 
 		var form = await this.stores.forms.create({
 			server_id: ctx.guildId,
-			name,
-			description,
-			questions: []
+			name: m.fields.getField('name').value.trim(),
+			description: m.fields.getField('description').value.trim(),
+			questions: [],
+			sections: []
 		});
 
+		var section = await this.stores.sections.create({
+			server_id: ctx.guild.id,
+			form: form.hid,
+			name: m.fields.getField('section-name').value().trim(),
+			description: m.fields.getField('section-description').value().trim(),
+			questions: []
+		})
+
+		form.sections = [section.id];
+		await form.save();
+
 		var message = await m.followUp({
-			embeds: [EMBEDS.form(form)],
+			embeds: [
+				EMBEDS.form(form),
+				EMBEDS.section(section)
+			],
 			components: [
 				{
 					type: 1,
-					components: [{
-						type: 3,
-						custom_id: 'select',
-						options: [{
-							label: 'Add new section',
-							emoji: '➕',
-							value: 'new'
-						}]
-					}]
+					components: [
+						buildSelect([
+							section,
+							{
+								label: 'Add new section',
+								emoji: '➕',
+								value: 'new'
+							}
+						], 0)
+					]
 				},
 				{
 					type: 1,
@@ -233,7 +268,7 @@ class FormHandler {
 
 		this.menus.set(message.id, new Menu(this.bot, {
 			form,
-			sections: [],
+			sections: [section],
 			questions: [],
 			message,
 			user: ctx.user,
@@ -274,11 +309,15 @@ class Menu {
 						"No data received! (Menu still accessible)"
 					)
 
-					this.sections.push({
+					var section = await this.stores.sections.create({
+						server_id: ctx.guild.id,
+						form: this.form.hid,
 						name: m.fields.getField('name').value().trim(),
 						description: m.fields.getField('description').value().trim(),
 						questions: []
 					})
+
+					this.sections.push(section)
 					this.selected = this.sections.length - 1;
 
 					await m.followUp('Data received!');
@@ -292,6 +331,7 @@ class Menu {
 				await this.addQuestion(ctx)
 				break;
 			case 'end':
+				form.sections = this.sections.map(s => s.id);
 				await form.save();
 				for(var s of this.sections)
 					await s.save();
@@ -299,13 +339,11 @@ class Menu {
 				break;
 		}
 
-		var embeds = [
-			EMBEDS.form(this.form)
-		]
-		if(this.selected)
-			embeds.push(EMBEDS.section(this.sections[this.selected]))
 		await this.message.edit({
-			embeds,
+			embeds: [
+				EMBEDS.form(this.form),
+				EMBEDS.section(this.sections[this.selected])
+			],
 			components: [
 				{
 					type: 1,
@@ -329,11 +367,7 @@ class Menu {
 	}
 
 	async addQuestion(ctx) {
-		var target = (
-			this.selected != undefined ?
-			this.sections[this.selected] :
-			this.form
-		)
+		var target = this.section[this.selected];
 
 		return;
 	}

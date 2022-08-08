@@ -5,7 +5,6 @@ const KEYS = {
 	hid: { },
 	user_id: { },
 	form: { },
-	questions: { },
 	answers: { },
 	status: { patch: true },
 	received: { }
@@ -36,8 +35,7 @@ class ResponseStore extends DataStore {
 				hid 		TEXT UNIQUE,
 				user_id 	TEXT,
 				form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
-				questions 	JSONB,
-				answers 	TEXT[],
+				answers 	JSONB,
 				status 		TEXT,
 				received 	TIMESTAMPTZ
 			);
@@ -60,14 +58,13 @@ class ResponseStore extends DataStore {
 				hid,
 				user_id,
 				form,
-				questions,
 				answers,
 				status,
 				received
-			) VALUES ($1,find_unique('responses'),$2,$3,$4,$5,$6,$7)
+			) VALUES ($1,find_unique('responses'),$2,$3,$4,$5,$6)
 			RETURNING *`,
-			[data.server_id, data.user_id, data.form, data.questions || [],
-			data.answers || [], data.status || 'pending', data.received || new Date()]);
+			[data.server_id, data.user_id, data.form, data.answers || [],
+			 data.status || 'pending', data.received || new Date()]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
@@ -83,13 +80,12 @@ class ResponseStore extends DataStore {
 				hid,
 				user_id,
 				form,
-				questions,
 				answers,
 				status,
 				received
 			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-			[server, data.hid, data.user_id, data.form, data.questions || [],
-			data.answers || [], data.status || 'pending', data.received || new Date()]);
+			[server, data.hid, data.user_id, data.form, data.answers || [],
+			 data.status || 'pending', data.received || new Date()]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
@@ -225,20 +221,10 @@ class ResponseStore extends DataStore {
 				form: f,
 				id,
 				server_id,
-				questions,
-				answers,
 				...rest
 			} = r;
 			if(!d[f]) d[f] = [];
 			
-			var ans = [];
-			for(var i = 0; i < questions.length; i++) {
-				ans.push({
-					question: questions[i],
-					answer: answers[i]
-				})
-			}
-			rest.answers = ans;
 			d[f].push(rest)
 		}
 

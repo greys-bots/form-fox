@@ -32,6 +32,10 @@ class Form extends DataObject {
 
 		return rest;
 	}
+
+	async getSections() {
+		this.sects = await this.store.bot.stores.sections.getAll(this.server_id, this.hid);
+	}
 }
 
 class FormStore extends DataStore {
@@ -47,7 +51,7 @@ class FormStore extends DataStore {
 				hid 			TEXT UNIQUE,
 				name 			TEXT,
 				description 	TEXT,
-				questions 		JSONB,
+				sections 		JSONB,
 				channel_id 		TEXT,
 				roles 			JSONB,
 				message 		TEXT,
@@ -80,7 +84,7 @@ class FormStore extends DataStore {
 				hid,
 				name,
 				description,
-				questions,
+				sections
 				channel_id,
 				roles,
 				message,
@@ -96,7 +100,7 @@ class FormStore extends DataStore {
 			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
 			RETURNING *`,
 			[data.server_id, data.name, data.description,
-			 JSON.stringify(data.questions ?? []),
+			 JSON.stringify(data.sections ?? []),
 			 data.channel_id, JSON.stringify(data.roles ?? []),
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,
@@ -110,14 +114,14 @@ class FormStore extends DataStore {
 		return await this.getID(form.rows[0].id);
 	}
 
-	async index(server, data = {}) {
+	async index(data = {}) {
 		try {
 			await this.db.query(`INSERT INTO forms (
 				server_id,
 				hid,
 				name,
 				description,
-				questions,
+				sections,
 				channel_id,
 				roles,
 				message,
@@ -131,8 +135,8 @@ class FormStore extends DataStore {
 				tickets_id,
 				ticket_msg
 			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
-			[server, data.name, data.description,
-			 JSON.stringify(data.questions || []),
+			[data.server_id, data.name, data.description,
+			 JSON.stringify(data.sections || []),
 			 data.channel_id, JSON.stringify(data.roles || []),
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,

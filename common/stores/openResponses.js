@@ -8,7 +8,7 @@ const KEYS = {
     message_id: { patch: true },
     user_id: { },
     form: { },
-    questions: { },
+    sections: { },
     answers: { patch: true },
     selection: { patch: true },
     page: { patch: true }
@@ -43,7 +43,7 @@ class OpenResponseStore extends DataStore {
 			message_id 	TEXT,
 			user_id 	TEXT,
 			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
-			questions   JSONB,
+			sections    JSONB,
 			answers 	TEXT[],
 			selection   TEXT[],
 			page 		INTEGER
@@ -58,12 +58,12 @@ class OpenResponseStore extends DataStore {
                 message_id,
                 user_id,
                 form,
-                questions,
+                sections,
                 answers
             ) VALUES ($1,$2,$3,$4,$5,$6,$7)
             RETURNING id`,
             [data.server_id, data.channel_id, data.message_id,
-             data.user_id, data.form, data.questions || [], 
+             data.user_id, data.form, data.sections || [], 
              data.answers || []]);
         } catch(e) {
             console.log(e);
@@ -81,10 +81,10 @@ class OpenResponseStore extends DataStore {
                 message_id,
                 user_id,
                 form,
-                questions,
+                sections,
                 answers
             ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-            [server, channel, message, data.user_id, data.form, data.questions || [], data.answers || []]);
+            [server, channel, message, data.user_id, data.form, data.sections || [], data.answers || []]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
