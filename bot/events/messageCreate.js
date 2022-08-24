@@ -49,7 +49,7 @@ module.exports = async (msg, bot)=>{
 	
 	try {
 		await bot.handlers.command.handle({command, args, msg, config});
-		await this.handleWarning(msg)
+		await handleWarning(msg)
 	} catch(e) {
 		console.log(e);
 		log.push(`Error: ${e}`);
