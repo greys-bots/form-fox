@@ -855,6 +855,35 @@ module.exports = {
 			}
 		]
 	},
+	denyBtns: (disabled) => ([{
+		type: 1,
+		components: [
+			{
+				type: 2,
+				label: 'Add reason',
+				custom_id: 'reason',
+				style: 1,
+				emoji: '📝',
+				disabled
+			},
+			{
+				type: 2,
+				label: 'Send denial',
+				custom_id: 'send',
+				style: 3,
+				emoji: '📥',
+				disabled
+			},
+			{
+				type: 2,
+				label: 'Cancel',
+				custom_id: 'cancel',
+				style: 4,
+				emoji: '❌',
+				disabled
+			},
+		]
+	}])
 
 	requiredPerms: [
 		'ADD_REACTIONS',

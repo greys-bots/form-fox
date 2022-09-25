@@ -1,6 +1,7 @@
 const { Models: { DataStore, DataObject } } = require('frame');
 const {
-    pageBtns: PGBTNS
+    pageBtns: PGBTNS,
+    denyBtns: DENY
 } = require('../extras');
 
 const VARIABLES = {
@@ -238,11 +239,12 @@ class ResponsePostStore extends DataStore {
         switch(reaction.emoji.name) {
             case '❌':
                 var reason;
-                await msg.channel.send([
-                    'Would you like to give a denial reason?\n',
-                    'Type `skip` to skip adding one, or ',
-                    '`cancel` to cancel the denial!'
-                ].join(''));
+                var m = await msg.channel.send({
+	                embeds: [{
+	                	title: 'Would you like to give a denial reason?'
+	                }],
+	                components: denyBtns(false)
+                });
                 var resp = await msg.channel.awaitMessages({filter: m => m.author.id == user.id, time: 2 * 60 * 1000, max: 1});
                 if(!resp?.first()) return await msg.channel.send('Err! Timed out!');
                 resp = resp.first().content;
