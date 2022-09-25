@@ -60,6 +60,8 @@ async function setup() {
 	}
 
 	bot.utils = Utilities;
+	var ut = require('./utils');
+	bot.utils = Object.assign(bot.utils, ut);
 }
 
 bot.on("ready", async ()=> {

@@ -541,7 +541,7 @@ class ResponseHandler {
 
 		var config = await this.bot.stores.configs.get(response.server_id);
 
-		var comps = msg.components[0].components;
+		var comps = msg.components[0].components.map(c => c.data);
 		switch(reaction.emoji.name) {
 			case '✅':
 				this.menus.add(msg.channel.id);
@@ -731,7 +731,7 @@ class ResponseHandler {
 			return;
 		}
 
-		var comps = prompt.components[0].components;
+		var comps = prompt.components[0].components.map(c => c.data);
 		switch(message.content.toLowerCase()) {
 			case 'submit':
 				this.menus.add(message.channel.id);
@@ -835,7 +835,7 @@ class ResponseHandler {
 		var config = await this.bot.stores.configs.get(response.server_id);
 
 		await inter.deferUpdate();
-		var comps = inter.message.components[0].components;
+		var comps = inter.message.components[0].components.map(c => c.data);
 		switch(inter.customId) {
 			case 'submit':
 				this.menus.add(inter.message.channel.id);
@@ -850,7 +850,7 @@ class ResponseHandler {
 				if(res.success) await inter.message.edit({
 					components: [{
 						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
+						components: comps.map(b => ({ ...b, disabled: true })).filter(x => x)
 					}]
 				});
 				return;

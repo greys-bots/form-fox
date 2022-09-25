@@ -868,10 +868,10 @@ module.exports = {
 			},
 			{
 				type: 2,
-				label: 'Send denial',
-				custom_id: 'send',
-				style: 3,
-				emoji: '📥',
+				label: 'Skip reason',
+				custom_id: 'skip',
+				style: 2,
+				emoji: '➡️',
 				disabled
 			},
 			{
@@ -883,7 +883,7 @@ module.exports = {
 				disabled
 			},
 		]
-	}])
+	}]),
 
 	requiredPerms: [
 		'ADD_REACTIONS',
