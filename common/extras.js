@@ -642,7 +642,7 @@ const qTypes = {
 				return undefined;
 			}
 
-			response.answers.push(date);
+			response.answers.push(`<t:${Math.floor(date.getTime() / 1000)}:D>`);
 			return {response, send: true};
 		}
 	},
