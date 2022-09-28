@@ -28,7 +28,7 @@ class Command extends SlashCommand {
 				"[form_id] - View and optionally clear a form's cooldown",
 				"[form_id] [cooldown] - Set a form's cooldown"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;

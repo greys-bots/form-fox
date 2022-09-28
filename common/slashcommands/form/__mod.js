@@ -9,7 +9,7 @@ class Command extends SlashCommand {
 			name: 'form',
 			description: 'Commands for managing forms',
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS']
 		})
 		this.#bot = bot;

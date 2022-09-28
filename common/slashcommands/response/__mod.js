@@ -9,7 +9,7 @@ class Command extends SlashCommand {
 			name: 'response',
 			description: "Commands for handling responses",
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_RESPONSES']
 		})
 		this.#bot = bot;

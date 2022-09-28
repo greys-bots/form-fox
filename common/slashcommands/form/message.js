@@ -34,7 +34,7 @@ class Command extends SlashCommand {
 				"$GUILD - the guild's name\n" +
 				"$FORM - the form's name\n" +
 				"$FORMID - the form's ID",
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;

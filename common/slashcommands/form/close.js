@@ -20,7 +20,7 @@ class Command extends SlashCommand {
 			usage: [
 				"[form_id] - Close the given form"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

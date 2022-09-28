@@ -27,7 +27,7 @@ class Command extends SlashCommand {
 			usage: [
 				"[form_id] [name] - Set a form's name"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;

@@ -28,7 +28,7 @@ class Command extends SlashCommand {
 				"[form_id] - View and optionally reset a form's emoji",
 				"[form_id] [emoji] - Set a form's emoji"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;

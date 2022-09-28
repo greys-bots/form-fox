@@ -42,7 +42,7 @@ class ViewCommand extends SlashCommand {
 				"[target] - Views permissions for a specific target"
 			],
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_OPS']
 		})
 
@@ -133,7 +133,7 @@ class OpCommand extends SlashCommand {
 				"server-wide will be able to use all admin commands " +
 				"regardless of permissions given here",
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_OPS']
 		})
 
@@ -148,6 +148,11 @@ class OpCommand extends SlashCommand {
 		var cfg = await this.#stores.configs.get(ctx.guild.id);
 		var opped = cfg?.opped ?? {users: [], roles: []};
 		var obj = {};
+		console.log(
+			`Constructor name: ${target.constructor.name}`,
+			`\nClass:`, Role,
+			`\nInstance? ${target instanceof Role}`
+		)
 		if(!(
 			target instanceof User ||
 			target instanceof GuildMember ||
@@ -206,7 +211,7 @@ class DeopCommand extends SlashCommand {
 				'[target] - De-ops the target'
 			],
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_OPS']
 		})
 
@@ -271,7 +276,7 @@ class AddCommand extends SlashCommand {
 				"[target] - Add a permission to the given target"
 			],
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_OPS']
 		})
 
@@ -336,7 +341,7 @@ class RemoveCommand extends SlashCommand {
 				"[target] - Remove a permission from the given target"
 			],
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_OPS']
 		})
 

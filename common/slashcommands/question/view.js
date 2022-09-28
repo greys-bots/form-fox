@@ -21,7 +21,7 @@ class Command extends SlashCommand {
 			],
 			ephemeral: true,
 			guildOnly: true,
-			permissions: ['MANAGE_GUILD']
+			permissions: ['ManageMessages'],
 		})
 		this.#bot = bot;
 		this.#stores = stores;

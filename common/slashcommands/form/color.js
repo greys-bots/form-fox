@@ -29,7 +29,7 @@ class Command extends SlashCommand {
 				"[form_id] - View and optionally clear a form's color",
 				"[form_id] [color] - Set a form's color"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;

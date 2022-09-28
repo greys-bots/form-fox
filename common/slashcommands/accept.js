@@ -18,7 +18,7 @@ class Command extends SlashCommand {
             usage: [
                 'Right click a message -> `accept`'
             ],
-            permissions: ['MANAGE_MESSAGES'],
+            permissions: ['ManageMessages'],
             opPerms: ['MANAGE_RESPONSES']
         })
         this.#bot = bot;

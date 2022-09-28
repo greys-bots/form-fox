@@ -9,7 +9,7 @@ class Command extends SlashCommand {
 			name: 'config',
 			description: "Commands for configuring options",
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_CONFIG']
 		})
 		this.#bot = bot;

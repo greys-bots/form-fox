@@ -20,7 +20,7 @@ class Command extends SlashCommand {
 				"- View the current auto-threading status",
 				"[value] - Set whether to automatically add threads to responses"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;

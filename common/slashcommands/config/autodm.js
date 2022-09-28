@@ -24,7 +24,7 @@ class Command extends SlashCommand {
 			],
 			extra: "NOTE: This feature may not work until the bot " +
 				   "has been whitelisted for the members intent!",
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 
 		})

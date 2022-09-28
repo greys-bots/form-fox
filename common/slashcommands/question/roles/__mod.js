@@ -10,7 +10,7 @@ class Command extends SlashCommand {
 			description: "Manage roles associated with specific questions",
 			type: 2,
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES']
+			permissions: ['ManageMessages'],
 		})
 		this.#bot = bot;
 		this.#stores = stores;

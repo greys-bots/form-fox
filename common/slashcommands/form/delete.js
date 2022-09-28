@@ -21,7 +21,7 @@ class Command extends SlashCommand {
 			usage: [
 				"[form_id] - Delete a form"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['DELETE_FORMS'],
 			guildOnly: true
 		})

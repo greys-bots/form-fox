@@ -19,7 +19,7 @@ class Command extends SlashCommand {
 			usage: [
 				"[channel] - Check a specific channel for proper permissions"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true
 		})
 		this.#bot = bot;
