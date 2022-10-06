@@ -14,7 +14,7 @@ class Command extends TextCommand {
 				" - Deletes ALL responses across ALL forms",
 				" [form id] - Deletes all responses for the given form"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['DELETE_RESPONSES'],
 			guildOnly: true
 		})

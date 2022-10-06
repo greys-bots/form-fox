@@ -11,7 +11,7 @@ class Command extends TextCommand {
 			description: 'Rename a form',
 			usage: [' [form id] [new name] - Rename the given form'],
 			alias: ['name', 'rn'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

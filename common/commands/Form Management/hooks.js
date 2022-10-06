@@ -21,7 +21,7 @@ class Command extends TextCommand {
 				`Events to subscribe to: ${EVENTS.join(', ')}\n` +
 				'If no events are given, it\'ll automatically subscribe to all!',
 			alias: ['hook', 'link', 'links'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module
@@ -86,7 +86,7 @@ class AddCommand extends TextCommand {
 				' [form id] [url] <events> - Adds a hook to the given form'
 			],
 			alias: ['new', '+', 'create'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		});
@@ -132,7 +132,7 @@ class RemoveCommand extends TextCommand {
 				' [form id] [hook id] - Removes a hook from the given form'
 			],
 			alias: ['delete', 'd', 'rmv', 'r', '-'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

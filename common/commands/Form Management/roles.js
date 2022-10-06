@@ -15,7 +15,7 @@ class Command extends TextCommand {
 				' [form id] - View or clear a form\'s roles',
 				' [form id] [role] [role] ... - Set a form\'s roles. Best done with mentions or ids'
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

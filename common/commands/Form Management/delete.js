@@ -15,7 +15,7 @@ class Command extends TextCommand {
 				' all | * -[form id] ... - Delete all except specific forms'
 			],
 			alias: ['del', 'remove'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['DELETE_FORMS'],
 			guildOnly: true,
 			module

@@ -886,13 +886,13 @@ module.exports = {
 	}]),
 
 	requiredPerms: [
-		'ADD_REACTIONS',
-		'MANAGE_MESSAGES',
-		'EMBED_LINKS',
-		'ATTACH_FILES',
-		'READ_MESSAGE_HISTORY',
-		'VIEW_CHANNEL',
-		'SEND_MESSAGES'
+		'AddReactions',
+		'ManageMessages',
+		'EmbedLinks',
+		'AttachFiles',
+		'ReadMessageHistory',
+		'ViewChannel',
+		'SendMessages'
 	],
 	opPerms: {
 		"MANAGE_RESPONSES": "Allow users to accept and deny responses",

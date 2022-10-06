@@ -17,7 +17,7 @@ class Command extends TextCommand {
 			description: "Manually accept a response, in case reactions aren't working",
 			usage: [' [response ID] - Manually accepts the response with the given ID'],
 			alias: ['acc', 'pass'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_RESPONSES'],
 			guildOnly: true
 		})

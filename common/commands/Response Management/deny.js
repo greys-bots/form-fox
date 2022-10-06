@@ -11,7 +11,7 @@ class Command extends TextCommand {
 			description: "Manually deny a response, in case reactions aren't working",
 			usage: [' [response ID] - Manually denies the response with the given ID'],
 			alias: ['fail'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_RESPONSES'],
 			guildOnly: true
 		})

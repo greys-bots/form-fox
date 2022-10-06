@@ -10,7 +10,7 @@ class Command extends TextCommand {
 			name: 'post',
 			description: 'Post a form to the given channel',
 			usage: [' [form id] [channel] - Post a form to a channel'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

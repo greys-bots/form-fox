@@ -24,7 +24,7 @@ class Command extends TextCommand {
 				"responses opened and finished after the fact!"
 			].join(""),
 			alias: ['q'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS']
 		})
 

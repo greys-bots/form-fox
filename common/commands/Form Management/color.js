@@ -11,7 +11,7 @@ class Command extends TextCommand {
 			description: 'Set the color for a form',
 			usage: [" [form id] [color] - Sets the given form's color"],
 			alias: ['col', 'colour'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

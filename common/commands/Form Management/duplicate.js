@@ -21,7 +21,7 @@ class Command extends TextCommand {
 				"(Questions are always copied!)"
 			].join("\n"),
 			alias: ['copy', 'dup', 'cp'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

@@ -13,7 +13,7 @@ class Command extends TextCommand {
 				" - Check all forms' channels for proper permissions",
 				" [channel] - Check a specific channel for proper permissions"
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_CONFIG'],
 			guildOnly: true,
 			module
