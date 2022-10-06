@@ -10,7 +10,7 @@ class Command extends TextCommand {
 			name: 'unbind',
 			description: 'Unbind a form reaction from the given message',
 			usage: [' [form id] [channel] [message id] - Unbinds a form react from a message'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

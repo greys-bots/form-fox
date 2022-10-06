@@ -10,7 +10,7 @@ class Command extends TextCommand {
 			description: 'Set the description of a form',
 			usage: [' [form id] [description] - Describe the given form'],
 			alias: ['describe', 'desc'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

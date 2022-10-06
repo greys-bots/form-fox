@@ -13,7 +13,7 @@ class Command extends TextCommand {
 				" - Imports an archive of your forms from a .json file attached to the message",
 				" [url] - Imports forms from a linked .json"],
 			alias: ['imp'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			cooldown: 60,

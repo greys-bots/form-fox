@@ -9,7 +9,7 @@ class Command extends TextCommand {
 			name: 'close',
 			description: "Close a form for responses",
 			usage: [' [form id] - Close the given form for more responses'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

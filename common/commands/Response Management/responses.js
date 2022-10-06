@@ -18,7 +18,7 @@ class Command extends TextCommand {
 				' <form id> from:[user id] - List responses from a certain user'
 			],
 			alias: ['resp', 'response', 'listresponses', 'listresponse', 'lr'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_RESPONSES'],
 			guildOnly: true
 		})

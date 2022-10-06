@@ -21,7 +21,7 @@ class Command extends TextCommand {
 				" [prefix] - Sets a new prefix"
 			],
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_CONFIG'],
 			module
 		});

@@ -9,7 +9,7 @@ class Command extends TextCommand {
 			name: 'bind',
 			description: 'Bind a form reaction to the given message',
 			usage: [' [form id] [channel] [message id] - Binds a form react to a message'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

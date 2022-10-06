@@ -17,7 +17,7 @@ class Command extends TextCommand {
 				"Example acceptance message: `You've been accepted! Welcome to $GUILD, $USER!`"
 			].join('\n'),
 			alias: ['msg'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

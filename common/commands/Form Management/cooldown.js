@@ -14,7 +14,7 @@ class Command extends TextCommand {
 				'before applying to the form again if their app is denied!\n' +
 				'Set this to 0 for no cooldown rate',
 			alias: ['cd'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

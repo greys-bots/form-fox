@@ -16,7 +16,7 @@ class Command extends TextCommand {
 				' closed - List closed forms'
 			],
 			alias: ['list', 'l', 'f', 'form'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

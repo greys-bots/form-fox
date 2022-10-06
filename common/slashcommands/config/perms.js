@@ -129,7 +129,7 @@ class OpCommand extends SlashCommand {
 			extra: 'Permission descriptions:\n' + 
 				Object.keys(PERMS).map(p => `${p} - ${PERMS[p]}`)
 				.join('\n') +
-				"NOTE: Users with the MANAGE_MESSAGES role permission " +
+				"NOTE: Users with the ManageMessages role permission " +
 				"server-wide will be able to use all admin commands " +
 				"regardless of permissions given here",
 			guildOnly: true,

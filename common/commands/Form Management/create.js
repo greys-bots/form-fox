@@ -16,7 +16,7 @@ class Command extends TextCommand {
 				Object.values(TYPES).map(t => `${t.alias.join(" | ")} - ${t.description}`).join("\n") +
 				"\n```",
 			alias: ['new', 'add', 'n', '+'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

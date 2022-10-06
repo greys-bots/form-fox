@@ -27,7 +27,7 @@ class Command extends TextCommand {
 			],
 
 			alias: [ 'ch', 'chan'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			guildOnly: true,
 			module
 		})

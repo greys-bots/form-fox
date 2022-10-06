@@ -28,7 +28,7 @@ class Command extends TextCommand {
 				" [form id] [val] - Sets the value for a form"
 			],
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			alias: ['reactremove', 'reaction', 'reacts', 'reactions', 'rr'],
 			module
 		})

@@ -15,7 +15,7 @@ class Command extends TextCommand {
 				' resp [form id] <form id> ... - Export specific forms and their responses'
 			],
 			alias: ['exp'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			cooldown: 10,

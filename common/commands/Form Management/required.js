@@ -14,7 +14,7 @@ class Command extends TextCommand {
 				' [form id] - View or clear required questions for a form',
 				' [form id] [question number] [question number] ... - Set certain questions as required'
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			alias: ['req'],
 			guildOnly: true

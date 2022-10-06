@@ -201,7 +201,7 @@ class ResponsePostStore extends DataStore {
 		var cfg = await this.bot.stores.configs.get(ctx.guild.id);
 		var check = await this.bot.handlers.interaction.checkPerms(
 			{
-				permissions: ['MANAGE_MESSAGES'],
+				permissions: ['ManageMessages'],
 				opPerms: ['MANAGE_RESPONSES']
 			},
 			ctx, cfg
@@ -370,9 +370,9 @@ class ResponsePostStore extends DataStore {
 
 					await ch2.lockPermissions(); //get perms from parent category
 					await ch2.permissionOverwrites.edit(u2.id, {
-						'VIEW_CHANNEL': true,
-						'SEND_MESSAGES': true,
-						'READ_MESSAGE_HISTORY': true
+						'ViewChannel': true,
+						'SendMessages': true,
+						'ReadMessageHistory': true
 					})
 
 					var tmsg = post.response.form.ticket_msg ?? cfg?.ticket_message;

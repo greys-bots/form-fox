@@ -10,7 +10,7 @@ class Command extends TextCommand {
 			name: 'open',
 			description: "Open a form for responses",
 			usage: [' [form id] - Open the given form for more responses'],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true
 		})

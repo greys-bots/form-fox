@@ -13,7 +13,7 @@ class Command extends TextCommand {
 				' [form id] - Views and optionally clears an existing emote',
 				' [form id] [new emoji] - Sets emoji for the given form'
 			],
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_FORMS'],
 			guildOnly: true,
 			module

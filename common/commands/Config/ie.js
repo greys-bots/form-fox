@@ -18,7 +18,7 @@ class Command extends TextCommand {
 			extra: `The "info embed" shows the user a list of questions they'll be answering, along with info `+
 					   `about the form itself. Making this \`false\` means it won't be sent`,
 			guildOnly: true,
-			permissions: ['MANAGE_MESSAGES'],
+			permissions: ['ManageMessages'],
 			opPerms: ['MANAGE_CONFIG'],
 			alias: ['infoembed', 'embed'],
 			module
