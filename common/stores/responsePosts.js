@@ -363,7 +363,8 @@ class ResponsePostStore extends DataStore {
 
 					if(ticket?.id) return await ctx.followUp(`Channel already opened! Link: <#${ticket.channel_id}>`)
 
-					var ch2 = await msg.guild.channels.create(`ticket-${post.response.hid}`, {
+					var ch2 = await msg.guild.channels.create({
+						name: `ticket-${post.response.hid}`,
 						parent: ch.id,
 						reason: 'Mod opened ticket for response '+post.response.hid
 					})
@@ -384,9 +385,13 @@ class ResponsePostStore extends DataStore {
 						await ch2.send(tmsg);
 					}
 
-					cmp[0].components[2].disabled = true;
+					cmp = cmp[0].components.map(x => x.toJSON());
+					cmp[2].disabled = true;
 					await msg.edit({
-						components: cmp
+						components: [{
+							type: 1,
+							components: cmp
+						}]
 					})
 					await this.bot.stores.tickets.create({
 						server_id: msg.guild.id,
