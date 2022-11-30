@@ -24,7 +24,9 @@ const KEYS = {
 
 class Form extends DataObject {
 	constructor(store, keys, data) {
-		super(store, keys, data)
+		super(store, keys, data);
+
+		this.old = this.toJSON();
 	}
 
 	toJSON() {
@@ -273,16 +275,13 @@ class FormStore extends DataStore {
 							if(!post.bound) {
 								await msg.reactions.removeAll();
 							} else {
-								console.log('changing reacts...');
 								var react = msg.reactions.cache.find(r => {
-									console.log(r);
-									return [r?.emoji.name, r?.emoji.identifier].includes(old.emoji || '📝');
+									return [r?.emoji.name, r?.emoji.identifier].includes(old?.emoji ?? '📝');
 								});
 								if(react) react.remove();
-								console.log('reacts changed!')
 							}
 
-							msg.react(data.emoji || '📝');
+							msg.react(data.emoji ?? '📝');
 						}
 
 						if(post.bound) continue;
