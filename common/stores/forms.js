@@ -84,7 +84,7 @@ class FormStore extends DataStore {
 				hid,
 				name,
 				description,
-				sections
+				sections,
 				channel_id,
 				roles,
 				message,
@@ -160,20 +160,6 @@ class FormStore extends DataStore {
 		
 		if(data.rows?.[0]) {
 			var form = new Form(this, KEYS, data.rows[0]);
-			var qs = [];
-			var edited = false;
-			for(var q of form.questions) {
-				if(!q.value) continue; // filter empty qs
-				if(q.choices && q.choices.includes('')) {
-					q.choices = q.choices.filter(x => x.length); // filter empty choices
-					edited = true;
-				}
-
-				qs.push(q);
-			}
-
-			if(edited || qs.length < form.questions.length)
-				form = await form.save();
 			return form;
 		} else return new Form(this, KEYS, { server_id: server });
 	}
@@ -230,10 +216,6 @@ class FormStore extends DataStore {
 		
 		if(data.rows?.[0]) {
 			var form = new Form(this, KEYS, data.rows[0]);
-			if(form.questions.find(q => q == "")) {
-				form.questions = form.questions.filter(x => x != "");
-				form = await form.save();
-			}
 
 			return form;
 		} else return new Form(this, KEYS, {});

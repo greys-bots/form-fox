@@ -202,9 +202,11 @@ class FormHandler {
 
 		bot.on('interactionCreate', async intr => {
 			if(intr.type !== IT.MessageComponent) return;
+			console.log('component received')
 
 			var menu = this.menus.get(intr.message.id);
-			if(menu?.user.id == intr.user.id) return;
+			if(menu?.user.id !== intr.user.id) return;
+			console.log('menu found')
 
 			await menu.handle(intr)
 		})
@@ -231,8 +233,8 @@ class FormHandler {
 		var section = await this.stores.sections.create({
 			server_id: ctx.guild.id,
 			form: form.hid,
-			name: m.fields.getField('section-name').value().trim(),
-			description: m.fields.getField('section-description').value().trim(),
+			name: m.fields.getField('section-name').value.trim(),
+			description: m.fields.getField('section-description').value?.trim(),
 			questions: []
 		})
 
@@ -265,6 +267,7 @@ class FormHandler {
 			],
 			fetchReply: true
 		})
+		console.log(message.id)
 
 		this.menus.set(message.id, new Menu(this.bot, {
 			form,
@@ -287,6 +290,7 @@ class FormHandler {
 class Menu {
 	constructor(bot, data) {
 		this.bot = bot;
+		this.stores = bot.stores;
 		for(var k in data)
 			this[k] = data[k];
 	}
@@ -297,7 +301,7 @@ class Menu {
 			case 'select':
 				var val = ctx.values[0];
 				if(val == 'new') {
-					var m = await this.bot.awaitModal(
+					var m = await this.bot.utils.awaitModal(
 						ctx,
 						MODALS.addSection(ctx),
 						ctx.user,
@@ -309,33 +313,39 @@ class Menu {
 						"No data received! (Menu still accessible)"
 					)
 
-					var section = await this.stores.sections.create({
+					var section = await this.bot.stores.sections.create({
 						server_id: ctx.guild.id,
 						form: this.form.hid,
-						name: m.fields.getField('name').value().trim(),
-						description: m.fields.getField('description').value().trim(),
+						name: m.fields.getField('name').value.trim(),
+						description: m.fields.getField('description').value?.trim(),
 						questions: []
 					})
 
 					this.sections.push(section)
 					this.selected = this.sections.length - 1;
 
-					await m.followUp('Data received!');
+					await m.followUp('Section created!');
 				} else {
 					val = parseInt(val);
 					this.selected = val;
-					
+					await ctx.reply({
+						content: `Selected section: ${this.sections[val].name}`,
+						ephemeral: true
+					})
 				}
 				break;
 			case 'add':
 				await this.addQuestion(ctx)
 				break;
 			case 'end':
-				form.sections = this.sections.map(s => s.id);
-				await form.save();
+				this.form.sections = this.sections.map(s => s.id);
+				await this.form.save();
 				for(var s of this.sections)
 					await s.save();
-				return ctx.followUp("Form saved!");
+				await ctx.message.edit({
+					components: []
+				})
+				return await ctx.reply("Form saved!");
 				break;
 		}
 
@@ -367,7 +377,7 @@ class Menu {
 	}
 
 	async addQuestion(ctx) {
-		var target = this.section[this.selected];
+		var target = this.sections[this.selected];
 
 		return;
 	}

@@ -112,3 +112,5 @@ class SectionStore extends DataStore {
 		return;
 	}
 }
+
+module.exports = (bot, db) => new SectionStore(bot, db);

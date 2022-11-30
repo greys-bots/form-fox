@@ -11,8 +11,11 @@ const KEYS = {
     sections: { },
     answers: { patch: true },
     selection: { patch: true },
-    page: { patch: true }
+    page: { patch: true },
+    current: { patch: true }
 }
+
+// `current` schema: { s: 0, q: 0 }
 
 class OpenResponse extends DataObject {
     constructor(store, keys, data) {
@@ -43,10 +46,10 @@ class OpenResponseStore extends DataStore {
 			message_id 	TEXT,
 			user_id 	TEXT,
 			form 		TEXT REFERENCES forms(hid) ON DELETE CASCADE,
-			sections    JSONB,
-			answers 	TEXT[],
+			answers 	JSONB,
 			selection   TEXT[],
-			page 		INTEGER
+			page 		INTEGER,
+			current		JSONB
 		)`)
     }
     
@@ -58,13 +61,13 @@ class OpenResponseStore extends DataStore {
                 message_id,
                 user_id,
                 form,
-                sections,
-                answers
+                answers,
+                current
             ) VALUES ($1,$2,$3,$4,$5,$6,$7)
             RETURNING id`,
             [data.server_id, data.channel_id, data.message_id,
-             data.user_id, data.form, data.sections || [], 
-             data.answers || []]);
+             data.user_id, data.form, 
+             JSON.stringify(data.answers ?? []), data.current ?? {s: 0, q: 0}]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
@@ -73,7 +76,7 @@ class OpenResponseStore extends DataStore {
         return await this.getID(c.rows[0].id);
     }
 
-    async index(server, channel, message, data = {}) {
+    async index(data = {}) {
         try {
             await this.db.query(`INSERT INTO open_responses (
                 server_id,
@@ -81,10 +84,13 @@ class OpenResponseStore extends DataStore {
                 message_id,
                 user_id,
                 form,
-                sections,
-                answers
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-            [server, channel, message, data.user_id, data.form, data.sections || [], data.answers || []]);
+                answers,
+                current
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7)
+            RETURNING id`,
+            [data.server_id, data.channel_id, data.message_id,
+             data.user_id, data.form, 
+             JSON.stringify(data.answers ?? []), data.current ?? {s: 0, q: 0}]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
