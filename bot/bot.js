@@ -53,7 +53,6 @@ async function setup() {
 
 	bot.handlers = {};
 	bot.handlers.interaction = Handlers.InteractionHandler(bot, __dirname + '/../common/slashcommands');
-	bot.handlers.command = Handlers.CommandHandler(bot, __dirname + '/../common/commands');
 	files = fs.readdirSync(__dirname + "/handlers");
 	for(var f of files) {
 		var n = f.slice(0, -3);
