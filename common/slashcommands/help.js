@@ -10,31 +10,18 @@ class Command extends SlashCommand {
 			description: "View command help",
 			options: [
 				{
-					name: 'module',
-					description: "View help for a specific group of commands",
-					type: 3,
-					required: false
-				},
-				{
 					name: 'command',
 					description: "View help for a specific command in a module",
 					type: 3,
-					required: false
-				},
-				{
-					name: 'subcommand',
-					description: "View help for a command's subcommand",
-					type: 3,
-					required: false
+					required: false,
+					autocomplete: true
 				}
 			],
 			usage: [
-				"[module] - Get help for a module",
-				"[module] [command] - Get help for a command in a module",
-				"[module] [command] [subcommand] - Get help for a command's subcommand"	
+				"[command] - Get help for a command or group of commands"	
 			],
 			extra: "Examples:\n"+
-				   "`/help module:form` - Shows form module help",
+				   "`/help command:form` - Shows form module help",
 			ephemeral: true
 		})
 		this.#bot = bot;
@@ -42,13 +29,11 @@ class Command extends SlashCommand {
 	}
 
 	async execute(ctx) {
-		var mod = ctx.options.getString('module')?.toLowerCase().trim();
-		var cmd = ctx.options.getString('command')?.toLowerCase().trim();
-		var scmd = ctx.options.getString('subcommand')?.toLowerCase().trim();
+		var cn = ctx.options.getString('command')?.toLowerCase().trim();
 
 		var embeds = [];
 		var cmds;
-		if(!mod && !cmd && !scmd) {
+		if(!cn) {
 			embeds = [{
 				title: "Eee! I'm Fox!",
 				description: "I help you make and manage forms here on discord! Here are some of my features:",
@@ -100,8 +85,8 @@ class Command extends SlashCommand {
 					{
 						name: "Support my creators!",
 						value: 
-							"[patreon](https://patreon.com/greysdawn) | " +
-							"[ko-fi](https://ko-fi.com/greysdawn)",
+							"[Patreon](https://patreon.com/greysdawn) | " +
+							"[Ko-fi](https://ko-fi.com/greysdawn)",
 						inline: true
 					}
 				],
@@ -137,13 +122,13 @@ class Command extends SlashCommand {
 				embeds.push(e)
 			}
 		} else {
-			var name = "";
+			var name = cn;
+			var [mod, cmd, scmd] = cn.split(" ");
 			var cm;
 			if(mod) {
 				cm = this.#bot.slashCommands.get(mod);
 				if(!cm) return "Module not found!";
 				cmds = cm.subcommands.map(o => o);
-				name += (cm.name ?? cm.name) + " ";
 			} else {
 				cmds = this.#bot.slashCommands.map(c => c);
 			}
@@ -152,12 +137,10 @@ class Command extends SlashCommand {
 				cm = cmds.find(c => (c.name ?? c.name) == cmd);
 				if(!cm) return "Command not found!";
 				cmds = cm.subcommands?.map(o => o);
-				name += `${cm.name ?? cm.name} `;
 
 				if(scmd) {
 					cm = cmds?.find(c => (c.name ?? c.name) == scmd);
 					if(!cm) return "Subcommand not found!";
-					name += `${cm.name ?? cm.name}`;
 				}
 			}
 
@@ -194,6 +177,25 @@ class Command extends SlashCommand {
 			for(var i = 0; i < embeds.length; i++)
 				embeds[i].title += ` (${i+1}/${embeds.length})`;
 		return embeds;
+	}
+
+	async auto(ctx) {
+		var names = this.#bot.slashNames;
+		var foc = ctx.options.getFocused();
+		var res;
+		if(!foc) res = names.map(n => ({ name: n, value: n }));
+		else {
+			foc = foc.toLowerCase()
+
+			res = names.filter(n =>
+				n.includes(foc)
+			).map(n => ({
+				name: n,
+				value: n
+			}))
+		}
+
+		return res.slice(0, 25);
 	}
 }
 

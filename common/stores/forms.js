@@ -24,7 +24,9 @@ const KEYS = {
 
 class Form extends DataObject {
 	constructor(store, keys, data) {
-		super(store, keys, data)
+		super(store, keys, data);
+
+		this.old = this.toJSON();
 	}
 
 	toJSON() {
@@ -158,6 +160,8 @@ class FormStore extends DataStore {
 			var form = new Form(this, KEYS, data.rows[0]);
 			var qs = [];
 			var edited = false;
+			if(!form.questions || !Array.isArray(form.questions))
+				form.questions = [];
 			for(var q of form.questions) {
 				if(!q.value) continue; // filter empty qs
 				if(q.choices && q.choices.includes('')) {
@@ -271,11 +275,13 @@ class FormStore extends DataStore {
 							if(!post.bound) {
 								await msg.reactions.removeAll();
 							} else {
-								var react = msg.reactions.cache.find(r => [r.emoji.name, r.emoji.identifier].includes(old.emoji || '📝'));
+								var react = msg.reactions.cache.find(r => {
+									return [r?.emoji.name, r?.emoji.identifier].includes(old?.emoji ?? '📝');
+								});
 								if(react) react.remove();
 							}
 
-							msg.react(data.emoji || '📝');
+							msg.react(data.emoji ?? '📝');
 						}
 
 						if(post.bound) continue;
