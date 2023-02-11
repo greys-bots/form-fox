@@ -369,7 +369,7 @@ class ResponseHandler {
 			})
 			await this.bot.stores.forms.updateCount(rmsg.channel.guild.id, response.form.hid);
 		} catch(e) {
-			console.log(e.message || e);
+			console.log(e);
 			return Promise.reject('ERR! '+(e.message || e));
 		}
 
