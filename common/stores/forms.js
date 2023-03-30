@@ -333,7 +333,7 @@ class FormStore extends DataStore {
 				try {
 					var chan = guild.channels.resolve(post.channel_id);
 					var msg = await chan.messages.fetch(post.message_id);
-					if(!msg) {
+					if(!chan || !msg) {
 						await this.bot.stores.formPosts.delete(server, post.channel_id, post.message_id);
 						return rej('Message missing!');
 					}
@@ -351,7 +351,7 @@ class FormStore extends DataStore {
 						}
 					}]})
 				} catch(e) {
-					errs.push(`Channel: ${chan.name} (${chan.id})\nErr: ${e.message || e}`);
+					errs.push(`Channel: ${chan?.name ?? "(channel not fetched)"} (${chan?.id ?? post.channel_id})\nErr: ${e.message ?? e}`);
 				}
 			}
 		}

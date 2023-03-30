@@ -421,10 +421,11 @@ class ResponseHandler {
 		var {channel, response} = ctx;
 
 		var prompt = await channel.messages.fetch(response.message_id);
+		prompt = prompt?.first();
 		try {
 			await response.delete();
 			if(!prompt) return;
-			console.log(prompt)
+			console.log('leaving prompt', response.message_id, prompt)
 			await prompt.edit({
 				embeds: [{
 					title: "Response cancelled",
