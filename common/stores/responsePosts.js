@@ -41,6 +41,10 @@ const KEYS = {
 	page: { patch: true }
 }
 
+async function sleep(ms) {
+	return new Promise((res, rej) => setTimeout(() => res(), ms ?? 1000))
+}
+
 class ResponsePost extends DataObject {
 	constructor(store, keys, data) {
 		super(store, keys, data)
@@ -370,7 +374,8 @@ class ResponsePostStore extends DataStore {
 					})
 
 					await ch2.lockPermissions(); //get perms from parent category
-					await ch2.permissionOverwrites.edit(u2.id, {
+					await sleep(500);
+					await ch2.permissionOverwrites.create(u2.id, {
 						'ViewChannel': true,
 						'SendMessages': true,
 						'ReadMessageHistory': true
