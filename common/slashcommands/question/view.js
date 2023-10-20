@@ -1,4 +1,5 @@
-const { qTypes:TYPES, numbers: NUMS } = require('../../extras');
+const { numbers: NUMS } = require('../../extras');
+const TYPES = require('../../questions');
 const { Models: { SlashCommand } } = require('frame');
 
 class Command extends SlashCommand {

@@ -1,4 +1,4 @@
-const { qTypes: TYPES } = require('../../extras');
+const TYPES = require('../../questions');
 const { Models: { SlashCommand } } = require('frame');
 
 class Command extends SlashCommand {
@@ -97,7 +97,7 @@ class Command extends SlashCommand {
 									"Enter your choices, each on a separate line. Maximum of 10. Example:\n" +
 									"Answer 1\n" +
 									"Answer 2\n" +
-									"Answer 2\n"
+									"Answer 3"
 								),
 								required: true
 							}

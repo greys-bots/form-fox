@@ -1,5 +1,7 @@
 const { Models: { DataStore, DataObject } } = require('frame');
-const { numbers: NUMBERS, qTypes: TYPES } = require('../extras');
+const { numbers: NUMBERS } = require('../extras');
+const TYPES = require('../questions');
+
 var menus = [];
 const KEYS = {
     id: { },
