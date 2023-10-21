@@ -1,7 +1,7 @@
 const {
-	events: EVENTS,
-	qTypes: TYPES
+	events: EVENTS
 } = require(__dirname + '/../../common/extras.js');
+const TYPES = require(__dirname + '/../../common/questions');
 
 class RoleHandler {
 	constructor(bot) {

@@ -1,11 +1,11 @@
 const {
-	qTypes: TYPES,
 	qButtons: QBTNS,
 	responseBtns: RESPBTNS,
 	pageBtns: PGBTNS,
 	submitBtns: SUBMIT,
 	confBtns: CONF
 } = require('../../common/extras');
+const TYPES = require('/../../common/questions');
 
 class ResponseHandler {
 	menus = new Set();

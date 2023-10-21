@@ -2,9 +2,9 @@ const {
 	confirmVals: STRINGS,
 	confirmReacts: REACTS,
 	confirmBtns: BUTTONS,
-	numbers: NUMBERS,
-	qTypes: TYPES
+	numbers: NUMBERS
 } = require('../common/extras');
+const TYPES = require('../common/questions');
 
 module.exports = {
 	genEmbeds: async (bot, arr, genFunc, info = {}, fieldnum, extras = {}) => {
