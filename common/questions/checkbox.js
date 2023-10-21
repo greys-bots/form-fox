@@ -1,3 +1,7 @@
+const {
+	numbers
+} = require('../extras');
+
 module.exports = {
 	description: 'allows the user to choose several options from multiple choices',
 	text: 'react or type the respective emoji/character to choose an option. react with ✏️ or type "select" to confirm selected choices.',
