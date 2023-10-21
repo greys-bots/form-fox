@@ -5,7 +5,7 @@ const {
 	submitBtns: SUBMIT,
 	confBtns: CONF
 } = require('../../common/extras');
-const TYPES = require('/../../common/questions');
+const TYPES = require('../../common/questions');
 
 class ResponseHandler {
 	menus = new Set();
