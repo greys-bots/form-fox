@@ -1,5 +1,5 @@
 const {
-	confBtns
+	numbers
 } = require('../extras');
 
 module.exports = {
