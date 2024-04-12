@@ -1,4 +1,5 @@
-const { clearBtns } = require('../../extras');
+const tc = require('tinycolor2');
+const { clearBtns } = require('../../../extras');
 const { Models: { SlashCommand } } = require('frame');
 
 class Command extends SlashCommand {
@@ -7,8 +8,8 @@ class Command extends SlashCommand {
 
 	constructor(bot, stores) {
 		super({
-			name: 'emoji',
-			description: "Changes a form's emoji",
+			name: 'color',
+			description: "Changes a form's color",
 			options: [
 				{
 					name: 'form_id',
@@ -18,15 +19,15 @@ class Command extends SlashCommand {
 					autocomplete: true
 				},
 				{
-					name: 'emoji',
-					description: 'The emoji to use for binding reacts. Omit to view/clear current value',
+					name: 'color',
+					description: 'The color you want. Omit to view/clear current color',
 					type: 3,
 					required: false
 				}
 			],
 			usage: [
-				"[form_id] - View and optionally reset a form's emoji",
-				"[form_id] [emoji] - Set a form's emoji"
+				"[form_id] - View and optionally clear a form's color",
+				"[form_id] [color] - Set a form's color"
 			],
 			permissions: ['ManageMessages'],
 			guildOnly: true
@@ -36,19 +37,20 @@ class Command extends SlashCommand {
 	}
 
 	async execute(ctx) {
+		await ctx.deferReply();
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var e = ctx.options.get('emoji')?.value;
-		var form = await this.#stores.forms.get(ctx.guildId, id);;
+		var c = ctx.options.get('color')?.value;
+		var form = await this.#stores.forms.get(ctx.guild.id, id);;
 		if(!form.id) return 'Form not found!';
 
-		if(!e) {
-			if(!form.emoji) return 'Form uses the default emoji! 📝';
+		if(!c) {
+			if(!form.color) return 'Form has no color set!';
 
-			var v = form.emoji.includes(':') ? `<:${form.emoji}:>` : form.emoji;
 			var rdata = {
 				embeds: [
 					{
-						description: `Current emoji: **${v}**`,
+						description: `Current color: **#${form.color}.**`,
+						color: parseInt(form.color, 16)
 					}
 				],
 				components: [
@@ -58,7 +60,7 @@ class Command extends SlashCommand {
 					}
 				]
 			}
-			await ctx.reply(rdata);
+			await ctx.followUp(rdata);
 
 			var reply = await ctx.fetchReply();
 			var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
@@ -66,18 +68,20 @@ class Command extends SlashCommand {
 			if(conf.msg) {
 				msg = conf.msg;
 			} else {
-				form.emoji = null;
+				form.color = null;
 				await form.save()
-				msg = 'Emoji reset!';
+				msg = 'Color reset!';
 			}
 
 			return msg;
 		}
 		
-		var emoji = e.includes(':') ? e.replace(/<:(.*):>/, '$1') : e;
+		var color = tc(c);
+		if(!color.isValid()) return 'That color isn\'t valid!';
 
-		form.emoji = emoji;
-		await form.save()
+		color = color.toHex();
+		form.color = color;
+		await form.save();
 		return 'Form updated!';
 	}
 

@@ -47,6 +47,8 @@ class Command extends SlashCommand {
 					title: form.name,
 					description: form.description,
 					color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
+					thumbnail: { url: form.post_icon ?? null },
+					image: { url: form.post_banner ?? null },
 					fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 					footer: {
 						text: `Form ID: ${form.hid} | ` +
@@ -59,9 +61,9 @@ class Command extends SlashCommand {
 					type: 1,
 					components: [{
 						type: 2,
-						label: 'Apply',
+						label: form.button_text ?? 'Apply',
 						emoji: form.emoji || "📝",
-						style: 1,
+						style: form.button_style != undefined ? form.button_style : 1,
 						custom_id: `${form.hid}-apply`
 					}]
 				}]

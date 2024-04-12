@@ -77,7 +77,9 @@ class ResponseHandler {
 				}, {
 					title: form.name,
 					description: form.description,
-					color: parseInt(form.color || 'ee8833', 16)
+					color: parseInt(form.color || 'ee8833', 16),
+					thumbnail: { url: form.post_icon ?? null },
+					image: { url: form.post_banner ?? null }
 				})
 				var fm = await user.send({embeds: [fembeds[0].embed]})
 				if(fembeds[1]) {
@@ -357,6 +359,7 @@ class ResponseHandler {
 				components: [{ type: 1, components: RESPBTNS }]
 			}
 			if(embeds.length > 1) toSend.components.push({ type: 1, components: PGBTNS });
+			if(response.form.note?.length) toSend.content = response.form.note;
 			var rmsg = await channel.send(toSend);
 			if(config?.autothread) await rmsg.startThread({name: `Response ${created.hid}`})
 

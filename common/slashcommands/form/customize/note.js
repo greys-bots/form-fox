@@ -1,5 +1,4 @@
-const tc = require('tinycolor2');
-const { clearBtns } = require('../../extras');
+const { clearBtns } = require('../../../extras');
 const { Models: { SlashCommand } } = require('frame');
 
 class Command extends SlashCommand {
@@ -8,8 +7,9 @@ class Command extends SlashCommand {
 
 	constructor(bot, stores) {
 		super({
-			name: 'color',
-			description: "Changes a form's color",
+			name: 'note',
+			description: "Changes a form's response note. This appears at the top of every received response",
+			type: 1,
 			options: [
 				{
 					name: 'form_id',
@@ -19,15 +19,15 @@ class Command extends SlashCommand {
 					autocomplete: true
 				},
 				{
-					name: 'color',
-					description: 'The color you want. Omit to view/clear current color',
+					name: 'note',
+					description: 'The note or text to send when a new response is received',
 					type: 3,
 					required: false
 				}
 			],
 			usage: [
-				"[form_id] - View and optionally clear a form's color",
-				"[form_id] [color] - Set a form's color"
+				"[form_id] - View and optionally reset a form's note",
+				"[form_id] [note] - Set a form's note"
 			],
 			permissions: ['ManageMessages'],
 			guildOnly: true
@@ -37,19 +37,20 @@ class Command extends SlashCommand {
 	}
 
 	async execute(ctx) {
+		await ctx.deferReply();
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var c = ctx.options.get('color')?.value;
-		var form = await this.#stores.forms.get(ctx.guildId, id);;
-		if(!form.id) return 'Form not found!';
+		var n = ctx.options.get('note')?.value;
+		var form = await this.#stores.forms.get(ctx.guild.id, id);;
+		if(!form) return 'Form not found!';
 
-		if(!c) {
-			if(!form.color) return 'Form has no color set!';
+		if(!n) {
+			if(!form.note) return 'Form has no note set';
 
 			var rdata = {
 				embeds: [
 					{
-						description: `Current color: **#${form.color}.**`,
-						color: parseInt(form.color, 16)
+						title: "Current note",
+						description: form.note,
 					}
 				],
 				components: [
@@ -59,27 +60,18 @@ class Command extends SlashCommand {
 					}
 				]
 			}
-			await ctx.reply(rdata);
+			await ctx.followUp(rdata);
 
 			var reply = await ctx.fetchReply();
-			var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
-			var msg;
-			if(conf.msg) {
-				msg = conf.msg;
-			} else {
-				form.color = null;
-				await form.save()
-				msg = 'Color reset!';
-			}
-
-			return msg;
+			var conf = await ctx.client.utils.getConfirmation(ctx.client, reply, ctx.user);
+			if(conf.msg) return conf.msg;
+			
+			form.note = undefined;
+			await form.save();
+			return 'Note cleared!';
 		}
 		
-		var color = tc(c);
-		if(!color.isValid()) return 'That color isn\'t valid!';
-
-		color = color.toHex();
-		form.color = color;
+		form.note = n;
 		await form.save();
 		return 'Form updated!';
 	}

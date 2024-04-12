@@ -19,7 +19,12 @@ const KEYS = {
 	embed: { patch: true },
 	apply_channel: { patch: true },
 	tickets_id: { patch: true },
-	ticket_msg: { patch: true }
+	ticket_msg: { patch: true },
+	post_icon: { patch: true },
+	post_banner: { patch: true },
+	button_text: { patch: true },
+	button_style: { patch: true },
+	note: { patch: true }
 }
 
 class Form extends DataObject {
@@ -61,7 +66,12 @@ class FormStore extends DataStore {
 				embed 			BOOLEAN,
 				apply_channel 	TEXT,
 				tickets_id 		TEXT,
-				ticket_msg 		TEXT
+				ticket_msg 		TEXT,
+				post_icon 		TEXT,
+				post_banner 	TEXT,
+				button_text 	TEXT,
+				button_style 	TEXT,
+				note 			TEXT
 			);
 
 			CREATE TABLE IF NOT EXISTS form_posts (
@@ -94,8 +104,13 @@ class FormStore extends DataStore {
 				embed,
 				apply_channel,
 				tickets_id,
-				ticket_msg
-			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+				ticket_msg,
+				post_icon,
+				post_banner,
+				button_text,
+				button_style,
+				note
+			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
 			RETURNING *`,
 			[data.server_id, data.name, data.description,
 			 JSON.stringify(data.questions ?? []),
@@ -103,7 +118,8 @@ class FormStore extends DataStore {
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,
 			 data.embed, data.apply_channel, data.tickets_id,
-			 data.ticket_msg]);
+			 data.ticket_msg, data.post_icon, data.post_banner,
+			 data.button_text, data.button_style, data.note]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
@@ -131,15 +147,22 @@ class FormStore extends DataStore {
 				embed,
 				apply_channel,
 				tickets_id,
-				ticket_msg
-			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
-			[server, data.name, data.description,
-			 JSON.stringify(data.questions || []),
-			 data.channel_id, JSON.stringify(data.roles || []),
+				ticket_msg,
+				post_icon,
+				post_banner,
+				button_text,
+				button_style,
+				note
+			) VALUES ($1,find_unique('forms'),$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+			RETURNING *`,
+			[data.server_id, data.name, data.description,
+			 JSON.stringify(data.questions ?? []),
+			 data.channel_id, JSON.stringify(data.roles ?? []),
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,
 			 data.embed, data.apply_channel, data.tickets_id,
-			 data.ticket_msg]);
+			 data.ticket_msg, data.post_icon, data.post_banner,
+			 data.button_text, data.button_style, data.note]);
 		} catch(e) {
 			console.log(e);
 	 		return Promise.reject(e.message);
@@ -290,20 +313,22 @@ class FormStore extends DataStore {
 							title: form.name,
 							description: form.description,
 							color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
+							thumbnail: { url: form.post_icon ?? null },
+							image: { url: form.post_banner ?? null },
 							fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
 							footer: {
 								text: `Form ID: ${form.hid} | ` +
 									  (!form.open ?
 									  'this form is not accepting responses right now!' :
-									  'react below to apply to this form!')
+									  'click below to apply to this form!')
 							}
 						}], components: [{
 							type: 1,
 							components: [{
 								type: 2,
-								label: 'Apply',
+								label: form.button_text ?? 'Apply',
 								emoji: form.emoji || "📝",
-								style: 1,
+								style: form.button_style != undefined ? form.button_style : 1,
 								custom_id: `${form.hid}-apply`
 							}]
 						}]})

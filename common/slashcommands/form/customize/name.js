@@ -1,4 +1,4 @@
-const { clearBtns } = require('../../extras');
+const { clearBtns } = require('../../../extras');
 const { Models: { SlashCommand } } = require('frame');
 
 class Command extends SlashCommand {
@@ -7,8 +7,8 @@ class Command extends SlashCommand {
 
 	constructor(bot, stores) {
 		super({
-			name: 'description',
-			description: "Changes a form's description",
+			name: 'name',
+			description: "Changes a form's name",
 			options: [
 				{
 					name: 'form_id',
@@ -18,14 +18,14 @@ class Command extends SlashCommand {
 					autocomplete: true
 				},
 				{
-					name: 'description',
-					description: 'The new description',
+					name: 'name',
+					description: 'The new name',
 					type: 3,
 					required: true
 				}
 			],
 			usage: [
-				"[form_id] [description] - Change a form's description"
+				"[form_id] [name] - Set a form's name"
 			],
 			permissions: ['ManageMessages'],
 			guildOnly: true
@@ -35,14 +35,15 @@ class Command extends SlashCommand {
 	}
 
 	async execute(ctx) {
+		await ctx.deferReply();
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var d = ctx.options.get('description')?.value;
-		var form = await this.#stores.forms.get(ctx.guildId, id);;
+		var n = ctx.options.get('name')?.value;
+		var form = await this.#stores.forms.get(ctx.guild.id, id);;
 		if(!form.id) return 'Form not found!';
 
-		if(d.length > 1000) return "Description length must be 1000 or less!"
+		if(n.length > 100) return "Name length must be 100 or less!"
 
-		form.description = d;
+		form.name = n;
 		await form.save()
 		return 'Form updated!';
 	}
