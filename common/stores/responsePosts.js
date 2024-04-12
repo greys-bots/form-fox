@@ -268,6 +268,14 @@ class ResponsePostStore extends DataStore {
 				embed.description += `\n\nReason: ${reason ?? "*(no reason given)*"}`;
 
 				try {
+					this.bot.emit('DENY', post.response);
+					if(ticket?.id) {
+						try {
+							var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+							await tch?.delete();
+						} catch(e) { }
+					}
+
 					post.response.status = 'denied';
 					post.response = await post.response.save();
 					await msg.edit({
@@ -275,6 +283,8 @@ class ResponsePostStore extends DataStore {
 						components: []
 					});
 					await msg.reactions.removeAll();
+
+					await post.delete();
 
 					await u2.send({embeds: [{
 						title: 'Response denied!',
@@ -288,16 +298,6 @@ class ResponsePostStore extends DataStore {
 						color: parseInt('aa5555', 16),
 						timestamp: new Date().toISOString()
 					}]})
-
-					if(ticket?.id) {
-						try {
-							var tch = await ctx.guild.channels.fetch(ticket.channel_id);
-							await tch?.delete();
-						} catch(e) { }
-					}
-
-					this.bot.emit('DENY', post.response);
-					await post.delete();
 				} catch(e) {
 					console.log(e);
 					return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');
@@ -315,6 +315,14 @@ class ResponsePostStore extends DataStore {
 				}
 
 				try {
+					this.bot.emit('ACCEPT', post.response);
+					if(ticket?.id) {
+						try {
+							var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+							await tch?.delete();
+						} catch(e) { }
+					}
+
 					post.response.status = 'accepted';
 					post.response = await post.response.save();
 					await msg.edit({
@@ -322,6 +330,8 @@ class ResponsePostStore extends DataStore {
 						components: []
 					});
 					await msg.reactions.removeAll();
+
+					await post.delete();
 
 					var welc = post.response.form.message;
 					if(welc) {
@@ -342,16 +352,6 @@ class ResponsePostStore extends DataStore {
 						color: parseInt('55aa55', 16),
 						timestamp: new Date().toISOString()
 					}]});
-
-					if(ticket?.id) {
-						try {
-							var tch = await ctx.guild.channels.fetch(ticket.channel_id);
-							await tch?.delete();
-						} catch(e) { }
-					}
-
-					this.bot.emit('ACCEPT', post.response);
-					await post.delete();
 				} catch(e) {
 					console.log(e);
 					return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);

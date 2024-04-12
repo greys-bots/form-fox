@@ -1,4 +1,7 @@
 const { Models: { SlashCommand } } = require('frame');
+const {
+	events: EVENTS
+} = require(__dirname + '/../../../extras.js');
 
 class Command extends SlashCommand {
 	#bot;
@@ -31,10 +34,19 @@ class Command extends SlashCommand {
 		if(!form.id) return 'Form not found!';
 
 		if(!form.roles?.[0]) return "No roles for that form!";
+		console.log(form.roles);
 		
 		return {embeds: [{
 			title: `${form.name} - Roles`,
-			description: form.roles.map(r => `<@&${r.id}>`).join("\n")
+			fields: EVENTS.map(e => {
+				var val = form.roles.filter(x => x.events.includes(e.toUpperCase()))
+							.map(x => `<@&${x.id}>`)
+							.join("\n");
+				return {
+					name: e.toUpperCase(),
+					value: val?.length ? val : "*None set*"
+				}
+			})
 		}]}
 	}
 

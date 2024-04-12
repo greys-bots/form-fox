@@ -1,4 +1,27 @@
 const { Models: { SlashCommand } } = require('frame');
+const {
+    denyBtns: DENY
+} = require('../extras');
+const MODALS = {
+    DENY: (value) => ({
+        title: "Deny reason",
+        custom_id: 'deny_reason',
+        components: [{
+            type: 1,
+            components: [{
+                type: 4,
+                custom_id: 'reason',
+                style: 2,
+                label: "Enter the reason below",
+                min_length: 1,
+                max_length: 1024,
+                required: true,
+                placeholder: "Big meanie :(",
+                value
+            }]
+        }]
+    })
+}
 
 class Command extends SlashCommand {
     #bot;
@@ -27,33 +50,75 @@ class Command extends SlashCommand {
         var u2 = await this.#bot.users.fetch(post.response.user_id);
         if(!u2) return "ERR! Couldn't fetch that response's user!";
 
-        var reason;
-        await ctx.reply([
-            'Would you like to give a denial reason?\n',
-            'Type `skip` to skip adding one, or ',
-            '`cancel` to cancel the denial!'
-        ].join(''));
-        var resp = await msg.channel.awaitMessages({filter: m => m.author.id == ctx.user.id, time: 2 * 60 * 1000, max: 1});
-        if(!resp?.first()) return await msg.channel.send('Err! Timed out!');
-        resp = resp.first().content;
-        if(resp.toLowerCase() == 'cancel') return await msg.channel.send('Action cancelled!');
-        if(resp.toLowerCase() == 'skip') reason = '*(no reason given)*';
-        else reason = resp;
+        var ticket = await this.#bot.stores.tickets.get(msg.guild.id, post.response.hid);
 
-        var embed = msg.embeds[0];
+        var reason;
+        var m = await ctx.reply({
+            embeds: [{
+                title: 'Would you like to give a denial reason?'
+            }],
+            components: DENY(false),
+            fetchReply: true
+        });
+
+        var resp = await this.#bot.utils.getChoice(this.#bot, m, ctx.user, 2 * 60 * 1000, false);
+        if(!resp.choice) return {content: 'Err! Nothing selected!', ephemeral: true};
+        switch(resp.choice) {
+            case 'cancel':
+                await m.delete()
+                await resp.interaction.reply({content: 'Action cancelled!', ephemeral: true});
+                return;
+            case 'reason':
+                var mod = await this.#bot.utils.awaitModal(resp.interaction, MODALS.DENY(reason), ctx.user, true, 5 * 60_000);
+                if(mod) reason = mod.fields.getTextInputValue('reason')?.trim();
+                await mod.followUp("Modal received!");
+                await m.edit({
+                    embeds: [{
+                        title: 'Denial reason',
+                        description: reason
+                    }]
+                })
+                break;
+            case 'skip':
+                await m.edit({
+                    embeds: [{
+                        title: 'Denial reason',
+                        description: reason
+                    }]
+                })
+                break;
+        }
+
+        await m.delete()
+
+        var embed = msg.embeds[0].toJSON();
         embed.color = parseInt('aa5555', 16);
         embed.footer = {text: 'Response denied!'};
         embed.timestamp = new Date().toISOString();
         embed.author = {
-            name: `${ctx.user.username}#${ctx.user.discriminator}`,
+            name: `${ctx.user.username}`,
             iconURL: ctx.user.avatarURL()
         }
+        embed.description += `\n\nReason: ${reason ?? "*(no reason given)*"}`;
 
         try {
+            this.#bot.emit('DENY', post.response);
+            if(ticket?.id) {
+                try {
+                    var tch = await ctx.guild.channels.fetch(ticket.channel_id);
+                    await tch?.delete();
+                } catch(e) { }
+            }
+
             post.response.status = 'denied';
             post.response = await post.response.save();
-            await msg.edit({embeds: [embed], components: []});
+            await msg.edit({
+                embeds: [embed],
+                components: []
+            });
             await msg.reactions.removeAll();
+
+            await post.delete();
 
             await u2.send({embeds: [{
                 title: 'Response denied!',
@@ -63,19 +128,16 @@ class Command extends SlashCommand {
                     `Form ID: ${post.response.form.hid}`,
                     `Response ID: ${post.response.hid}`
                 ].join("\n"),
-                fields: [{name: 'Reason', value: reason}],
+                fields: [{name: 'Reason', value: reason ?? "*(no reason given)*"}],
                 color: parseInt('aa5555', 16),
                 timestamp: new Date().toISOString()
             }]})
-
-            this.#bot.emit('DENY', post.response);
-            await post.delete();
         } catch(e) {
             console.log(e);
-            return 'ERR! Response denied, but couldn\'t message the user!';
+            return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');
         }
 
-        return "Response denied!";
+        return {content: 'Response denied!', ephemeral: true};
     }
 }
 

@@ -1,5 +1,5 @@
 const { Models: { DataStore, DataObject } } = require('frame');
-const { qTypes: TYPES } = require('../extras');
+const TYPES = require('../questions');
 
 const KEYS = {
 	id: { },
@@ -263,7 +263,6 @@ class FormStore extends DataStore {
 	}
 
 	async update(id, data = {}, old) {
-		console.log(data.roles)
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
 		try {
