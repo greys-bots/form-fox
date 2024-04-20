@@ -45,11 +45,10 @@ class Command extends SlashCommand {
 		if(!e) {
 			if(!form.emoji) return 'Form uses the default emoji! 📝';
 
-			var v = form.emoji.includes(':') ? `<:${form.emoji}:>` : form.emoji;
 			var rdata = {
 				embeds: [
 					{
-						description: `Current emoji: **${v}**`,
+						description: `Current emoji: **${form.emoji}**`,
 					}
 				],
 				components: [
@@ -74,8 +73,6 @@ class Command extends SlashCommand {
 
 			return msg;
 		}
-		
-		var emoji = e.includes(':') ? e.replace(/<:(.*):>/, '$1') : e;
 
 		form.emoji = emoji;
 		await form.save()
