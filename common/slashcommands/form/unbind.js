@@ -46,7 +46,7 @@ class Command extends SlashCommand {
 
 		var channel;
 		var ch = ctx.options.getChannel('channel');
-		if(ch && ['GUILD_TEXT', 'GUILD_NEWS'].includes(ch.type)) channel = ch;
+		if(ch) channel = ch;
 		else channel = ctx.channel;
 
 		var mid = ctx.options.get('msg_id').value.trim();
