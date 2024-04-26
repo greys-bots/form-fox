@@ -270,7 +270,8 @@ class FormPostStore extends DataStore {
 
 		var posts = await this.getByMessage(msg.channel.guild.id, msg.id);
 		if(!posts?.[0]) return;
-		var post = posts.find(p => (p.form.emoji ?? '📝') == (reaction.emoji.id ? reaction.emoji.identifier : reaction.emoji.name));
+		console.log(reaction.emoji.toString());
+		var post = posts.find(p => (p.form.emoji ?? '📝') == (reaction.emoji.id ? `<${reaction.emoji.animated ? 'a' : ''}:${reaction.emoji.name}:${reaction.emoji.id}>` : reaction.emoji.name));
 		if(!post) return;
 
 		var cfg = await this.bot.stores.configs.get(msg.channel.guild.id);

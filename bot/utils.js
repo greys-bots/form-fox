@@ -18,6 +18,8 @@ module.exports = {
 				color: typeof info.color == "function" ?
 						info.color(arr[0], 0) : info.color,
 				footer: info.footer,
+				thumbnail: info.thumbnail,
+				image: info.image,
 				fields: []
 			}};
 			
@@ -34,6 +36,8 @@ module.exports = {
 						color: typeof info.color == "function" ?
 								info.color(arr[i], i) : info.color,
 						footer: info.footer,
+						thumbnail: info.thumbnail,
+						image: info.image,
 						fields: [await genFunc(arr[i], i, arr)]
 					}};
 				}
