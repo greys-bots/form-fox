@@ -40,7 +40,12 @@ const bot = new FrameClient({
 	statuses: [
 		(bot) => `${bot.prefix}h | in ${bot.guilds.cache.size} guilds!`,
 		(bot) => `${bot.prefix}h | serving ${bot.users.cache.size} users!`
-	]
+	],
+	warning: (
+		`⚠️ **Potential Shutdown Incoming** ⚠️\n` +
+		`I might be shutting down soon :(\n` +
+		`Check out [this post](<https://greysdawn.com/blog/shutdown>) for more info`
+	)
 });
 
 async function setup() {
