@@ -42,9 +42,10 @@ const bot = new FrameClient({
 		(bot) => `${bot.prefix}h | serving ${bot.users.cache.size} users!`
 	],
 	warning: (
-		`⚠️ **Potential Shutdown Incoming** ⚠️\n` +
-		`I might be shutting down soon :(\n` +
-		`Check out [this post](<https://greysdawn.com/blog/shutdown>) for more info`
+		`‼️ **Update: Hosting Goal Met!** ‼️\n` +
+		`We're no longer worried about shutting down!\n` +
+		`Check out [this post](<https://greysdawn.com/blog/hosting-met>) for more info ` +
+		`and a look at future goals`
 	)
 });
 
