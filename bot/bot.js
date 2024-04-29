@@ -40,13 +40,7 @@ const bot = new FrameClient({
 	statuses: [
 		(bot) => `${bot.prefix}h | in ${bot.guilds.cache.size} guilds!`,
 		(bot) => `${bot.prefix}h | serving ${bot.users.cache.size} users!`
-	],
-	warning: (
-		`‼️ **Update: Hosting Goal Met!** ‼️\n` +
-		`We're no longer worried about shutting down!\n` +
-		`Check out [this post](<https://greysdawn.com/blog/hosting-met>) for more info ` +
-		`and a look at future goals`
-	)
+	]
 });
 
 async function setup() {
