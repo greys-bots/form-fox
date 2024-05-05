@@ -14,6 +14,9 @@ const {
 const fs = require("fs");
 const path = require("path");
 
+const apiSetup = require('../api');
+var api;
+
 const bot = new FrameClient({
 	intents: [
 		Intents.Guilds,
@@ -62,6 +65,8 @@ async function setup() {
 	bot.utils = Utilities;
 	var ut = require('./utils');
 	bot.utils = Object.assign(bot.utils, ut);
+
+	api = await apiSetup(bot, stores);
 }
 
 bot.on("ready", async ()=> {
@@ -78,6 +83,8 @@ setup()
 .then(async () => {
 	try {
 		await bot.login(process.env.TOKEN);
+		api.listen(process.env.API_PORT ?? 8080)
+		console.log(`API listening on port ${process.env.API_PORT ?? 8080}`);
 	} catch(e) {
 		console.log("Trouble connecting...\n"+e)
 	}
