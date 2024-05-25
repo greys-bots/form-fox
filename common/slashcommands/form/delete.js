@@ -14,7 +14,7 @@ class Command extends SlashCommand {
 					name: 'form_id',
 					description: 'The form\'s ID',
 					type: 3,
-					required: true,
+					required: false,
 					autocomplete: true
 				}
 			],
@@ -30,12 +30,20 @@ class Command extends SlashCommand {
 	}
 
 	async execute(ctx) {
-		var id = ctx.options.get('form_id').value.toLowerCase().trim();
-		var form = await this.#stores.forms.get(ctx.guildId, id);;
-		if(!form.id) return 'Form not found!';
+		var id = ctx.options.get('form_id')?.value.toLowerCase().trim();
+		var forms = await this.#stores.forms.getAll(ctx.guild.id);
+		if(!forms?.length) return "No forms to delete!";
+		if(id) forms = forms.filter(x => x.hid == id);
+		if(!forms[0]?.id) return 'Form not found!';
+
+		var content = (
+			forms.length > 1 ?
+			"Are you **sure** you want to delete **ALL** forms?\n**WARNING:** All response data stored for these forms will be lost! **This can't be undone!**" :
+			"Are you **sure** you want to delete this form?\n**WARNING:** All response data stored for this form will be lost! **This can't be undone!**"
+		)
 
 		var rdata = {
-			content: "Are you **sure** you want to delete this form?\n**WARNING:** All response data for this form will be lost! **This can't be undone!**",
+			content,
 			components: [
 				{
 					type: 1,
@@ -47,15 +55,13 @@ class Command extends SlashCommand {
 
 		var reply = await ctx.fetchReply();
 		var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
-		var msg;
-		if(conf.msg) {
-			msg = conf.msg;
-		} else {
-			await form.delete()
-			msg = 'Form deleted!';
+		if(conf.msg) return conf.msg;
+
+		for(var f of forms) {
+			await f.delete()
 		}
 
-		return msg;
+		return `Form${forms.length == 1 ? '' : 's'} deleted!`;
 	}
 
 	async auto(ctx) {
