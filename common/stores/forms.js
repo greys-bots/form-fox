@@ -436,7 +436,7 @@ class FormStore extends DataStore {
 		return forms;
 	}
 
-	async import(server, data = []) {
+	async import(server, data = [], prem) {
 		try {
 			var forms = await this.getAll(server);
 			var updated = 0, created = 0, failed = [];
@@ -460,6 +460,8 @@ class FormStore extends DataStore {
 					await this.update(id, form);
 					updated++;
 				} else {
+					if(!prem && forms.length >= 5)
+						continue;
 					await this.create({
 						server_id: server,
 						...form

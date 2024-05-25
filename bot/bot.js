@@ -37,6 +37,7 @@ const bot = new FrameClient({
 }, {
 	prefix: process.env.PREFIX,
 	invite: process.env.INVITE,
+	owner: process.env.OWNER,
 	statuses: [
 		(bot) => `${bot.prefix}h | in ${bot.guilds.cache.size} guilds!`,
 		(bot) => `${bot.prefix}h | serving ${bot.users.cache.size} users!`

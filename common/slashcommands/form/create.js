@@ -35,8 +35,8 @@ class Command extends SlashCommand {
 		var description = ctx.options.getString('description').trim();
 
 		var forms = await this.#stores.forms.getAll(ctx.guild.id);
-		var prem = await this.#bot.handlers.checkAccess(ctx.guild.id);
-		if(forms?.length > 5 && !prem.access) return "Your server already has 5 forms! You'll need to subscribe to premium to make more!";
+		var prem = await this.#bot.handlers.premium.checkAccess(ctx.guild.id);
+		if(forms?.length >= 5 && !prem.access) return "Your server already has 5 forms! You'll need to subscribe to premium to make more!";
 
 		var form = await this.#stores.forms.create({
 			server_id: ctx.guildId,

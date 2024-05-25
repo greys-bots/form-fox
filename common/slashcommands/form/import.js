@@ -33,6 +33,8 @@ class Command extends SlashCommand {
 			console.log(e);
 			return "Please link a valid .json file!";
 		}
+
+		var prem = await this.#bot.handlers.premium.checkAccess(ctx.guild.id);
 		if(!data.length || !Array.isArray(data)) return "Data should be an array of forms!";
 		if(data.length > 100) return "You can only import up to 100 forms at a time!";
 
@@ -51,12 +53,13 @@ class Command extends SlashCommand {
 		if(conf.msg) {
 			msg = conf.msg;
 		} else {
-			var results = await this.#stores.forms.import(ctx.guild.id, data);
+			var results = await this.#stores.forms.import(ctx.guild.id, data, pre.access);
 			msg = "Forms imported!\n" +
 				  `Updated: ${results.updated}\n` +
 				  `Created: ${results.created}\n` +
 				  `Failed: ${results.failed?.length ?? 0}\n`;
 			if(results.failed.length) msg += results.failed.join("\n");
+			if(data.length > 5 && !prem.access) msg += `Since you don't have premium, some forms may not have been imported!\n`
 		}
 
 		return msg;
