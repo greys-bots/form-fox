@@ -1,5 +1,8 @@
 const { Models: { DataStore, DataObject } } = require('frame');
 const TYPES = require('../questions');
+const {
+	events: EVENTS
+} = require('../extras.js');
 
 const KEYS = {
 	id: { },
@@ -38,6 +41,22 @@ class Form extends DataObject {
 		var {store, KEYS, old, ...rest} = this;
 
 		return rest;
+	}
+
+	async fixRoles() {
+		if(!Array.isArray(this.roles)) return;
+		
+		// transform current roles to new format
+		var tmp = { };
+		EVENTS.forEach(e => tmp[e.toUpperCase()] = []);
+		for(var r of this.roles) {
+			for(var e of r.events) {
+				tmp[e].push({ id: r.id, action: 'add' })
+			}
+		}
+
+		this.roles = tmp;
+		await this.save();
 	}
 }
 
@@ -114,7 +133,7 @@ class FormStore extends DataStore {
 			RETURNING *`,
 			[data.server_id, data.name, data.description,
 			 JSON.stringify(data.questions ?? []),
-			 data.channel_id, JSON.stringify(data.roles ?? []),
+			 data.channel_id, JSON.stringify(data.roles ?? {}),
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,
 			 data.embed, data.apply_channel, data.tickets_id,
@@ -157,7 +176,7 @@ class FormStore extends DataStore {
 			RETURNING *`,
 			[data.server_id, data.name, data.description,
 			 JSON.stringify(data.questions ?? []),
-			 data.channel_id, JSON.stringify(data.roles ?? []),
+			 data.channel_id, JSON.stringify(data.roles ?? {}),
 			 data.message, data.color, data.open || true,
 			 data.cooldown, data.emoji, data.reacts,
 			 data.embed, data.apply_channel, data.tickets_id,

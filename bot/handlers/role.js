@@ -9,7 +9,7 @@ class RoleHandler {
 
 		EVENTS.forEach(e => {
 			this.bot.on(e.toUpperCase(), (data) => {
-				this.addRoles({
+				this.handleRoles({
 					...data,
 					client: this.bot
 				}, e.toUpperCase())
@@ -17,14 +17,19 @@ class RoleHandler {
 		})
 	}
 
-	async addRoles(ctx, event) {
+	async handleRoles(ctx, event) {
 		var { form, answers: ans } = ctx;
 		var guild = await ctx.client.guilds.fetch(ctx.server_id);
 		var member = await guild.members.fetch(ctx.user_id);
 
-		var roles = form.roles
-			?.filter(x => x.events.includes(event))
-			.map(x => x.id);
+		if(Array.isArray(form.roles) await form.fixRoles();
+		var tmp = form.roles?.[event] ?? [];
+		var add = [];
+		var remove = [];
+		for(var r of tmp) {
+			if(r.action == 'add') add.push(r.id);
+			if(r.action == 'remove') remove.push(r.id);
+		}
 
 		if(event == 'ACCEPT') {
 			for(var i = 0; i < form.questions.length; i++) {
@@ -32,12 +37,13 @@ class RoleHandler {
 				if(!q.roles?.length) continue;
 
 				var rls = TYPES[q.type].handleRoles(q, ans, i);
-				roles = roles.concat(rls);
+				add = add.concat(rls);
 			}
 		}
 
 		try {
-			if(roles.length) await member.roles.add(roles);
+			if(add.length) await member.roles.add(add);
+			if(remove.length) await member.roles.remove(remove);
 		} catch(e) {
 			console.log(
 				`Error adding roles for form ${form.hid}`,

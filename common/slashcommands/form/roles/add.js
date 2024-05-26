@@ -20,7 +20,7 @@ class Command extends SlashCommand {
 				},
 				{
 					name: 'roles',
-					description: "The roles to add",
+					description: "The roles to add (@ping them!)",
 					type: 3,
 					required: true
 				},
@@ -33,10 +33,26 @@ class Command extends SlashCommand {
 						name: e,
 						value: e.toUpperCase()
 					}))
+				},
+				{
+					name: 'action',
+					description: "The action to take on the role (adding/removing)",
+					type: 3,
+					required: true,
+					choices: [
+						{
+							name: 'add role',
+							value: 'add'
+						},
+						{
+							name: 'remove role',
+							value: 'add'
+						}
+					]
 				}
 			],
 			usage: [
-				"[form_id] [roles] - Add roles to a form"
+				"[form_id] [roles] [event] [action] - Add roles to a form"
 			],
 		})
 		this.#bot = bot;
@@ -46,24 +62,28 @@ class Command extends SlashCommand {
 	async execute(ctx) {
 		var roles = ctx.options.resolved.roles;
 		if(!roles?.size) return "Please provide at least one valid role!";
-		var event = ctx.options.getString('event');
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
+		var event = ctx.options.getString('event');
+		var action = ctx.options.getString('action');
 
-		if(!form.roles) form.roles = [];
+		
+
+		if(!form.roles) form.roles = { };
+		if(!form.roles[event]) form.roles[event] = [];
 		var toAdd = [];
 		for(var [id, r] of roles) {
-			if(form.roles.find(x => x.id == r.id)) {
-				// update with new event for now
-				var ind = form.roles.findIndex(x => x.id == r.id);
-				form.roles[ind].events = [event];
+			if(form.roles[event]?.find(x => x.id == r.id)) {
+				// update with new action for now
+				var ind = form.roles[event].findIndex(x => x.id == r.id);
+				form.roles[event][ind].action = action;
 			} else {
-				toAdd.push({id: r.id, events: [event]});
+				toAdd.push({id: r.id, action});
 			}
 		}
 
-		form.roles = form.roles.concat(toAdd);
+		form.roles[event] = form.roles[event].concat(toAdd);
 
 		await form.save();
 		return "Form updated!";
