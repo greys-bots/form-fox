@@ -22,7 +22,7 @@ class RoleHandler {
 		var guild = await ctx.client.guilds.fetch(ctx.server_id);
 		var member = await guild.members.fetch(ctx.user_id);
 
-		if(Array.isArray(form.roles) await form.fixRoles();
+		if(Array.isArray(form.roles)) await form.fixRoles();
 		var tmp = form.roles?.[event] ?? [];
 		var add = [];
 		var remove = [];

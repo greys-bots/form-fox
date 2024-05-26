@@ -8,7 +8,7 @@ class Command extends SlashCommand {
 	constructor(bot, stores) {
 		super({
 			name: 'set',
-			description: "Set the roles for a form",
+			description: "Set the roles for a form. This overwrites the existing role configuration",
 			type: 1,
 			options: [
 				{
@@ -33,10 +33,26 @@ class Command extends SlashCommand {
 						name: e,
 						value: e.toUpperCase()
 					}))
+				},
+				{
+					name: 'action',
+					description: "The action to take on the role (adding/removing)",
+					type: 3,
+					required: true,
+					choices: [
+						{
+							name: 'add role',
+							value: 'add'
+						},
+						{
+							name: 'remove role',
+							value: 'add'
+						}
+					]
 				}
 			],
 			usage: [
-				"[form_id] [roles] - Set the roles on a form"
+				"[form_id] [roles] [event] [action] - Set the roles on a form, overwriting existing ones"
 			],
 			guildOnly: true
 		})
@@ -48,14 +64,17 @@ class Command extends SlashCommand {
 		var roles = ctx.options.resolved.roles;
 		if(!roles?.size) return "Please provide valid roles!";
 		var event = ctx.options.getString('event');
+		var action = ctx.options.getString('action');
 		
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
-		roles = roles.map(r => ({id: r.id, events: [event]}));
+		roles = roles.map(r => ({id: r.id, action}));
 
-		form.roles = JSON.stringify(roles);
+		form.roles = {
+			[event]: roles
+		}
 		await form.save();
 		
 		return 'Form updated!';

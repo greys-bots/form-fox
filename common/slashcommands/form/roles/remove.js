@@ -1,4 +1,5 @@
 const { Models: { SlashCommand } } = require('frame');
+const { events: EVENTS } = require(__dirname + '/../../../extras');
 
 class Command extends SlashCommand {
 	#bot;
@@ -21,6 +22,16 @@ class Command extends SlashCommand {
 					description: "The roles to remove",
 					type: 3,
 					required: true
+				},
+				{
+					name: 'event',
+					description: "The event to remove roles from",
+					type: 3,
+					required: false,
+					choices: EVENTS.map(e => ({
+						name: e,
+						value: e.toUpperCase()
+					}))
 				}
 			],
 			usage: [
@@ -40,8 +51,17 @@ class Command extends SlashCommand {
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
-		if(!form.roles?.[0]) return "No roles to remove!";
-		form.roles = form.roles.filter(r => !roles.includes(r.id));
+		var event = ctx.options.getString('event');
+
+		if(Array.isArray(form.roles)) await form.fixRoles();
+		if(!Object.keys(form.roles)?.length) return "No roles to remove!";
+		var events;
+		if(event) events = [event];
+		else events = EVENTS;
+		for(var e of events) {
+			if(!form.roles[e]) continue;
+			form.roles[e] = form.roles[e].filter(x => !roles.includes(x.id));
+		}
 
 		await form.save()
 		return "Form updated!";

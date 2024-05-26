@@ -41,16 +41,11 @@ class Command extends SlashCommand {
 		}
 		var reply = await ctx.reply({...rdata, fetchReply: true});
 		var conf = await this.#bot.utils.getConfirmation(this.#bot, reply, ctx.user);
-		var msg;
-		if(conf.msg) {
-			msg = conf.msg;
-		} else {
-			form.roles = JSON.stringify([]);
-			await form.save()
-			msg = 'Roles cleared!';
-		}
-
-		return msg;
+		if(conf.msg) return conf.msg;
+		
+		form.roles = {};
+		await form.save()
+		return 'Roles cleared!';
 	}
 
 	async auto(ctx) {
