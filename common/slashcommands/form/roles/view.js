@@ -33,14 +33,16 @@ class Command extends SlashCommand {
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 
-		if(!form.roles?.[0]) return "No roles for that form!";
-		console.log(form.roles);
+		console.log(form.roles)
+		if(Array.isArray(form.roles)) await form.fixRoles();
+		if(!Object.keys(form.roles)?.length) return "No roles for that form!";
+		console.log(form.roles)
 		
 		return {embeds: [{
 			title: `${form.name} - Roles`,
 			fields: EVENTS.map(e => {
-				var val = form.roles.filter(x => x.events.includes(e.toUpperCase()))
-							.map(x => `<@&${x.id}>`)
+				var val = form.roles[e.toUpperCase()]
+							.map(x => `<@&${x.id}> - ${x.action}`)
 							.join("\n");
 				return {
 					name: e.toUpperCase(),

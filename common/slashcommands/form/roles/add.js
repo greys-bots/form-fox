@@ -46,7 +46,7 @@ class Command extends SlashCommand {
 						},
 						{
 							name: 'remove role',
-							value: 'add'
+							value: 'remove'
 						}
 					]
 				}
@@ -68,8 +68,6 @@ class Command extends SlashCommand {
 		var event = ctx.options.getString('event');
 		var action = ctx.options.getString('action');
 
-		console.log(form.roles);
-		return 'wip'
 		if(Array.isArray(form.roles)) await form.fixRoles();
 		if(!form.roles) form.roles = { };
 		if(!form.roles[event]) form.roles[event] = [];

@@ -35,7 +35,8 @@ class Command extends SlashCommand {
 				}
 			],
 			usage: [
-				"[form_id] [roles] - Remove roles from a form"
+				"[form_id] [roles] - Remove roles from a form",
+				"[form_id] [roles] [event] - Remove roles from a specific form event"
 			],
 		})
 		this.#bot = bot;
