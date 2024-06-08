@@ -457,7 +457,7 @@ class FormStore extends DataStore {
 
 	async import(server, data = [], prem) {
 		try {
-			var forms = await this.getAll(server);
+			var forms = await this.getAll(server) ?? [];
 			var updated = 0, created = 0, failed = [];
 			for(var f of data) {
 				var verify = this.verify(f);
