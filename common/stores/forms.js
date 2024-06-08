@@ -475,8 +475,16 @@ class FormStore extends DataStore {
 					id,
 					...form
 				} = f;
-				if(forms && forms.find(f => f.hid == form.hid || f.name == form.name)) {
-					await this.update(id, form);
+
+				var existing = forms?.find(f => f.hid == form.hid || f.name == form.name);
+				if(forms && existing) {
+					// so everything gets transformed properly
+					// we need to set each key
+					for(var k in form) {
+						existing[k] = form[k];
+					}
+					// and then save it
+					await existing.save();
 					updated++;
 				} else {
 					if(!prem && forms.length >= 5)
