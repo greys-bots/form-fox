@@ -9,15 +9,24 @@ class Command extends SlashCommand {
 	constructor(bot, stores) {
 		super({
 			name: 'import',
-			description: "Import forms",
-			options: [{
-				name: 'url',
-				description: "The .json URL to import",
-				type: 3,
-				required: true
-			}],
+			description: "Import forms using either a URL or direct .json file upload",
+			options: [
+				{
+					name: 'url',
+					description: "The URL of a .json file to import",
+					type: 3,
+					required: false
+				},
+				{
+					name: 'file',
+					description: "The .json file to import",
+					type: 11,
+					required: false
+				}
+			],
 			usage: [
-				"[url] - Import forms using the file provided"
+				"[url] - Import forms using the URL provided",
+				"[file] - Import forms using the file provided"
 			],
 		})
 		this.#bot = bot;
@@ -25,7 +34,9 @@ class Command extends SlashCommand {
 	}
 
 	async execute(ctx) {
-		var url = ctx.options.get('url').value.trim();
+		var url = ctx.options.get('url')?.value.trim();
+		var file = ctx.options.getAttachment('file');
+		if(file) url = file.url;
 		var data;
 		try {
 			data = (await (await fetch(url)).json());

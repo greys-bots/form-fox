@@ -38,13 +38,16 @@ class Command extends SlashCommand {
 		var data = await this.#stores.forms.export(ctx.guildId, ids, resp);
 		if(!data?.[0]) return "No forms to export!";
 
-		return {
+		var msg = await ctx.reply({
 			content: "Here's your file!",
 			files: [{
 				attachment: Buffer.from(JSON.stringify(data)),
 				name: "forms.json"
-			}]
-		}
+			}],
+			fetchReply: true
+		})
+		
+		return msg.attachments.first().url;
 	}
 }
 
