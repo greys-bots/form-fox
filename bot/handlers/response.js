@@ -389,7 +389,7 @@ class ResponseHandler {
 
 			await this.bot.stores.responsePosts.create({
 				server_id: rmsg.channel.guild.id,
-				channel_id: channel.id,
+				channel_id: rmsg.channel.id,
 				message_id: rmsg.id,
 				response: created.hid,
 				page: 1

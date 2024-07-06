@@ -1,14 +1,14 @@
 const { ChannelType } = require('discord.js');
 
 module.exports = {
-	type: 'tag:add',
+	name: 'add',
 	description: 'Add tags to a response in a forum channel',
 	events: ['SUBMIT', 'ACCEPT', 'DENY'],
 	priority: 0,
 
 	async setup(ctx) {
 		var data = { };
-		var { channel, form, inter, client } = ctx;
+		var { channel, inter, client } = ctx;
 		if(!channel || channel.type !== ChannelType.GuildForum)
 			return { success: false, message: 'This action only applies to forms with response channels that are forums!' };
 
@@ -34,11 +34,11 @@ module.exports = {
 	},
 
 	async handler(ctx) {
-		var { client, form, thread, action } = ctx;
+		var { thread, action } = ctx;
 
 		if(!thread) return;
 
-		await thread.setAppliedTags([...thread.appliedTags, ...action.data.tags]);
+		await thread.setAppliedTags([...(thread.appliedTags ?? []), ...action.data.tags]);
 	},
 
 	transform(data, ctx) {

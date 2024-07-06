@@ -5,7 +5,6 @@ const KEYS = {
 	server_id: { },
 	form: { },
 	hid: { },
-	name: { patch: true },
 	type: { patch: true },
 	event: { patch: true },
 	data: { patch: true },
@@ -29,7 +28,6 @@ class ActionStore extends DataStore {
 			server_id 			TEXT,
 			form			 	TEXT,
 			hid		 			TEXT DEFAULT find_unique('actions'),
-			name 				TEXT,
 			type 				TEXT,
 			event 				TEXT,
 			data 				JSONB,
@@ -42,14 +40,13 @@ class ActionStore extends DataStore {
 			var c = await this.db.query(`INSERT INTO actions (
 				server_id,
 				form,
-				name,
 				type,
 				event,
 				data,
 				priority
-			) VALUES ($1,$2,$3,$4,$5,$6,$7)
+			) VALUES ($1,$2,$3,$4,$5,$6)
 			RETURNING id`,
-			[data.server_id, data.form, data.name,
+			[data.server_id, data.form,
 			 data.type, data.event, data.data, data.priority ?? 1]);
 		} catch(e) {
 			console.log(e);
@@ -81,8 +78,8 @@ class ActionStore extends DataStore {
 		}
 		
 		if(data.rows?.[0]) {
-			data rows = data.rows.sort((a, b) => (
-				a.priority - b.priority;
+			data.rows = data.rows.sort((a, b) => (
+				a.priority - b.priority
 			))
 			return data.rows.map(x => new Action(this, KEYS, x));
 		} else return [];
@@ -97,8 +94,8 @@ class ActionStore extends DataStore {
 		}
 		
 		if(data.rows?.[0]) {
-			data rows = data.rows.sort((a, b) => (
-				a.priority - b.priority;
+			data.rows = data.rows.sort((a, b) => (
+				a.priority - b.priority
 			))
 			return data.rows.map(x => new Action(this, KEYS, x));
 		} else return [];

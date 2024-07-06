@@ -28,22 +28,47 @@ class Command extends SlashCommand {
 
 	async execute(ctx) {
 		const ACTIONS = this.#bot.handlers.action.Types;
+
+		var actions = await this.#stores.actions.getAll(ctx.guild.id);
+		if(!actions?.length) return "No actions registered!";
 		
 		var fid = ctx.options.getString('form')?.toLowerCase().trim();
-		var form = await this.#stores.forms.get(ctx.guildId, fid);
-		if(!form) return 'Form not found!';
+		if(fid) {
+			actions = actions.filter(x => x.form == fid);
+			if(!actions?.length) return "No actions registered for that form!";
+		}
 
-		var config = await this.#stores.configs.get(ctx.guild.id);
-		var channel;
-		if(form.channel_id) channel = await ctx.guild.channels.fetch(form.channel_id);
-		else if(config.response_channel) channel = await ctx.guild.channels.fetch(config.response_channel);
-
-		var actions = await this.#stores.actions.getByForm(ctx.guild.id, form.hid);
-		if(!actions?.length) return "No actions registered for that form!";
+		var forms = { };
+		var configs = { };
+		var channels = { };
 
 		var embeds = [];
 		for(var action of actions) {
-			var act = ACTIONS.find(x => x.type == action.data.type);
+			var form;
+			if(forms[action.form]) form = forms[action.form];
+			else {
+				form = await this.#stores.forms.get(ctx.guild.id, action.form);
+				forms[action.form] = form;
+			}
+
+			var config;
+			if(configs[ctx.guild.id]) config = configs[ctx.guild.id]
+			else {
+				config = await this.#stores.configs.get(ctx.guild.id);
+				configs[ctx.guild.id] = config;
+			}
+
+			var channel;
+			var chid = form.channel_id ?? config.response_channel;
+			if(chid) {
+				channel = channels[chid];
+				if(!channel) {
+					channel = await ctx.guild.channels.fetch(chid);
+					channel[chid] = channel;
+				}
+			}
+
+			var act = ACTIONS.find(x => x.type == action.type);
 			if(!act) continue;
 
 			var fields = act.transform(action, { guild: ctx.guild, channel, form, inter: ctx });

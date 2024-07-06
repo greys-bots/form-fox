@@ -8,13 +8,12 @@ const {
 	qTypes: TYPES
 } = require(__dirname + '/../../common/extras.js');
 
-const fs = require(fs);
-
-// const ACTIONS = require(__dirname + '/../../common/actions');
+const fs = require('fs');
 
 class ActionHandler {
-	constructor(bot, path) {
+	constructor(bot, path = (__dirname + '/../../common/actions')) {
 		this.bot = bot;
+		this.path = path;
 
 		EVENTS.forEach(e => {
 			this.bot.on(e.toUpperCase(), (data) => {
@@ -23,18 +22,35 @@ class ActionHandler {
 		})
 
 		this.bot.once('ready', async () => {
-			await this.load(path);
+			await this.load();
 			console.log('Actions loaded');
 		})
 	}
 
-	async load(path = (__dirname + '/../../common/actions')) {
+	async load() {
 		var actions = new Collection();
 
-		var files = fs.readdirSync(path);
+		// adapted from command loading code
+		var files = this.bot.utils.recursivelyReadDirectory(this.path);
 		for(var f of files) {
-			var tmp = require(`${path}/${f}`);
-			actions.set(tmp.type, tmp);
+			var path_frags = f.replace(this.path, "").split(/(?:\\|\/)/); // get fragments of path to slice up
+			var mods = path_frags.slice(1, -1); // the module names (folders SHOULD = mod name)
+			var file = path_frags[path_frags.length - 1]; // the actual file name
+			delete require.cache[require.resolve(f)]; // for reloading
+			
+			var action = require(f); // again, full command data
+
+			// if the commands are part of modules,
+			// then we need to nest them into those modules for parsing
+			if(mods.length) {
+				action.type = mods.join(':') + `:${action.name}`;
+				actions.set(action.type, action);
+			} else {
+				// no mods? just make it top-level
+				action.type = command.name;
+				
+				actions.set(action.name, action);
+			}
 		}
 
 		this.Types = actions;
@@ -65,7 +81,7 @@ class ActionHandler {
 
 		for(var action of actions) {
 			if(action.data.event !== event) continue;
-			var item = ACTIONS.find(x => x.type == action.data.type);
+			var item = this.Types.find(x => x.type == action.data.type);
 			if(!item) continue;
 
 			try {

@@ -1,9 +1,10 @@
 const { ChannelType } = require('discord.js');
 
 module.exports = {
-	type: 'tag:remove',
+	name: 'remove',
 	description: 'Remove tags from a response in a forum channel',
 	events: ['ACCEPT', 'DENY'],
+	priority: 0,
 
 	async setup(ctx) {
 		var data = { };
@@ -34,16 +35,14 @@ module.exports = {
 	},
 
 	async handler(ctx) {
-		var { client, form, channel, action } = ctx;
+		var { thread, action } = ctx;
 
-		console.log(action);
-
-		if(channel?.type !== ChannelType.GuildForum) return;
-		var applied = channel.appliedTags
+		if(!thread) return;
+		var applied = (thread.appliedTags ?? [])
 			.filter(x => !action.tags.includes(x.id))
 			.map(x => x.id);
 
-		await channel.setAppliedTags(applied);
+		await thread.setAppliedTags(applied);
 	},
 
 	transform(data, ctx) {

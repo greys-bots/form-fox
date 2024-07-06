@@ -60,6 +60,17 @@ class Form extends DataObject {
 		this.roles = tmp;
 		await this.save();
 	}
+
+	async save(update = true) {
+		var obj = await this.verify((this.id != null));
+
+		var data;
+		if(this.id) data = await this.store.update(this.id, obj, this.old, update);
+		else data = await this.store.create(obj);
+		for(var k in this.KEYS) this[k] = data[k];
+		this.old = Object.assign({}, data);
+		return this;
+	}
 }
 
 class FormStore extends DataStore {
@@ -266,6 +277,18 @@ class FormStore extends DataStore {
 		})
 	}
 
+	async getEvery() {
+		try {
+			var data = await this.db.query(`SELECT * FROM forms`);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) return data.rows.map(x => new Form(this, KEYS, x));
+		else return [];
+	}
+
 	async getID(id) {
 		try {
 			var data = await this.db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
@@ -285,7 +308,7 @@ class FormStore extends DataStore {
 		} else return new Form(this, KEYS, {});
 	}
 
-	async update(id, data = {}, old) {
+	async update(id, data = {}, old, update = true) {
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
 		try {
@@ -300,6 +323,7 @@ class FormStore extends DataStore {
 		var responses = await this.bot.stores.responses.getByForm(form.server_id, form.hid);
 		var posts = await this.bot.stores.formPosts.getByForm(form.server_id, form.hid);
 
+		if(!update) return form;
 		var errs = [];
 		if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
 			var guild = this.bot.guilds.resolve(form.server_id);

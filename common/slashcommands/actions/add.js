@@ -89,6 +89,7 @@ class Command extends SlashCommand {
 			form: form.hid,
 			type,
 			event,
+			priority: actionInfo.priority ?? 1,
 			data: actionData
 		});
 		return "Action added!";

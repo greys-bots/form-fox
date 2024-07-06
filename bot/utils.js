@@ -290,6 +290,150 @@ module.exports = {
 		return resp.values;
 	},
 
+	awaitRoleSelection: async (ctx, defaults, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 6,
+			custom_id: 'selector',
+			default_values: defaults,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => ({
+					...c,
+					disabled: true
+				}))
+			}]
+		});
+
+		return resp.values;
+	},
+
+	awaitChannelSelection: async (ctx, defaults, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 8,
+			custom_id: 'selector',
+			default_values: defaults,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => ({
+					...c,
+					disabled: true
+				}))
+			}]
+		});
+
+		return resp.values;
+	},
+
+	awaitMentionableSelection: async (ctx, defaults, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 7,
+			custom_id: 'selector',
+			default_values: defaults,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => ({
+					...c,
+					disabled: true
+				}))
+			}]
+		});
+
+		return resp.values;
+	},
+
 	async awaitModal(ctx, data, user, ephemeral = false, time = 30_000) {
 		return new Promise(async res => {
 			await ctx.showModal(data);

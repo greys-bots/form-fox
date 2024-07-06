@@ -29,7 +29,7 @@ const MODALS = {
 const KEYS = {
 	id: { },
 	server_id: { },
-	channel: { },
+	channel_id: { },
 	message_id: { },
 	response: { },
 	page: { patch: true }
@@ -365,12 +365,13 @@ class ResponsePostStore extends DataStore {
 					if(post.response.form.ticket_format) {
 						tname = post.response.form.ticket_format;
 						for(var key of Object.keys(VARIABLES)) {
+							if(['$FORM', '$GUILD'].includes(key)) continue;
 							tname = tname.replace(key, VARIABLES[key](u2, msg.guild, post.response.form, post.response));
 						}
 					}
 
 					var ch2 = await msg.guild.channels.create({
-						name: `ticket-${post.response.hid}`,
+						name: tname,
 						parent: ch.id,
 						reason: 'Mod opened ticket for response '+post.response.hid
 					})

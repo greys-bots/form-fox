@@ -25,7 +25,7 @@ class Command extends SlashCommand {
 			],
 			usage: [
 				"[message] - Set the default ticket message for all forms",
-				"[channel] [form_id] - Set the ticket message for a form"
+				"[message] [form_id] - Set the ticket message for a form"
 			],
 			extra: 
 				"Variables available:\n" +

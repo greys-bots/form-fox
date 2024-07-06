@@ -1,13 +1,14 @@
 const { ChannelType } = require('discord.js');
 
 module.exports = {
-	type: 'post:close',
+	name: 'close',
 	description: 'Close forum post for a response',
 	events: ['ACCEPT', 'DENY'],
+	priority: 1,
 
 	async setup(ctx) {
 		var data = { };
-		var { channel, form, inter, client } = ctx;
+		var { channel } = ctx;
 		if(!channel || channel.type !== ChannelType.GuildForum)
 			return { success: false, message: 'This action only applies to forms with response channels that are forums!' };
 
@@ -15,7 +16,7 @@ module.exports = {
 	},
 
 	async handler(ctx) {
-		var { client, form, thread, action } = ctx;
+		var { thread } = ctx;
 
 		if(!thread) return;
 
@@ -38,7 +39,7 @@ module.exports = {
 
 		fields.push({
 			name: 'Result',
-			value: "Forum post will be closed"
+			value: "Forum post will be locked"
 		})
 
 		return fields;
