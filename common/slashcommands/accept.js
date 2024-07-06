@@ -1,9 +1,6 @@
-const VARIABLES = {
-    '$USER': (user, guild) => user,
-    '$GUILD': (user, guild) => guild.name,
-    '$FORM': (user, guild, form) => form.name,
-    '$FORMID': (user, guild, form) => form.id,
-}
+const {
+	textVars: VARIABLES
+} = require('../extras');
 const { Models: { SlashCommand } } = require('frame');
 
 class Command extends SlashCommand {
@@ -38,7 +35,7 @@ class Command extends SlashCommand {
         embed.footer = {text: 'Response accepted!'};
         embed.timestamp = new Date().toISOString();
         embed.author = {
-            name: `${ctx.user.username}#${ctx.user.discriminator}`,
+            name: ctx.user.tag,
             iconURL: ctx.user.avatarURL()
         }
 
@@ -51,7 +48,7 @@ class Command extends SlashCommand {
             var welc = post.response.form.message;
             if(welc) {
                 for(var key of Object.keys(VARIABLES)) {
-                    welc = welc.replace(key, eval(VARIABLES[key]));
+                    welc = welc.replace(key, VARIABLES[key](u2, ctx.guild, post.response.form, post.response));
                 }
             }
 

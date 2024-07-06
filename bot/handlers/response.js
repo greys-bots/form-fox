@@ -3,9 +3,14 @@ const {
 	responseBtns: RESPBTNS,
 	pageBtns: PGBTNS,
 	submitBtns: SUBMIT,
-	confBtns: CONF
+	confBtns: CONF,
+	textVars: VARIABLES
 } = require('../../common/extras');
 const TYPES = require('../../common/questions');
+
+const {
+	ChannelType
+} = require('discord.js');
 
 class ResponseHandler {
 	menus = new Set();
@@ -333,7 +338,7 @@ class ResponseHandler {
 						 new Array(questions.length).fill("*(answer skipped!)*"),
 				status: 'pending'
 			});
-			this.bot.emit('SUBMIT', created);
+
 			var template = {
 				title: "Response",
 				description: [
@@ -360,8 +365,27 @@ class ResponseHandler {
 			}
 			if(embeds.length > 1) toSend.components.push({ type: 1, components: PGBTNS });
 			if(response.form.note?.length) toSend.content = response.form.note;
-			var rmsg = await channel.send(toSend);
-			if(config?.autothread) await rmsg.startThread({name: `Response ${created.hid}`})
+			var rmsg;
+			if(channel.type == ChannelType.GuildForum) {
+				var title;
+				if(response.form.forum_title) {
+					title = response.form.forum_title;
+					for(var k in VARIABLES) {
+						title = title.replace(k, VARIABLES[k](user, guild, response.form, created));
+					}
+				} else title = `Response ${created.hid} (${response.form.name})`;
+
+				var tchan = await channel.threads.create({
+					name: title,
+					message: toSend,
+					// appliedTags: response.form.forum_tags?.length ? response.form.forum_tags : []
+				});
+				rmsg = await tchan.fetchStarterMessage();
+				await rmsg.pin();
+			} else {
+				var rmsg = await channel.send(toSend);
+				if(config?.autothread) await rmsg.startThread({name: `Response ${created.hid}`})
+			}
 
 			await this.bot.stores.responsePosts.create({
 				server_id: rmsg.channel.guild.id,
@@ -371,6 +395,7 @@ class ResponseHandler {
 				page: 1
 			})
 			await this.bot.stores.forms.updateCount(rmsg.channel.guild.id, response.form.hid);
+			this.bot.emit('SUBMIT', created);
 		} catch(e) {
 			console.log(e);
 			return Promise.reject('ERR! '+(e.message || e));

@@ -1,15 +1,9 @@
 const { Models: { DataStore, DataObject } } = require('frame');
 const {
 	pageBtns: PGBTNS,
-	denyBtns: DENY
+	denyBtns: DENY,
+	textVars: VARIABLES
 } = require('../extras');
-
-const VARIABLES = {
-	'$USER': (user, guild) => user,
-	'$GUILD': (user, guild) => guild.name,
-	'$FORM': (user, guild, form) => form.name,
-	'$FORMID': (user, guild, form) => form.hid,
-}
 
 const MODALS = {
 	DENY: (value) => ({
@@ -336,7 +330,7 @@ class ResponsePostStore extends DataStore {
 					var welc = post.response.form.message;
 					if(welc) {
 						for(var key of Object.keys(VARIABLES)) {
-							welc = welc.replace(key, VARIABLES[key](u2, msg.guild, post.response.form));
+							welc = welc.replace(key, VARIABLES[key](u2, msg.guild, post.response.form, post.response));
 						}
 					}
 
@@ -366,6 +360,14 @@ class ResponsePostStore extends DataStore {
 					if(!ch) return await ctx.followUp('Category not found!!');
 
 					if(ticket?.id) return await ctx.followUp(`Channel already opened! Link: <#${ticket.channel_id}>`)
+
+					var tname = `ticket-${post.response.hid}`;
+					if(post.response.form.ticket_format) {
+						tname = post.response.form.ticket_format;
+						for(var key of Object.keys(VARIABLES)) {
+							tname = tname.replace(key, VARIABLES[key](u2, msg.guild, post.response.form, post.response));
+						}
+					}
 
 					var ch2 = await msg.guild.channels.create({
 						name: `ticket-${post.response.hid}`,

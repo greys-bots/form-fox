@@ -251,5 +251,16 @@ module.exports = {
 		"DELETE_FORMS": "Allow users to delete forms",
 		"MANAGE_CONFIG": "Allow users to set config options",
 		"MANAGE_OPS": "Allow users to add and remove opped users/roles",
+	},
+
+	textVars: {
+		'$USERTAG': (user) => user.tag,
+		'$USERID': (user) => user.id,
+		'$USER': (user) => user,
+		'$GUILD': (user, guild) => guild.name,
+		'$COUNT': (user, guild) => guild.memberCount,
+		'$FORMID': (user, guild, form) => form.hid,
+		'$FORM': (user, guild, form) => form.name,
+		'$RESPONSE': (user, guild, form, response) => response.hid
 	}
 }

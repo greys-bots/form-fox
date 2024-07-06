@@ -27,7 +27,9 @@ const KEYS = {
 	post_banner: { patch: true },
 	button_text: { patch: true },
 	button_style: { patch: true },
-	note: { patch: true }
+	note: { patch: true },
+	ticket_format: { patch: true },
+	forum_title: { patch: true }
 }
 
 class Form extends DataObject {
@@ -90,7 +92,9 @@ class FormStore extends DataStore {
 				post_banner 	TEXT,
 				button_text 	TEXT,
 				button_style 	TEXT,
-				note 			TEXT
+				note 			TEXT,
+				ticket_format	TEXT,
+				forum_title		TEXT
 			);
 
 			CREATE TABLE IF NOT EXISTS form_posts (
