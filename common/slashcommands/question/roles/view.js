@@ -41,12 +41,13 @@ class Command extends SlashCommand {
 
 		var form = await this.#stores.forms.get(ctx.guild.id, f);
 		if(!form.id) return 'Form not found!';
-		
+		await form.getQuestions();
+
 		if(q === 0) q = 1;
-		if(q > form.questions.length) q = form.questions.length;
+		if(q > form.resolved.questions.length) q = form.resolved.questions.length;
 		
-		var questions = form.questions;
-		if(q !== null) questions = [form.questions[q - 1]];
+		var questions = form.resolved.questions;
+		if(q !== null) questions = [questions[q - 1]];
 		questions = questions.filter(qu => qu?.roles?.length);
 		if(!questions.length) return "No valid questions supplied!";
 

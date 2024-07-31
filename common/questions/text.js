@@ -1,3 +1,7 @@
+const {
+	TACTIONS
+} = require('../extras');
+
 module.exports = {
 	description: 'allows the user to freely type an answer',
 	alias: ['text', 'free'],

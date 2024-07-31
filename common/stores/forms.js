@@ -61,6 +61,23 @@ class Form extends DataObject {
 		await this.save();
 	}
 
+	async getQuestions() {
+		console.log('getting questions')
+		var questions = await this.store.bot.stores.questions.getByForm(this.server_id, this.hid);
+		console.log(questions);
+		var qs = [];
+		for(var q of this.questions) {
+			var question = questions.find(x => x.id == q);
+			if(!question) continue;
+			qs.push(question);
+		}
+		if(!this.resolved) this.resolved = {};
+		this.resolved.questions = qs;
+
+		console.log(qs);
+		return qs;
+	}
+
 	async save(update = true) {
 		var obj = await this.verify((this.id != null));
 
@@ -215,22 +232,6 @@ class FormStore extends DataStore {
 		
 		if(data.rows?.[0]) {
 			var form = new Form(this, KEYS, data.rows[0]);
-			var qs = [];
-			var edited = false;
-			if(!form.questions || !Array.isArray(form.questions))
-				form.questions = [];
-			for(var q of form.questions) {
-				if(!q.value) continue; // filter empty qs
-				if(q.choices && q.choices.includes('')) {
-					q.choices = q.choices.filter(x => x.length); // filter empty choices
-					edited = true;
-				}
-
-				qs.push(q);
-			}
-
-			if(edited || qs.length < form.questions.length)
-				form = await form.save();
 			return form;
 		} else return new Form(this, KEYS, { server_id: server });
 	}

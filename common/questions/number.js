@@ -1,3 +1,7 @@
+const {
+	NACTIONS
+} = require('../extras');
+
 module.exports = {
 	description: 'requires the user to enter only numbers',
 	text: "valid number required.",
