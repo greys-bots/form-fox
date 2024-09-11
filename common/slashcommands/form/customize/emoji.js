@@ -74,7 +74,7 @@ class Command extends SlashCommand {
 			return msg;
 		}
 
-		form.emoji = emoji;
+		form.emoji = e;
 		await form.save()
 		return 'Form updated!';
 	}
