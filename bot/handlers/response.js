@@ -203,7 +203,7 @@ class ResponseHandler {
 				components: [{ type: 1, components: SUBMIT }]
 			}
 			if(embeds.length > 1) {
-				content.components.push({ type: 1, components: PGBTNS });
+				content.components.push({ type: 1, components: PGBTNS(0, embeds.length) });
 				response.page = 1;
 				await response.update();
 			}
