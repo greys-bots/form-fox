@@ -11,25 +11,84 @@ class Command extends SlashCommand {
 			usage: [
 				"- Gives info about the bot"
 			],
-			ephemeral: true
+			ephemeral: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
 	}
 
 	async execute(ctx) {
-		return {embeds: [{
-			title: '**About**',
-			description: "Eee! I'm Fox! I help people set up forms and responses here on Discord!",
-			fields:[
-				{name: "Creators", value: "[greysdawn](https://github.com/greysdawn) | (GS)#6969"},
-				{name: "Invite", value: `[Clicky!](${process.env.INVITE})`,inline: true},
-				{name: "Support Server", value: "[Clicky!](https://discord.gg/EvDmXGt)", inline: true},
-				{name: "Other Links", value: "[Repo](https://github.com/greys-bots/form-fox)"},
-				{name: "Stats", value: `Guilds: ${this.#bot.guilds.cache.size} | Users: ${this.#bot.users.cache.size}`},
-				{name: "Support my creators!", value: "[Ko-Fi](https://ko-fi.com/greysdawn) | [Patreon](https://patreon.com/greysdawn)"}
-			]
-		}]}
+		return [{
+			components: [{
+				type: 17,
+				accent_color: 0xee8833,
+				components: [
+					{
+						type: 10,
+						content: "-# About"
+					},
+					{
+						type: 14
+					},
+					{
+						type: 10,
+						content:
+							"# Eee! I'm Fox!\n" +
+							"I help people set up forms and responses here on Discord!\n" +
+							"## Creators\n" +
+							"[greysdawn](https://github.com/greysdawn) | @greysdawn\n" +
+							"## Stats\n" +
+							`**Guilds:** ${this.#bot.guilds.cache.size} | **Users:** ${this.#bot.users.cache.size}`
+					},
+					{
+						type: 14
+					},
+					{
+						type: 9,
+						components: [{
+							type: 10,
+							content: "Invite me!"
+						}],
+						accessory: {
+							type: 2,
+							style: '5',
+							label: 'Invite',
+							url: "https://discordapp.com/api/oauth2/authorize?client_id=737192331241062462"
+						}
+					},
+					{
+						type: 1,
+						components: [
+							{
+								type: 2,
+								style: 5,
+								label: "Support server",
+								url: "https://discord.gg/EvDmXGt"
+							},
+							{
+								type: 2,
+								style: 5,
+								label: "Github",
+								url: "https://github.com/greys-bots/form-fox"
+							},
+							{
+								type: 2,
+								style: 5,
+								label: "Patreon",
+								url: "https://patreon.com/greysdawn"
+							},
+							{
+								type: 2,
+								style: 5,
+								label: "Ko-Fi",
+								url: "https://ko-fi.com/greysdawn"
+							}
+						]
+					}
+				]
+			}]
+		}]
 	}
 }
 
