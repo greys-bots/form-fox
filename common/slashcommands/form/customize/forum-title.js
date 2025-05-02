@@ -30,7 +30,8 @@ class Command extends SlashCommand {
 				"[form_id] [format] - Set a form's forum thread title format"
 			],
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -47,13 +48,15 @@ class Command extends SlashCommand {
 			if(!form.forum_title) return 'That form has no format set!';
 
 			var rdata = {
-				embeds: [
-					{
-						title: "Current format",
-						description: form.forum_title,
-					}
-				],
+				flags: ['IsComponentsV2'],
 				components: [
+					{
+						type: 17,
+						components: [{
+							type: 10,
+							content: `### Current format\n${form.forum_title}`
+						}]
+					},
 					{
 						type: 1,
 						components: clearBtns

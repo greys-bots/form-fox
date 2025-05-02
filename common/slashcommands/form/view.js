@@ -21,7 +21,8 @@ class Command extends SlashCommand {
 				"- View all forms",
 				"[form_id] - View a specific form"
 			],
-			ephemeral: true
+			ephemeral: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -35,23 +36,10 @@ class Command extends SlashCommand {
 
 			var embeds = [];
 			for(var f of forms) {
-				console.log(f.roles)
-				var responses = await this.#stores.responses.getByForm(ctx.guildId, f.hid);
-				embeds.push({
-					title: `${f.name} (${f.hid}) ` +
-						   `${f.emoji?.includes(':') ? '<' + f.emoji + '>' : f.emoji || '📝'}`,
-					description: f.description,
-					fields: [
-						{name: "Message", value: f.message || "*(not set)*"},
-						{name: "Channel", value: f.channel_id ? `<#${f.channel_id}>` : '*(not set)*'},
-						{name: "Response count", value: responses?.length.toString() || "0"},
-						{name: "Roles", value: f.roles?.[0]? f.roles.map(r => `<@&${r.id}>`).join("\n") : "*(not set)*"}
-					],
-					color: parseInt(!f.open ? 'aa5555' : f.color || '55aa55', 16)
-				})
+				var emb = await f.getInfo();
+				embeds.push({components: [emb]})
 			}
 
-			if(embeds.length > 1) for(var i = 0; i < embeds.length; i++) embeds[i].title += ` (${i+1}/${embeds.length})`;
 			return embeds;
 		}
 
@@ -60,19 +48,8 @@ class Command extends SlashCommand {
 		console.log(form.roles)
 
 		
-		var responses = await this.#stores.responses.getByForm(ctx.guildId, form.hid);
-		return {embeds: [{
-			title: `${form.name} (${form.hid}) ` +
-				   `${form.emoji?.includes(':') ? '<' + form.emoji + '>' : form.emoji || '📝'}`,
-			description: form.description,
-			fields: [
-				{name: "Message", value: form.message || "*(not set)*"},
-				{name: "Channel", value: form.channel_id ? `<#${form.channel_id}>` : '*(not set)*'},
-				{name: "Response count", value: responses?.length.toString() || "0"},
-				{name: "Roles", value: form.roles?.[0] ? form.roles.map(r => `<@&${r.id}>`).join("\n") : "*(not set)*"}
-			],
-			color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16)
-		}]}
+		var emb = await form.getInfo();
+		return [{components: [emb]}]
 	}
 
 	async auto(ctx) {

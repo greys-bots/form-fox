@@ -99,22 +99,9 @@ class Command extends SlashCommand {
 			}
 
 			var tmp = this.#bot.handlers.response.buildResponseEmbeds(r, template);
-			if(tmp.length > 1)  {
-				for(var i = 0; i < tmp.length; i++) {
-					if(i == 0) {
-						tmp[i].title = `Response ${r.hid}`;
-					} else {
-						tmp[i].title = `Response ${r.hid} (cont.)`;
-					}
-				}
-			}
 
 			embeds = embeds.concat(tmp);
 		}
-
-		if(embeds.length > 1)
-			for(var i = 0; i < embeds.length; i++)
-				embeds[i].title += ` (page ${i +1}/${embeds.length})`;
 
 		return embeds;
 	}

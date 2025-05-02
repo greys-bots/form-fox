@@ -40,7 +40,8 @@ class Command extends SlashCommand {
 				"$FORMID - the form's ID\n" +
 				"$RESPONSE - the response's ID",
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -57,13 +58,15 @@ class Command extends SlashCommand {
 			if(!form.note) return 'That form has no note set!';
 
 			var rdata = {
-				embeds: [
-					{
-						title: "Current note",
-						description: form.note,
-					}
-				],
+				flags: ['IsComponentsV2'],
 				components: [
+					{
+						type: 17,
+						components: [{
+							type: 10,
+							content: `### Current note\n${form.note}`
+						}]
+					},
 					{
 						type: 1,
 						components: clearBtns

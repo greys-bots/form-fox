@@ -126,8 +126,6 @@ module.exports = {
 		fields.push({
 			type: 10,
 			content: `### Event\n${data.event}`
-			name: 'Event',
-			value: data.event
 		})
 
 		fields.push({

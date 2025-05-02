@@ -55,25 +55,36 @@ class Command extends SlashCommand {
 		for(var qu of questions) {
 			if(!qu.roles) {
 				embeds.push({
-					title: "Roles on form "+form.hid,
-					description: "Question: "+qu.value,
-					fields: {
-						name: 'No roles',
-						value: "Question has no roles attached"
-					}
+					components: [{
+						type: 17,
+						components: [
+							{
+								type: 10,
+								content: `Roles on form ${form.hid}\nQuestion: ${qu.value}`
+							},
+							{
+								type: 10,
+								content: `### No roles\n*Question has no roles attached*`
+							}
+						]
+					}]
 				});
 				continue;
 			}
 
 			embeds.push({
-				title: "Roles on form "+form.hid,
-				description: "Question: "+qu.value,
-				fields: TYPES[qu.type].showRoles(qu)
+				components: [{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `Roles on form ${form.hid}\nQuestion: ${qu.value}`
+						},
+						...TYPES[qu.type].showRoles(qu)
+					]
+				}]
 			})
 		}
-
-		if(embeds.length > 1) for(var i = 0; i < embeds.length; i++)
-			embeds[i].title += ` ${i+1}/${embeds.length}`;
 
 		return embeds;
 	}

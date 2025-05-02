@@ -66,8 +66,10 @@ module.exports = {
 	showRoles(q) {
 		return q.roles.map(r => {
 			return {
-				name: `${r.action} | ${r.value.slice(0, 50)}`,
-				value: `<@&${r.id}>`
+				type: 10,
+				content:
+					`### ${r.action} | ${r.value}\n` +
+					`<@&${r.id}>`
 			}
 		})
 	}

@@ -19,7 +19,8 @@ class Command extends SlashCommand {
 			usage: [
 				"[form_id] - View hooks on a form"
 			],
-			ephemeral: true
+			ephemeral: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -35,12 +36,21 @@ class Command extends SlashCommand {
 
 		return hooks.map(h => {
 			return {
-				title: `Hook ${h.hid}`,
-				description: `Belongs to form ${form.hid}`,
-				fields: [
-					{name: 'URL', value: h.url},
-					{name: 'Events', value: h.events.join(', ')}
-				]
+				components: [{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `## Hook ${h.hid}\nBelongs to form ${form.hid}`
+						},
+						{
+							type: 10,
+							content:
+								`**URL:** ${h.url}\n` +
+								`**Events:** ${h.events.join(', ')}`
+						},
+					]
+				}]
 			}
 		})
 	}

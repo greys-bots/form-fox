@@ -39,7 +39,8 @@ class Command extends SlashCommand {
 				"$FORMID - the form's ID\n" +
 				"$RESPONSE - the response's ID\n",
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -55,13 +56,15 @@ class Command extends SlashCommand {
 			if(!form.message) return 'Form has no message set!';
 
 			var rdata = {
-				embeds: [
-					{
-						title: 'Message',
-						description: form.message
-					}
-				],
+				flags: ['IsComponentsV2'],
 				components: [
+					{
+						type: 17,
+						components: [{
+							type: 10,
+							content: `### Current message\n${form.message}`
+						}]
+					},
 					{
 						type: 1,
 						components: clearBtns

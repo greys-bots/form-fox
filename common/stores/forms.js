@@ -78,6 +78,147 @@ class Form extends DataObject {
 		return qs;
 	}
 
+	async getEmbed() {
+		var comps = [];
+		var responses = await this.store.bot.stores.responses.getByForm(this.server_id, this.hid);
+
+		if(this.post_icon) {
+			comps.push({
+				type: 9,
+				components: [{
+					type: 10,
+					content:
+						`## ${this.name}\n` +
+						this.description
+				}],
+				accessory: {
+					type: 11,
+					media: {
+						url: this.post_icon
+					}
+				}
+			})
+		} else {
+			comps.push({
+				type: 10,
+				content:
+					`## ${this.name}\n` +
+					this.description
+			})
+		}
+
+		if(this.post_banner) {
+			comps.push({
+				type: 12,
+				items: [{
+					media: { url: this.post_banner }
+				}]	
+			})
+		}
+
+		comps = comps.concat([
+			{
+				type: 14
+			},
+			{
+				type: 10,
+				content:
+					`-# ID: ${this.hid} | ` + 
+					`${responses?.length.toString() || '0'} responses | ` +
+					(
+						!this.open ?
+						'this form is not accepting responses right now!' :
+						'click below to apply to this form!'
+					)
+			}
+		])
+
+		return {
+			type: 17,
+			accent_color: parseInt(!this.open ? 'aa5555' : this.color || '55aa55', 16),
+			components: comps
+		}
+	}
+
+	async getInfo() {
+		var comps = [];
+		var responses = await this.store.bot.stores.responses.getByForm(this.server_id, this.hid);
+
+		if(this.post_icon) {
+			comps.push({
+				type: 9,
+				components: [{
+					type: 10,
+					content:
+						`## ${this.name} ` +
+						`${this.emoji?.includes(':') ? '<' + this.emoji + '>' : this.emoji || '📝'}\n` +
+						this.description
+				}],
+				accessory: {
+					type: 11,
+					media: {
+						url: this.post_icon
+					}
+				}
+			})
+		} else {
+			comps.push({
+				type: 10,
+				content:
+					`## ${this.name}` +
+					`${this.emoji?.includes(':') ? '<' + this.emoji + '>' : this.emoji || '📝'}\n` +
+					this.description
+			})
+		}
+
+		comps = comps.concat([
+			{
+				type: 10,
+				content: `### Message\n${this.message ?? '*(not set)*'}`
+			},
+			{
+				type: 10,
+				content: `### Channel\n${this.channel_id ? `<#${this.channel_id}>` : '*(not set)*'}`
+			},
+			{
+				type: 10,
+				content: `### Roles\n${this.roles?.[0]? this.roles.map(r => `<@&${r.id}>`).join("\n") : "*(not set)*"}`
+			}
+		])
+
+		if(this.post_banner) {
+			comps.push({
+				type: 12,
+				items: [{
+					media: { url: this.post_banner }
+				}]	
+			})
+		}
+
+		comps = comps.concat([
+			{
+				type: 14
+			},
+			{
+				type: 10,
+				content:
+					`-# ID: ${this.hid} | ` + 
+					`${responses?.length.toString() || '0'} responses | ` +
+					(
+						!this.open ?
+						'this form is not accepting responses right now!' :
+						'click below to apply to this form!'
+					)
+			}
+		])
+
+		return {
+			type: 17,
+			accent_color: parseInt(!this.open ? 'aa5555' : this.color || '55aa55', 16),
+			components: comps
+		}
+	}
+
 	async save(update = true) {
 		var obj = await this.verify((this.id != null));
 
@@ -321,7 +462,6 @@ class FormStore extends DataStore {
 
 		var form = await this.getID(id);
 		if(!form) return undefined; //that's just silly
-		var responses = await this.bot.stores.responses.getByForm(form.server_id, form.hid);
 		var posts = await this.bot.stores.formPosts.getByForm(form.server_id, form.hid);
 
 		if(!update) return form;
@@ -355,30 +495,23 @@ class FormStore extends DataStore {
 						}
 
 						if(post.bound) continue;
+						var emb = await form.getEmbed();
 
-						await msg.edit({embeds: [{
-							title: form.name,
-							description: form.description,
-							color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-							thumbnail: { url: form.post_icon ?? null },
-							image: { url: form.post_banner ?? null },
-							fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
-							footer: {
-								text: `Form ID: ${form.hid} | ` +
-									  (!form.open ?
-									  'this form is not accepting responses right now!' :
-									  'click below to apply to this form!')
-							}
-						}], components: [{
-							type: 1,
-							components: [{
-								type: 2,
-								label: form.button_text ?? 'Apply',
-								emoji: form.emoji || "📝",
-								style: form.button_style != undefined ? form.button_style : 1,
-								custom_id: `${form.hid}-apply`
-							}]
-						}]})
+						await msg.edit({
+							components: [
+								emb,
+								{
+									type: 1,
+									components: [{
+										type: 2,
+										label: form.button_text ?? 'Apply',
+										emoji: form.emoji || {name: "📝"},
+										style: form.button_style != undefined ? form.button_style : 1,
+										custom_id: `${form.hid}-apply`
+									}]
+								}
+							]
+						})
 					} catch(e) {
 						errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 					}
@@ -410,18 +543,22 @@ class FormStore extends DataStore {
 						return rej('Message missing!');
 					}
 
-					await msg.edit({embeds: [{
-						title: form.name,
-						description: form.description,
-						color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-						fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
-						footer: {
-							text: `Form ID: ${form.hid} | ` +
-								  (!form.open ?
-								  'this form is not accepting responses right now!' :
-								  'react below to apply to this form!')
-						}
-					}]})
+					var emb = await form.getEmbed();
+					await msg.edit({
+						components: [
+							emb,
+							{
+								type: 1,
+								components: [{
+									type: 2,
+									label: form.button_text ?? 'Apply',
+									emoji: form.emoji || {name: "📝"},
+									style: form.button_style != undefined ? form.button_style : 1,
+									custom_id: `${form.hid}-apply`
+								}]
+							}
+						]
+					})
 				} catch(e) {
 					errs.push(`Channel: ${chan?.name ?? "(channel not fetched)"} (${chan?.id ?? post.channel_id})\nErr: ${e.message ?? e}`);
 				}

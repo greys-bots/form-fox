@@ -257,8 +257,10 @@ module.exports = {
 		return q.choices.map((c) => {
 			var roles = q.roles.filter(r => r.choice == c);
 			return {
-				name: c,
-				value: roles.length ? roles.map(r => `<@&${r.id}>`).join(" ") : "(none)"
+				type: 10,
+				content:
+					`### ${c}\n` +
+					roles.length ? roles.map(r => `<@&${r.id}>`).join(" ") : "(none)"
 			}
 		})
 	}

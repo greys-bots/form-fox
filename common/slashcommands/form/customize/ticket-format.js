@@ -55,13 +55,15 @@ class Command extends SlashCommand {
 			if(!form.ticket_format) return 'That form has no format set!';
 
 			var rdata = {
-				embeds: [
-					{
-						title: "Current format",
-						description: form.ticket_format,
-					}
-				],
+				flags: ['IsComponentsV2'],
 				components: [
+					{
+						type: 17,
+						components: [{
+							type: 10,
+							content: `### Current format\n${form.ticket_format}`
+						}]
+					},
 					{
 						type: 1,
 						components: clearBtns
