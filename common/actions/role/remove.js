@@ -34,18 +34,20 @@ module.exports = {
 
 		var fields = [];
 		fields.push({
-			name: 'Type',
-			value: data.type
+			type: 10,
+			content: `### Type\n${data.type}`
 		})
 
 		fields.push({
-			name: 'Event',
-			value: data.event
+			type: 10,
+			content: `### Event\n${data.event}`
 		})
 
 		fields.push({
-			name: 'Roles removed',
-			value: data.roles.map(x => `<@&${x}>`).join(", ")
+			type: 10,
+			content:
+				`### Roles removed\n` +
+				data.roles.map(x => `<@&${x}>`).join(", ")
 		})
 
 		return fields;

@@ -119,18 +119,25 @@ module.exports = {
 
 		var fields = [];
 		fields.push({
-			name: 'Type',
-			value: data.type
+			type: 10,
+			content: `### Type\n${data.type}`
 		})
 
 		fields.push({
+			type: 10,
+			content: `### Event\n${data.event}`
 			name: 'Event',
 			value: data.event
 		})
 
 		fields.push({
-			name: 'Result',
-			value: "Forum post will be locked"
+			type: 10,
+			content: `### Target\n${data.target.type == 'user' ? 'User' : `<#${data.target.id}>`}`
+		})
+
+		fields.push({
+			type: 10,
+			content: `### Message\n${data.message}`
 		})
 
 		return fields;

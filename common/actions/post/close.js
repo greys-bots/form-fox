@@ -28,18 +28,18 @@ module.exports = {
 
 		var fields = [];
 		fields.push({
-			name: 'Type',
-			value: data.type
+			type: 10,
+			content: `### Type\n${data.type}`
 		})
 
 		fields.push({
-			name: 'Event',
-			value: data.event
+			type: 10,
+			content: `### Event\n${data.event}`
 		})
 
 		fields.push({
-			name: 'Result',
-			value: "Forum post will be locked"
+			type: 10,
+			content: `### Result\nForum post will be closed`
 		})
 
 		return fields;

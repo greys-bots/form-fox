@@ -70,23 +70,25 @@ module.exports = {
 
 		var fields = [];
 		fields.push({
-			name: 'Type',
-			value: data.type
+			type: 10,
+			content: `### Type\n${data.type}`
 		})
 
 		fields.push({
-			name: 'Event',
-			value: data.event
+			type: 10,
+			content: `### Event\n${data.event}`
 		})
 
 		fields.push({
-			name: 'Roles added',
-			value: data.roles.map(x => `<@&${x}>`).join(", ")
+			type: 10,
+			content: 
+				`### Roles added\n` +
+				data.roles.map(x => `<@&${x}>`).join(", ")
 		})
 
 		fields.push({
-			name: 'Condition',
-			value: data.condition
+			type: 10,
+			content: `### Condition\n${data.condition}`
 		})
 
 		return fields;

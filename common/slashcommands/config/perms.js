@@ -43,7 +43,8 @@ class ViewCommand extends SlashCommand {
 			],
 			guildOnly: true,
 			permissions: ['ManageMessages'],
-			opPerms: ['MANAGE_OPS']
+			opPerms: ['MANAGE_OPS'],
+			v2: true
 		})
 
 		this.#bot = bot;

@@ -58,18 +58,20 @@ module.exports = {
 
 		var fields = [];
 		fields.push({
-			name: 'Type',
-			value: data.type
+			type: 10,
+			content: `### Type\n${data.type}`
 		})
 
 		fields.push({
-			name: 'Event',
-			value: data.event
+			type: 10,
+			content: `### Event\n${data.event}`
 		})
 
 		fields.push({
-			name: 'Tags',
-			value: tags.join(", ")
+			type: 10,
+			content:
+				`### Tags added\n` +
+				tags.join(", ")
 		})
 
 		return fields;

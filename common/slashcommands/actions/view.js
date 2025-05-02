@@ -20,7 +20,8 @@ class Command extends SlashCommand {
 			],
 			permissions: [],
 			guildOnly: true,
-			ephemeral: true
+			ephemeral: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -73,8 +74,16 @@ class Command extends SlashCommand {
 
 			var fields = act.transform(action, { guild: ctx.guild, channel, form, inter: ctx });
 			embeds.push({
-				title: 'Action ' + action.hid,
-				fields
+				components: [{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `## Action ${action.hid}`	
+						},
+						...fields
+					]
+				}]
 			})
 		}
 
