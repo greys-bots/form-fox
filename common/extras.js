@@ -54,21 +54,21 @@ const qButtons = {
 		style: 2,
 		label: 'Other',
 		custom_id: 'other',
-		emoji: '🅾️'
+		emoji: {name: '🅾️'}
 	},
 	select: {
 		type: 2,
 		style: 1,
 		label: 'Select',
 		custom_id: 'select',
-		emoji: '✏️'
+		emoji: {name: '✏️'}
 	},
 	skip: {
 		type: 2,
 		style: 2,
 		label: 'Skip',
 		custom_id: 'skip',
-		emoji: '➡️'
+		emoji: {name: '➡️'}
 	},
 	submit: {
 		type: 2,
@@ -153,34 +153,34 @@ module.exports = {
 			style: 3,
 			label: 'Accept',
 			custom_id: 'accept',
-			emoji: '✅'
+			emoji: {name: '✅'}
 		},
 		{
 			type: 2,
 			style: 4,
 			label: 'Deny',
 			custom_id: 'deny',
-			emoji: '❌'
+			emoji: {name: '❌'}
 		},
 		{
 			type: 2,
 			style: 2,
 			label: 'Ticket',
 			custom_id: 'ticket',
-			emoji: '🎟️'
+			emoji: {name: '🎟️'}
 		}
 	],
 	pageBtns: (ind, len) => {
 		return [
 			{
 				type: 2,
-				emoji: '⏮️',
+				emoji: {name: '⏮️'},
 				style: 1,
 				custom_id: 'first'
 			},
 			{
 				type: 2,
-				emoji: '◀️',
+				emoji: {name: '◀️'},
 				style: 1,
 				custom_id: 'prev'
 			},
@@ -193,13 +193,13 @@ module.exports = {
 			},
 			{
 				type: 2,
-				emoji: '▶️',
+				emoji: {name: '▶️'},
 				style: 1,
 				custom_id: 'next'
 			},
 			{
 				type: 2,
-				emoji: '⏭️',
+				emoji: {name: '⏭️'},
 				style: 1,
 				custom_id: 'last'
 			}
@@ -213,7 +213,7 @@ module.exports = {
 				label: 'Add reason',
 				custom_id: 'reason',
 				style: 1,
-				emoji: '📝',
+				emoji: {name: '📝'},
 				disabled
 			},
 			{
@@ -221,7 +221,7 @@ module.exports = {
 				label: 'Skip reason',
 				custom_id: 'skip',
 				style: 2,
-				emoji: '➡️',
+				emoji: {name: '➡️'},
 				disabled
 			},
 			{
@@ -229,7 +229,7 @@ module.exports = {
 				label: 'Cancel',
 				custom_id: 'cancel',
 				style: 4,
-				emoji: '❌',
+				emoji: {name: '❌'},
 				disabled
 			},
 		]

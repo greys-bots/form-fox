@@ -62,9 +62,7 @@ class Form extends DataObject {
 	}
 
 	async getQuestions() {
-		console.log('getting questions')
 		var questions = await this.store.bot.stores.questions.getByForm(this.server_id, this.hid);
-		console.log(questions);
 		var qs = [];
 		for(var q of this.questions) {
 			var question = questions.find(x => x.id == q);

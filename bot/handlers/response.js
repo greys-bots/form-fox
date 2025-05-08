@@ -59,7 +59,8 @@ class ResponseHandler {
 		if(!form.channel_id && !cfg?.response_channel)
 			return 'No response channel set for that form! Ask the mods to set one!';
 
-		if(!form.questions?.[0]) return "That form has no questions! Ask the mods to add some first!"; 
+		if(!form.questions?.[0]) return "That form has no questions! Ask the mods to add some first!";
+		await form.getQuestions();
 
 		try {
 			var existing = await this.bot.stores.openResponses.get(user.dmChannel?.id);
@@ -74,20 +75,72 @@ class ResponseHandler {
 			}
 			
 			if(cfg?.embed || form.embed) {
-				var fembeds = await this.bot.utils.genEmbeds(this.bot, form.questions, (q, i) => {
+				// todo: convert to components v2
+				// change to genComps, move template to a map of the result
+				// figure out better menu handling for components instead of embeds as well
+				// (should have that figured out in scaffold's interaction handler)
+				var fcomps = await this.bot.utils.genComps(form.resolved.questions, (q, i) => {
 					return {
-						name: `Question ${i+1}${form.required?.includes(i+1) ? " (required)" : ""}`,
-						value: q.value
+						type: 10,
+						content: 
+							`**Question ${i+1}** ${form.required?.includes(i+1) ? " (required)" : ""}\n` +
+							q.name
 					}
-				}, {
-					title: form.name,
-					description: form.description,
-					color: parseInt(form.color || 'ee8833', 16),
-					thumbnail: { url: form.post_icon ?? null },
-					image: { url: form.post_banner ?? null }
 				})
-				var fm = await user.send({embeds: [fembeds[0].embed]})
+				console.log(fcomps);
+				var fembeds = fcomps.map( c => {
+					let cmps = []
+					if(form.post_icon) {
+						cmps.push({
+							type: 9,
+							components: [{
+								type: 10,
+								content:
+									`# ${form.name}\n` +
+									form.description
+							}],
+							accessory: {
+								type: 11,
+								media: { url: form.post_icon }
+							}
+						})
+					} else {
+						cmps.push({
+							type: 10,
+							content:
+								`# ${form.name}\n` +
+								form.description
+						})
+					}
+
+					if(form.post_banner) {
+						cmps.push({
+							type: 12,
+							items: [{
+								media: { url: form.post_banner ?? null }
+							}]
+						})
+					}
+					return {
+						components: [{
+							type: 17,
+							accent_color: parseInt(form.color || 'ee8833', 16),
+							components: [
+								...cmps,
+								...c
+							]
+						}]
+					}
+				})
+				var fm;
 				if(fembeds[1]) {
+					fm = await user.send({
+						flags: ['IsComponentsV2'],
+						components: [
+							...fembeds[0].components,
+							PGBTNS(1, fembeds.length)
+						]
+					})
 					if(!this.bot.menus) this.bot.menus = {};
 					this.bot.menus[fm.id] = {
 						user: user.id,
@@ -95,35 +148,43 @@ class ResponseHandler {
 						index: 0,
 						timeout: setTimeout(()=> {
 							if(!this.bot.menus[fm.id]) return;
-							try {
-								fm.reactions.removeAll();
-							} catch(e) {
-								console.log(e);
-							}
 							delete this.bot.menus[fm.id];
 						}, 900000),
-						execute: this.bot.utils.paginateEmbeds
+						execute: this.bot.utils.paginate
 					};
-					["⬅️", "➡️", "⏹️"].forEach(r => fm.react(r));
-				}
+				} else fm = await user.send({
+					flags: ['IsComponentsV2'],
+					...fembeds[0]
+				})
 			}
 
 			var question = await this.handleQuestion(form, 0);
-			var qemb = {
-				embeds: [{
-					title: form.name,
-					description: form.description,
-					fields: question.message,
-					color: parseInt(form.color || 'ee8833', 16),
-					footer: question.footer
-				}],
-				components: []
-			}
+			var qcomps = [
+				{
+					type: 10,
+					content: `# ${form.name}\n${form.description}`
+				},
+				{
+					type: 10,
+					content: question.message
+				}
+			];
 
-			if(ctx.auto) {
-				qemb.content =
-					`**(This form was automatically sent from ` +
-					`guild ${ctx.guild.name}!)**`;
+			if(question.footer) qcomps.push({
+				type: 10,
+				content: `-# ${question.footer}`
+			});
+			if(ctx.auto) qcomps.push({
+				type: 10,
+				content: `-# This form was automatically sent from guild ${ctx.guild.name}!`
+			})
+			console.log(qcomps);
+			var qemb = {
+				components: [{
+					type: 17,
+					accent_color: parseInt(form.color || 'ee8833', 16),
+					components: qcomps
+				}]
 			}
 
 			if(question.buttons) {
@@ -134,8 +195,12 @@ class ResponseHandler {
 					})
 				}
 			}
+			console.log(qemb)
 
-			var message = await user.send(qemb);
+			var message = await user.send({
+				flags: ['IsComponentsV2'],
+				...qemb
+			});
 			
 			await this.bot.stores.openResponses.create({
 				server_id: form.server_id,
@@ -162,17 +227,30 @@ class ResponseHandler {
 	}
 
 	async sendQuestion(response, message) {
+		let { form } = response;
 		var question = await this.handleQuestion(response, response.answers.length);
 		if(question) {
+			var qcomps = [
+				{
+					type: 10,
+					content: `# ${form.name}\n${form.description}`
+				},
+				{
+					type: 10,
+					content: question.message
+				}
+			];
+
+			if(question.footer) qcomps.push({
+				type: 10,
+				content: `-# ${question.footer}`
+			});
 			var qemb = {
-				embeds: [{
-					title: response.form.name,
-					description: response.form.description,
-					fields: question.message,
-					color: parseInt(response.form.color || 'ee8833', 16),
-					footer: question.footer
-				}],
-				components: []
+				components: [{
+					type: 17,
+					accent_color: parseInt(form.color || 'ee8833', 16),
+					components: qcomps
+				}]
 			}
 
 			if(question.buttons) {
@@ -184,7 +262,10 @@ class ResponseHandler {
 				}
 			}
 
-			var msg = await message.channel.send(qemb);
+			var msg = await message.channel.send({
+				flags: ['IsComponentsV2'],
+				...qemb
+			});
 
 			return msg;
 		} else {
@@ -503,35 +584,38 @@ class ResponseHandler {
 	}
 
 	async handleQuestion(data, number) {
-		var questions = data.questions?.[0] ? data.questions : data.form.questions;
+		if(!data.resolved?.questions) {
+			if(data.form) await data.form.getQuestions();
+			else await data.getQuestions();
+		}
+		var questions = data.resolved?.questions?.[0] ? data.resolved.questions : data.form.resolved.questions;
 		var current = questions[number];
+		console.log(current, current.options, current.options?.choices)
 		if(!current) return undefined;
 
 		var question = {};
 		var type = TYPES[current.type];
 
 		question.message = [
-			{
-				name: `Question ${number + 1}${current.required ? ' (required)' : ''}`,
-				value: current.value
-			}
+			`# Question ${number + 1}${current.required ? ' (required)' : ''}\n## ${current.name}\n`
 		];
 		if(type.message) question.message = question.message.concat(type.message(current));
+		question.message = question.message.join('\n');
 
 		question.buttons = [];
 		if(type.buttons) question.buttons = type.buttons(current);
 		question.buttons.push(QBTNS.cancel);
 
-		question.footer = {text: 'react with ❌ or type "cancel" to cancel.'};
-		if(type.text) question.footer.text = type.text + " " + question.footer.text;
+		question.footer = 'react with ❌ or type "cancel" to cancel.';
+		if(type.text) question.footer = type.text + " " + question.footer.text;
 
 		if(!current.required) {
 			if(!questions.find((x, i) => x.required && i > number)) {
-				question.footer.text += ' react with ✅ or type "submit" to finish early.';
+				question.footer += ' react with ✅ or type "submit" to finish early.';
 				question.buttons.push(QBTNS.submit);
 			}
 
-			question.footer.text += ' react with ➡️ or type "skip" to skip this question!';
+			question.footer += ' react with ➡️ or type "skip" to skip this question!';
 			question.buttons.push(QBTNS.skip);
 		}
 

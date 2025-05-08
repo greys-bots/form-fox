@@ -104,16 +104,6 @@ class Command extends SlashCommand {
 
         await m.delete()
 
-        var embed = msg.embeds[0].toJSON();
-        embed.color = parseInt('aa5555', 16);
-        embed.footer = {text: 'Response denied!'};
-        embed.timestamp = new Date().toISOString();
-        embed.author = {
-            name: `${ctx.user.username}`,
-            iconURL: ctx.user.avatarURL()
-        }
-        embed.description += `\n\nReason: ${reason ?? "*(no reason given)*"}`;
-
         var embed = msg.components[0];
         embed.accent_color = parseInt('aa5555', 16);
 
