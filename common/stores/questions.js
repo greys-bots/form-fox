@@ -1,4 +1,11 @@
 const { Models: { DataStore, DataObject } } = require('frame');
+const TYPES = require('../questions');
+const {
+	qButtons: QBTNS,
+	pageBtns: PGBTNS,
+	submitBtns: SUBMIT,
+	confBtns: CONF,
+} = require('../extras');
 
 const KEYS = {
 	id: { },
@@ -14,6 +21,39 @@ const KEYS = {
 class Question extends DataObject {	
 	constructor(store, keys, data) {
 		super(store, keys, data);
+	}
+
+	async getForm() {
+		var form = await this.store.bot.stores.forms.get(this.server_id, this.form);
+		if(!this.resolved) this.resolved = {}
+		this.resolved.form = form;
+		return form;
+	}
+
+	async getEmbed() {
+		if(!this.resolved?.form) await this.getForm();
+		var type = TYPES[this.type];
+		var tcomps = type.embed(this);
+
+		var qcomps = [
+			{
+				type: 10,
+				content: `-# ${this.resolved.form.name} (${this.form})`
+			},
+			{
+				type: 10,
+				content: `## ${this.name} ${this.required ? '(required)' : ''}`
+			},
+			...tcomps
+		];
+
+		var qemb = {
+			type: 17,
+			accent_color: parseInt(this.resolved.form.color || 'ee8833', 16),
+			components: qcomps
+		}
+
+		return qemb;
 	}
 }
 

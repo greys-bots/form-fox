@@ -5,56 +5,42 @@ const {
 module.exports = {
 	description: 'allows the user to choose one option from multiple choices',
 	alias: ['multiple choice', 'multi', 'mc'],
-	message: (current) => {
-		var message = current.options.choices.map((c, i) => {
-			return `### Option ${numbers[i + 1]}\n${c}`
+
+	embed(data) {
+		let comps = [ ];
+		let options = data.options.choices.map((c, i) => {
+			return {
+				label: c,
+				value: `${i}`
+			}
+		})
+		if(data.options.other) options.push({
+			label: 'Other',
+			description: 'Enter a custom response',
+			value: 'OTHER'
 		})
 
-		if(current.options.other) message.push('**Other:** Enter a custom response');
-		return message.join('\n');
-	},
-	text: "interact or type the respective emoji/character to choose an option.",
-	buttons: (current) => {
-		var r = [{
-			type: 2,
-			style: 2,
-			label: 'Select',
-			custom_id: 'select',
-			emoji: { name: '✉️'}
-		}]
-		if(current.options.other) r.push({
-			type: 2,
-			style: 2,
-			label: 'Fill in',
-			custom_id: 'other',
-			emoji: { name: '📝'}
-		})
-		
-		return r;
+		comps.push(
+			{
+				type: 1,
+				components: [{
+					type: 3,
+					custom_id: 'option-select',
+					options,
+					min_values: 1,
+					max_values: 1
+				}]
+			},
+			{
+				type: 10,
+				content: `-# select an option above`
+			}
+		)
+
+		return comps;
 	},
 
 	setup: true,
-
-	async handleReactAdd(msg, response, question, react) {
-		var index = numbers.indexOf(react.emoji.name);
-		var embed = msg.embeds[0];
-		if(question.options.choices[index - 1]) {
-			response.answers.push(question.options.choices[index - 1]);
-			return {response, send: true};
-		} else if(react.emoji.name == "🅾" && question.options.other) {
-			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-    		await msg.edit({embeds: [embed]});
-
-    		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-			if(!response.selection) response.selection = [];
-            response.selection.push('OTHER')
-
-            return {response, menu: true, send: false}
-		} else {
-			msg.channel.send('Invalid choice! Please select something else');
-			return undefined;
-		}
-	},
 
 	async handleMessage(message, response, question) {
 		var index = parseInt(message.content);
@@ -79,39 +65,28 @@ module.exports = {
 	},
 
 	async handleInteraction(msg, response, question, inter) {
-		var embed = msg.embeds[0];
-		switch(inter.customId) {
-			case 'select':
-				var ch = question.options.choices.map((c, i) => ({
-					label: `Option ${i+1}`,
-					value: i.toString(),
-					emoji: numbers[i + 1],
-					description: c.slice(0, 100)
-				}))
+		let val = inter.values;
+		let choice = question.options.choices[parseInt(val[0])];
+		if(choice) {
+			response.answers.push(choice)
+			var embed = msg.components[0].toJSON();
+			var ind = embed.components.findIndex(x => x.type == 1);
+			embed.components[ind] = {
+				type: 10,
+				content: `**Selected:**\n` + choice 
+			}
+			console.log(embed);
+			return {
+				response,
+				send: true,
+				embed
+			};
+		} else {
+			await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
+			if(!response.selection) response.selection = [];
+            response.selection.push('OTHER')
 
-				var choice = await inter.client.utils.awaitSelection(
-					inter,
-					ch,
-					"Select an option below",
-					{
-						placeholder: 'Select option'
-					}
-				);
-				if(!Array.isArray(choice)) return await inter.followUp(choice);
-
-				response.answers.push(question.options.choices[parseInt(choice[0])])
-				return {response, send: true};
-				break;
-			case 'other':
-				embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-        		await inter.message.edit({embeds: [embed]});
-
-        		await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-				if(!response.selection) response.selection = [];
-                response.selection.push('OTHER')
-
-                return {response, menu: true, send: false}
-				break;
+            return {response, menu: true, send: false}
 		}
 	},
 

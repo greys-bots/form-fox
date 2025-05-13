@@ -75,10 +75,6 @@ class ResponseHandler {
 			}
 			
 			if(cfg?.embed || form.embed) {
-				// todo: convert to components v2
-				// change to genComps, move template to a map of the result
-				// figure out better menu handling for components instead of embeds as well
-				// (should have that figured out in scaffold's interaction handler)
 				var fcomps = await this.bot.utils.genComps(form.resolved.questions, (q, i) => {
 					return {
 						type: 10,
@@ -159,47 +155,15 @@ class ResponseHandler {
 			}
 
 			var question = await this.handleQuestion(form, 0);
-			var qcomps = [
-				{
-					type: 10,
-					content: `# ${form.name}\n${form.description}`
-				},
-				{
-					type: 10,
-					content: question.message
-				}
-			];
-
-			if(question.footer) qcomps.push({
-				type: 10,
-				content: `-# ${question.footer}`
-			});
-			if(ctx.auto) qcomps.push({
+			if(ctx.auto) question.components[0].components.push({
 				type: 10,
 				content: `-# This form was automatically sent from guild ${ctx.guild.name}!`
 			})
-			console.log(qcomps);
-			var qemb = {
-				components: [{
-					type: 17,
-					accent_color: parseInt(form.color || 'ee8833', 16),
-					components: qcomps
-				}]
-			}
-
-			if(question.buttons) {
-				for(var i = 0; i < question.buttons.length; i += 5) {
-					qemb.components.push({
-						type: 1,
-						components: question.buttons.slice(i, i+5)
-					})
-				}
-			}
-			console.log(qemb)
+			console.log(question);
 
 			var message = await user.send({
 				flags: ['IsComponentsV2'],
-				...qemb
+				...question
 			});
 			
 			await this.bot.stores.openResponses.create({
@@ -228,43 +192,11 @@ class ResponseHandler {
 
 	async sendQuestion(response, message) {
 		let { form } = response;
-		var question = await this.handleQuestion(response, response.answers.length);
+		var question = await this.handleQuestion(form, response.answers.length);
 		if(question) {
-			var qcomps = [
-				{
-					type: 10,
-					content: `# ${form.name}\n${form.description}`
-				},
-				{
-					type: 10,
-					content: question.message
-				}
-			];
-
-			if(question.footer) qcomps.push({
-				type: 10,
-				content: `-# ${question.footer}`
-			});
-			var qemb = {
-				components: [{
-					type: 17,
-					accent_color: parseInt(form.color || 'ee8833', 16),
-					components: qcomps
-				}]
-			}
-
-			if(question.buttons) {
-				for(var i = 0; i < question.buttons.length; i += 5) {
-					qemb.components.push({
-						type: 1,
-						components: question.buttons.slice(i, i+5)
-					})
-				}
-			}
-
 			var msg = await message.channel.send({
 				flags: ['IsComponentsV2'],
-				...qemb
+				...question
 			});
 
 			return msg;
@@ -583,43 +515,33 @@ class ResponseHandler {
 		return {success: true};
 	}
 
-	async handleQuestion(data, number) {
-		if(!data.resolved?.questions) {
-			if(data.form) await data.form.getQuestions();
-			else await data.getQuestions();
-		}
-		var questions = data.resolved?.questions?.[0] ? data.resolved.questions : data.form.resolved.questions;
-		var current = questions[number];
-		console.log(current, current.options, current.options?.choices)
+	async handleQuestion(form, number) {
+		var questions;
+		if(!form.resolved?.questions) questions = await form.getQuestions();
+		else questions = form.resolved.questions;
+
+		var current = form.resolved.questions[number];
 		if(!current) return undefined;
 
-		var question = {};
-		var type = TYPES[current.type];
-
-		question.message = [
-			`# Question ${number + 1}${current.required ? ' (required)' : ''}\n## ${current.name}\n`
-		];
-		if(type.message) question.message = question.message.concat(type.message(current));
-		question.message = question.message.join('\n');
-
-		question.buttons = [];
-		if(type.buttons) question.buttons = type.buttons(current);
-		question.buttons.push(QBTNS.cancel);
-
-		question.footer = 'react with ❌ or type "cancel" to cancel.';
-		if(type.text) question.footer = type.text + " " + question.footer.text;
-
+		var emb = await current.getEmbed();
+		var buttons = [QBTNS.cancel];
 		if(!current.required) {
 			if(!questions.find((x, i) => x.required && i > number)) {
-				question.footer += ' react with ✅ or type "submit" to finish early.';
-				question.buttons.push(QBTNS.submit);
+				buttons.push(QBTNS.submit);
 			}
 
-			question.footer += ' react with ➡️ or type "skip" to skip this question!';
-			question.buttons.push(QBTNS.skip);
+			buttons.push(QBTNS.skip);
 		}
 
-		return question;
+		return {
+			components: [
+				emb,
+				{
+					type: 1,
+					components: buttons
+				}
+			]
+		};
 	}
 
 	async handleReactions(reaction, user) {
@@ -820,12 +742,10 @@ class ResponseHandler {
 			var embed = prompt.embeds[0];
 
 			if(message.content.toLowerCase() == 'cancel') {
-				embed.fields[embed.fields.length - 1].value = 'Enter a custom response (react with 🅾️ or type "other")';
-				await prompt.edit({embeds: [embed]});
 				response.selection = response.selection.filter(x => x != 'OTHER');
 				await response.save();
 				this.menus.delete(message.channel.id);
-				return;
+				return await message.channel.send('Action cancelled!');
 			}
 
 			response.selection[response.selection.indexOf('OTHER')] = message.content;
@@ -925,7 +845,6 @@ class ResponseHandler {
 	}
 
 	async handleInteractions(inter) {
-		if(!inter.isButton()) return;
 		var { user } = inter;
 		if(this.bot.user.id == user.id) return;
 		if(user.bot) return;
@@ -937,7 +856,7 @@ class ResponseHandler {
 		var response = await this.bot.stores.openResponses.get(inter.message.channel.id);
 		if(!response?.id) return;
 
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+		var questions = await response.form.getQuestions();
 		if(!questions?.[0]) {
 			await response.delete();
 			return inter.reply("That form is invalid! This response is now closed");
@@ -948,7 +867,8 @@ class ResponseHandler {
 		var config = await this.bot.stores.configs.get(response.server_id);
 
 		await inter.deferUpdate();
-		var comps = inter.message.components[0].components.map(c => c.data);
+		var embed = inter.message.components[0];
+		var comps = inter.message.components[1].components.map(c => c.data);
 		switch(inter.customId) {
 			case 'submit':
 				this.menus.add(inter.message.channel.id);
@@ -1044,6 +964,7 @@ class ResponseHandler {
 		response = res2.response;
 
 		if(res2.menu) this.menus.add(inter.message.channel.id);
+		if(res2.embed) embed = res2.embed;
 
 		var message;
 		if(res2.send) var message = await this.sendQuestion(response, inter.message);
@@ -1052,10 +973,13 @@ class ResponseHandler {
 		await response.save();
 
 		if(message) await inter.message.edit({
-			components: [{
-				type: 1,
-				components: comps.map(b => ({ ...b, disabled: true }))
-			}]
+			components: [
+				embed,
+				{
+					type: 1,
+					components: comps.map(b => ({ ...b, disabled: true }))
+				}
+			]
 		});
 	}
 }
