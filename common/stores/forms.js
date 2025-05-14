@@ -72,7 +72,6 @@ class Form extends DataObject {
 		if(!this.resolved) this.resolved = {};
 		this.resolved.questions = qs;
 
-		console.log(qs);
 		return qs;
 	}
 

@@ -468,17 +468,23 @@ class ResponsePostStore extends DataStore {
 
 		if(PGBTNS(1,1).find(pg => pg.custom_id == ctx.customId)) {
 			var template = {
-				title: "Response",
-				description: [
-					`Form name: ${post.response.form.name}`,
-					`Form ID: ${post.response.form.hid}`,
-					`User: ${u2.username}#${u2.discriminator} (${u2})`,
-					`Response ID: ${post.response.hid}`
-				].join('\n'),
+				components: [
+					{
+						type: 10,
+						content:
+							`# Response\n` +
+							`Form name: ${response.form.name}\n` +
+							`Form ID: ${response.form.hid}\n` +
+							`User: ${user.username}#${user.discriminator} (${user})\n` +
+							`Response ID: ${created.hid}`		
+					}
+				],
 				color: parseInt('ccaa55', 16),
-				fields: [],
-				timestamp: post.response.received,
-				footer: {text: 'Awaiting acceptance/denial...'}
+				footer: [{
+					type: 10,
+					content:
+						`-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F> | Status: pending`
+				}]
 			}
 
 			var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
@@ -499,7 +505,9 @@ class ResponsePostStore extends DataStore {
 					break;
 			}
 
-			await msg.edit({embeds: [embeds[post.page - 1]]});
+			await msg.edit({
+				components: [embeds[post.page - 1]]
+			});
 			await post.save();
 			return;
 		}

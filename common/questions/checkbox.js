@@ -100,8 +100,8 @@ module.exports = {
 	async handleInteraction(msg, response, question, inter) {
 		let data = {}
 		var embed = msg.components[0].toJSON();
-		var ind = embed.components.findIndex(x => x.type == 1);
-		if(inter.isSelectMenu()) {
+		if(inter.isStringSelectMenu()) {
+			console.log(inter.values);
 			let vals = inter.values.map(x => parseInt(x));
 			let choices = vals.map(x => {
 				if(isNaN(x)) return 'OTHER';
@@ -114,21 +114,27 @@ module.exports = {
 			}
 
 			if(!response.selection) response.selection = [];
-	            response.selection.push(...choices)
+            response.selection = choices;
+            console.log('choices: ', choices, 'selection: ', response.selection)
+            await response.save();
 
-	            return {response, menu: data.menu, send: false}
-		} else {
+            return {response, menu: data.menu, send: false}
+		} else if(inter.component.customId == 'finish-select') {
+			console.log(response.selection)
 			if(!response.selection?.length && question.required) {
 				await msg.channel.send('Select something first!');
 				return { response, send: false }
 			}
 
+			var ind = embed.components.findIndex(x => x.type == 1);
+			let answer = response.selection.join('\n');
 			embed.components[ind] = {
 				type: 10,
-				content: `**Selected:**\n` + response.selection.join('\n')
+				content: `**Selected:**\n` + answer
 			}
 
-			response.answers.push(response.selection.join('\n'))
+			response.answers.push(answer);
+			await response.save();
 			return {response, embed, send: true}
 		}
 	},

@@ -33,7 +33,7 @@ module.exports = {
 			},
 			{
 				type: 10,
-				content: `-# select an option above`
+				content: `Select an option above`
 			}
 		)
 

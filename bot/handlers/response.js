@@ -83,7 +83,6 @@ class ResponseHandler {
 							q.name
 					}
 				})
-				console.log(fcomps);
 				var fembeds = fcomps.map( c => {
 					let cmps = []
 					if(form.post_icon) {
@@ -159,7 +158,6 @@ class ResponseHandler {
 				type: 10,
 				content: `-# This form was automatically sent from guild ${ctx.guild.name}!`
 			})
-			console.log(question);
 
 			var message = await user.send({
 				flags: ['IsComponentsV2'],
@@ -202,23 +200,25 @@ class ResponseHandler {
 			return msg;
 		} else {
 			var template = {
-				title: response.form.name,
-				description: response.form.description,
-				fields: [],
-				color: parseInt(response.form.color || 'ccaa55', 16),
-				footer: {text: [
-					'react with ✅ to finish; ',
-					'react with ❌ to cancel. ',
-					'respective keywords: submit, cancel'
-				].join(' ')}
+				components: [{
+					type: 10,
+					content: `# ${response.form.name}\n${response.form.description}`
+				}],
+				color: parseInt(response.form.color || 'ccaa55', 16)
 			};
 
-			var embeds = this.buildResponseEmbeds(response, template);
+			var embeds = await this.buildResponseEmbeds(response, template);
 
 			var content = {
-				content: "How's this look?",
-				embeds: [embeds[0]],
-				components: [{ type: 1, components: SUBMIT }]
+				flags: ['IsComponentsV2'],
+				components: [
+					{
+						type: 10,
+						content: "How's this look?"
+					},
+					embeds[0],
+					{ type: 1, components: SUBMIT }
+				]
 			}
 			if(embeds.length > 1) {
 				content.components.push({ type: 1, components: PGBTNS });
@@ -233,92 +233,38 @@ class ResponseHandler {
 
 	// TODO: optimize this better. maybe store page data (fields) in
 	// 		 the store for the response instead of rebuilding on every react
-	buildResponseEmbeds(response, template) {
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+	async buildResponseEmbeds(response, template) {
+		var questions = await response.form.getQuestions();
 		var embeds = [];
 
-		var fields = [];
-
-		for(let i=0; i<response.questions.length; i++) {
-			if(!response.answers[i]?.length) {
-				fields.push({
-					name: questions[i].value,
-					value: '*(answer skipped)*'
-				})
-				continue;
+		var comps = await this.bot.utils.genComps(questions, (q, i) => {
+			let r = response.answers[i];
+			return {
+				type: 10,
+				content:
+					`### ${q.name}\n` +
+					(r?.length ? r : '*(answer skipped)*')
 			}
+		}, 20)
 
-			var lines = response.answers[i].split("\n");
-			var val = "";
-			var n = 0;
-			for(var j = 0; j < lines.length; j++) {
-				if(!lines[j].length) { val += "\n"; continue; } // handle empty lines
-
-				// if line is too big for the current val...
-				if(val.length + (lines[j].length + 1) > 1023) {
-					// if there isn't a val and the line is just too long...
-					if(!val.length) {
-						// split it up
-						var chunks = lines[j].match(/(.|[\r\n]){1,1024}/gm);
-						for(var k = 0; k < chunks.length; k++) {
-							if(chunks[k].length > 1023) {
-								fields.push({
-									name: `${questions[i].value} ${k > 0 ? '(cont.)' : ''}`,
-									value: chunks[k]
-								})
-								n++;
-							} else {
-								val = chunks[k] + "\n";
-							}
-						}
-					} else {
-						// otherwise just push the current val
-						// and make the new val the current line
-						fields.push({
-							name: questions[i].value + (n > 0 ? ' (cont.)' : ''),
-							value: val
-						});
-						val = lines[j] + "\n";
-						n++;
-					}
-
-					continue;
-				}
-
-				val += lines[j] + "\n";
+		embeds = comps.map(c => {
+			return {
+				type: 17,
+				accent_color: template?.color ?? parseInt(response.form.color || 'ccaa55', 16),
+				components: [
+					...(template?.components ?? []),
+					...c,
+					...(template?.footer ?? [])
+				]
 			}
+		})
 
-			// still a value at the end? push it
-			if(val.length) {
-				fields.push({
-					name: questions[i].value + (n > 0 ? ' (cont.)' : ''),
-					value: val
-				})
-			}
-		}
-
-		if(fields.length <= 20) {
-			embeds.push({
-				...template,
-				fields
-			})
-		} else {
-			// slice up fields into proper embeds
-			for(var i = 0; i < fields.length; i += 10) {
-				var tmp = Object.assign({}, template);
-				tmp.fields = fields.slice(i, i + 10);
-				embeds.push(tmp);
-			}
-		}
-			
-		if(embeds.length > 1) for(var i = 0; i < embeds.length; i++)
-			embeds[i].title += ` (page ${i+1}/${embeds.length})`;
-
+		console.log(embeds[0].components[0].components)
 		return embeds;
 	}
 
 	async sendResponse(response, message, user, config) {
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+		var questions = await response.form.getQuestions();
 
 		if(questions.find((q, i) => q.required && i+1 > response.answers.length))
 			return 'You still have required questions to answer!';
@@ -353,31 +299,44 @@ class ResponseHandler {
 			});
 
 			var template = {
-				title: "Response",
-				description: [
-					`Form name: ${response.form.name}`,
-					`Form ID: ${response.form.hid}`,
-					`User: ${user.username}#${user.discriminator} (${user})`,
-					`Response ID: ${created.hid}`
-				].join('\n'),
+				components: [
+					{
+						type: 10,
+						content:
+							`# Response\n` +
+							`Form name: ${response.form.name}\n` +
+							`Form ID: ${response.form.hid}\n` +
+							`User: ${user.username}#${user.discriminator} (${user})\n` +
+							`Response ID: ${created.hid}`		
+					}
+				],
 				color: parseInt('ccaa55', 16),
-				fields: [],
-				timestamp: new Date().toISOString(),
-				footer: {text: 'Awaiting acceptance/denial...'}
+				footer: [{
+					type: 10,
+					content:
+						`-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F> | Status: pending`
+				}]
 			}
-			var embeds = this.buildResponseEmbeds(response, template);
-			await prompt.edit(embeds[0])
+			var embeds = await this.buildResponseEmbeds(response, template);
+			await prompt.edit({
+				components: [embeds[0]]
+			})
+
 			var guild = this.bot.guilds.resolve(response.server_id);
 			if(!guild) return Promise.reject("ERR! Guild not found! Aborting!");
 			var chan_id = response.form.channel_id || config?.response_channel;
 			var channel = guild.channels.resolve(chan_id);
 			if(!channel) return Promise.reject("ERR! Guild response channel missing! Aborting!");
 			var toSend = {
-				embeds: [embeds[0]],
-				components: [{ type: 1, components: RESPBTNS }]
+				flags: ['IsComponentsV2'],
+				components: [
+					embeds[0],
+					{ type: 1, components: RESPBTNS }
+				]
 			}
+
 			if(embeds.length > 1) toSend.components.push({ type: 1, components: PGBTNS });
-			if(response.form.note?.length) toSend.content = response.form.note;
+			if(response.form.note?.length) toSend.components = [{type: 10, content: response.form.note}, ...toSend.components];
 			var rmsg;
 			if(channel.type == ChannelType.GuildForum) {
 				var title;
@@ -443,19 +402,26 @@ class ResponseHandler {
 
 		try {
 			await response.delete();
-			await prompt.edit({embeds: [{
-				title: "Response cancelled",
-				description: "This form response has been cancelled!",
-				color: parseInt('aa5555', 16),
-				timestamp: new Date().toISOString()
-			}]});
+			await prompt.edit({
+				components: [{
+					type: 17,
+					accent_color: 0xaa5555,
+					components: [{
+						type: 10,
+						content:
+							`## Response cancelled\n` +
+							`This response has been cancelled!\n` +
+							`-# Cancelled <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+					}]
+				}]
+			});
 		} catch(e) {
 			console.log(e);
 			return Promise.reject('ERR! '+(e.message || e));
 		}
 
 		this.menus.delete(message.channel.id);
-		return {msg: 'Response cancelled!', success: true};
+		return {msg: 'Successfully cancelled!', success: true};
 	}
 
 	async autoCancel(ctx) {
@@ -468,13 +434,17 @@ class ResponseHandler {
 			if(!prompt) return;
 			console.log('leaving prompt', response.message_id, prompt)
 			await prompt.edit({
-				embeds: [{
-					title: "Response cancelled",
-					description: "Left the server; this form response has been automatically cancelled!",
-					color: parseInt('aa5555', 16),
-					timestamp: new Date().toISOString()
-				}],
-				components: []
+				components: [{
+					type: 17,
+					accent_color: 0xaa5555,
+					components: [{
+						type: 10,
+						content:
+							`## Response cancelled\n` +
+							`User has left the server.\n` +
+							`-# Cancelled <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+					}]
+				}]
 			});
 		} catch(e) {
 			console.log(e);
@@ -486,7 +456,7 @@ class ResponseHandler {
 	}
 
 	async skipQuestion(response, message, user) {
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+		var questions = await response.form.getQuestions();
 		if(questions.length < response.answers.length + 1) return {};
 
 		if(questions[response.answers.length].required)
@@ -566,7 +536,7 @@ class ResponseHandler {
 		if(!response?.id) return;
 		if(response.message_id != msg.id) return;
 
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+		var questions = await response.form.getQuestions();
 		if(!questions?.[0]) {
 			await response.delete();
 			return msg.channel.send("That form is invalid! This response is now closed");
@@ -635,14 +605,14 @@ class ResponseHandler {
 			}
 
 			var template = {
-				title: response.form.name,
-				description: response.form.description,
-				color: parseInt('ccaa55', 16),
-				fields: [],
-				footer: {text: 'react with ✅ to finish;  react with ❌ to cancel.  respective keywords: submit, cancel'}
+				components: [{
+					type: 10,
+					content: `# ${response.form.name}\n${response.form.description}`
+				}],
+				color: parseInt('ccaa55', 16)
 			}
 
-			var embeds = this.bot.handlers.response.buildResponseEmbeds(response, template);
+			var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
 			switch(reaction.emoji.name) {
 				case '⬅️':
 				if(response.page == 1) response.page = embeds.length;
@@ -654,7 +624,7 @@ class ResponseHandler {
 				break;
 			}
 
-			await msg.edit({embeds: [embeds[response.page - 1]]});
+			await msg.edit({components: [embeds[response.page - 1]]});
             await response.save();
             return;
 		}
@@ -699,7 +669,7 @@ class ResponseHandler {
 		if(!response?.id) return;
 		if(response.message_id != msg.id) return;
 
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+		var questions = await response.form.getQuestions();
 		if(!questions?.[0]) {
 			await response.delete();
 			return msg.channel.send("That form is invalid! This response is now closed");
@@ -725,7 +695,7 @@ class ResponseHandler {
 		var response = await this.bot.stores.openResponses.get(message.channel.id);
 		if(!response?.id) return;
 
-		var questions = response.questions?.[0] ? response.questions : response.form.questions;
+		var questions = await response.form.getQuestions();
 		if(!questions?.[0]) {
 			await response.delete();
 			return message.channel.send("That form is invalid! This response is now closed");
@@ -863,6 +833,7 @@ class ResponseHandler {
 		}
 
 		var question = questions[response.answers.length]; // current question
+		console.log('answers: ', response.answers);
 
 		var config = await this.bot.stores.configs.get(response.server_id);
 
@@ -897,12 +868,6 @@ class ResponseHandler {
 				}
 				this.menus.delete(inter.message.channel.id);
 				if(res.msg) await inter.followUp(res.msg);
-				if(res.success) await inter.message.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
 				return;
 			case 'skip':
 				this.menus.add(inter.message.channel.id);
@@ -926,14 +891,14 @@ class ResponseHandler {
 		if(PGBTNS(1, 1).find(pg => pg.custom_id == inter.customId)) {
 			await inter.deferUpdate();
 			var template = {
-				title: response.form.name,
-				description: response.form.description,
-				color: parseInt('ccaa55', 16),
-				fields: [],
-				footer: {text: 'react with ✅ to finish; react with ❌ to cancel. respective keywords: submit, cancel'}
+				components: [{
+					type: 10,
+					content: `# ${response.form.name}\n${response.form.description}`
+				}],
+				color: parseInt('ccaa55', 16)
 			}
 
-			var embeds = this.bot.handlers.response.buildResponseEmbeds(response, template);
+			var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
 			switch(inter.customId) {
 				case 'first':
 					response.page = 1;
@@ -951,12 +916,12 @@ class ResponseHandler {
 					break;
 			}
 
-			await inter.message.edit({embeds: [embeds[response.page - 1]]});
+			await inter.message.edit({components: [embeds[response.page - 1]]});
 	        await response.save()
 	        return;
 		}
 
-		var type = TYPES[question.type];
+		var type = TYPES[question?.type];
 		if(!type.handleInteraction) return;
 
 		var res2 = await type.handleInteraction(inter.message, response, question, inter);
