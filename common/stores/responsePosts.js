@@ -331,19 +331,21 @@ class ResponsePostStore extends DataStore {
 
 				return await ctx.followUp({content: 'Response denied!', ephemeral: true});
 			case 'accept':
-				var embed = msg.components[0];
+				var embed = msg.components[0].toJSON();
 		        embed.accent_color = parseInt('55aa55', 16);
+		        let footer = embed.components[embed.components.length - 1]
+		        footer.content = footer.content.replace('pending', 'accepted')
 		        embed.components = embed.components.concat([
 		            {
 		                type: 14
 		            },
 		            {
 		                type: 10,
-		                content: `Response accepted <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+		                content: `-# Response accepted <t:${Math.floor(new Date().getTime() / 1000)}:F>`
 		            },
 		            {
 		                type: 10,
-		                content: `Accepted by ${user} (${user.tag} | ${user.id})`
+		                content: `-# Accepted by ${user} (${user.tag} | ${user.id})`
 		            }
 		        ])
 

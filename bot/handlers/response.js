@@ -304,10 +304,10 @@ class ResponseHandler {
 						type: 10,
 						content:
 							`# Response\n` +
-							`Form name: ${response.form.name}\n` +
-							`Form ID: ${response.form.hid}\n` +
-							`User: ${user.username}#${user.discriminator} (${user})\n` +
-							`Response ID: ${created.hid}`		
+							`**Form name:** ${response.form.name}\n` +
+							`**Form ID:** ${response.form.hid}\n` +
+							`**User:** ${user.username}#${user.discriminator} (${user})\n` +
+							`**Response ID:** ${created.hid}`		
 					}
 				],
 				color: parseInt('ccaa55', 16),
@@ -719,9 +719,8 @@ class ResponseHandler {
 			}
 
 			response.selection[response.selection.indexOf('OTHER')] = message.content;
-			embed.fields[embed.fields.length - 1].value = message.content;
-			await prompt.edit({embeds: [embed]});
 			this.menus.delete(message.channel.id);
+			await message.channel.send("Value recorded!");
 
 			if(question.type == 'mc') {
 				response.answers.push(message.content);
@@ -823,7 +822,7 @@ class ResponseHandler {
 			return;
 		}
 
-		var response = await this.bot.stores.openResponses.get(inter.message.channel.id);
+		var response = await this.bot.stores.openResponses.get(inter.message?.channel?.id);
 		if(!response?.id) return;
 
 		var questions = await response.form.getQuestions();
@@ -838,8 +837,10 @@ class ResponseHandler {
 		var config = await this.bot.stores.configs.get(response.server_id);
 
 		await inter.deferUpdate();
-		var embed = inter.message.components[0];
-		var comps = inter.message.components[1].components.map(c => c.data);
+		var l = inter.message.components.length;
+		var comps = inter.message.components.map(c => c.toJSON());
+		var embed = comps[0];
+		comps = comps[l - 1].components.map(b => ({ ...b, disabled: true }));
 		switch(inter.customId) {
 			case 'submit':
 				this.menus.add(inter.message.channel.id);
@@ -851,12 +852,9 @@ class ResponseHandler {
 				}
 				this.menus.delete(inter.message.channel.id);
 				if(res.msg) await inter.followUp(res.msg);
-				if(res.success) await inter.message.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true })).filter(x => x)
-					}]
-				});
+				// if(res.success) await inter.message.edit({
+				// 	components: [comps]
+				// });
 				return;
 			case 'cancel':
 				this.menus.add(inter.message.channel.id);
@@ -942,7 +940,7 @@ class ResponseHandler {
 				embed,
 				{
 					type: 1,
-					components: comps.map(b => ({ ...b, disabled: true }))
+					components: comps
 				}
 			]
 		});
