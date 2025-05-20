@@ -299,10 +299,10 @@ class ResponseHandler {
 						type: 10,
 						content:
 							`# Response\n` +
-							`Form name: ${response.form.name}\n` +
-							`Form ID: ${response.form.hid}\n` +
-							`User: ${user.username}#${user.discriminator} (${user})\n` +
-							`Response ID: ${created.hid}`		
+							`**Form name:** ${response.form.name}\n` +
+							`**Form ID:** ${response.form.hid}\n` +
+							`**User:** ${user.username}#${user.discriminator} (${user})\n` +
+							`**Response ID:** ${created.hid}`		
 					}
 				],
 				color: parseInt('ccaa55', 16),
@@ -688,7 +688,7 @@ class ResponseHandler {
 		if(this.menus.has(inter.channel.id)) return;
 		if(!inter.message) return;
 
-		var response = await this.bot.stores.openResponses.get(inter.message.channel.id);
+		var response = await this.bot.stores.openResponses.get(inter.message?.channel?.id);
 		if(!response?.id) return;
 
 		var questions = await response.form.getQuestions();
