@@ -12,26 +12,21 @@ const {
 	ChannelType
 } = require('discord.js');
 
+const ACTIONS = {
+	'submit': ['submit', '✅'],
+	'cancel': ['cancel', '❌'],
+	'skip': ['skip', '➡️', '⬅️'],
+	'first': ['first', '⏪'],
+	'prev': ['back', '⬅️'],
+	'next': ['next', '➡️'],
+	'last': ['last', '⏩'],
+	'answer': ['answer']
+}
+
 class ResponseHandler {
 	menus = new Set();
 	constructor(bot) {
 		this.bot = bot;
-
-		bot.on('messageReactionAdd', async (...args) => {
-			try {
-				this.handleReactions(...args);
-			} catch(e) {
-				console.log(e.message || e);
-			}
-		})
-
-		bot.on('messageReactionRemove', async (...args) => {
-			try {
-				this.handleReactionRemove(...args);
-			} catch(e) {
-				console.log(e.message || e);
-			}
-		})
 
 		bot.on('messageCreate', async (...args) => {
 			try {
@@ -514,177 +509,140 @@ class ResponseHandler {
 		};
 	}
 
-	async handleReactions(reaction, user) {
-		if(this.bot.user.id == user.id) return;
-		if(user.bot) return;
-
-		var msg;
-		if(reaction.message.partial) {
-			try {
-				msg = await reaction.message.fetch();
-			} catch(e) {
-				if(e.message.includes('Unknown')) return;
-				else return Promise.reject(e);
-			}
-		} else msg = reaction.message;
-
-		if(this.menus.has(msg.channel.id)) {
-			return;
+	async handleAnswer(ctx) {
+		var {
+			user,
+			message,
+			interaction,
+			prompt,
+			form,
+			response,
+			question,
+			config,
+			action,
+			data
+		} = ctx;
+		
+		if(!message) message = interaction.message;
+		else {
+			if(this.bot.user.id == message?.author.id) return;
+			if(message?.author.bot) return;
+			if(message.content.toLowerCase().startsWith(this.bot.prefix)) return; //in case they're doing commands
 		}
 
-		var response = await this.bot.stores.openResponses.get(msg.channel.id);
-		if(!response?.id) return;
-		if(response.message_id != msg.id) return;
+		if(this.menus.has(message.channel.id)) return;
 
-		var questions = await response.form.getQuestions();
-		if(!questions?.[0]) {
-			await response.delete();
-			return msg.channel.send("That form is invalid! This response is now closed");
+		var template = {
+			components: [{
+				type: 10,
+				content: `# ${form.name}\n${form.description}`
+			}],
+			color: parseInt('ccaa55', 16)
 		}
 
-		var question = questions[response.answers.length]; // current question
-
-		var config = await this.bot.stores.configs.get(response.server_id);
-
-		var comps = msg.components[0].components.map(c => c.data);
-		switch(reaction.emoji.name) {
-			case '✅':
-				this.menus.add(msg.channel.id);
+		var res;
+		var embed = prompt.components[0];
+		var comps = prompt.components[1].components.map(c => ({ ...c.toJSON(), disabled: true }));
+		switch(action) {
+			case 'submit':
+				this.menus.add(message.channel.id);
 				try {
-					var res = await this.sendResponse(response, msg, user, config);
+					res = await this.sendResponse(response, message, user, config);
 				} catch(e) {
 					console.log(e);
-					await msg.channel.send(e.message || e);
+					await message.channel.send(e.message || e);
 				}
-				this.menus.delete(msg.channel.id);
-				if(res.msg) await msg.channel.send(res.msg);
-				if(res.success) await msg.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
-			case '❌':
-				this.menus.add(msg.channel.id);
+				this.menus.delete(message.channel.id);
+				break;
+			case 'cancel':
+				this.menus.add(message.channel.id);
 				try {
-					var res = await this.cancelResponse(response, msg, user, config);
+					res = await this.cancelResponse(response, message, user, config);
 				} catch(e) {
 					console.log(e);
-					await msg.channel.send(e.message || e);
+					await message.channel.send(e.message || e);
 				}
-				this.menus.delete(msg.channel.id);
-				if(res.msg) await msg.channel.send(res.msg);
-				if(res.success) await msg.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
-		}
-
-		if(['⬅️', '➡️'].includes(reaction.emoji.name)) {
-			if(!msg.content) {
-				this.menus.add(msg.channel.id);
+				this.menus.delete(message.channel.id);
+				break;
+			case 'skip':
+				this.menus.add(message.channel.id);
 				try {
-					var res = await this.skipQuestion(response, msg, user, config);
+					res = await this.skipQuestion(response, message, user, config);
 				} catch(e) {
 					console.log(e);
-					await msg.channel.send(e.message || e);
+					await message.channel.send(e.message || e);
 				}
-				this.menus.delete(msg.channel.id);
-				if(res.msg) await msg.channel.send(res.msg);
-				if(res.success) await msg.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
-			}
+				this.menus.delete(message.channel.id);
+				break;
+			case 'first':
+				var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
+				response.page = 1;
 
-			var template = {
-				components: [{
-					type: 10,
-					content: `# ${response.form.name}\n${response.form.description}`
-				}],
-				color: parseInt('ccaa55', 16)
-			}
-
-			var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
-			switch(reaction.emoji.name) {
-				case '⬅️':
+				await prompt.edit({components: [embeds[response.page - 1]]});
+		        await response.save()
+		        return;
+			case 'prev':
+				var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
 				if(response.page == 1) response.page = embeds.length;
 				else response.page -= 1;
-				break;
-			case '➡️':
+
+				await prompt.edit({components: [embeds[response.page - 1]]});
+		        await response.save()
+		        return;
+			case 'next':
+				var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
 				if(response.page == embeds.length) response.page = 1;
 				else response.page += 1;
-				break;
-			}
 
-			await msg.edit({components: [embeds[response.page - 1]]});
-            await response.save();
-            return;
+				await prompt.edit({components: [embeds[response.page - 1]]});
+		        await response.save()
+		        return;
+			case 'last':
+				var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
+				response.page = embeds.length;
+
+				await prompt.edit({components: [embeds[response.page - 1]]});
+		        await response.save()
+		        return;
+			case 'answer':
+				var questions = form.resolved?.questions ?? await form.getQuestions();
+				if(questions.length < response.answers.length + 1) return;
+				var type = TYPES[question.type];
+
+				var res2 = await type.handle({
+					prompt,
+					response,
+					question,
+					data
+				});
+				if(!res2) return;
+				response = res2.response;
+
+				if(res2.menu) this.menus.add(message.channel.id);
+				if(res2.embed) embed = res2.embed;
+
+				var msg;
+				if(res2.send) msg = await this.sendQuestion(response, message);
+
+				response.message_id = msg?.id ?? response.message_id;
+				await response.save();
+
+				if(msg) await prompt.edit({
+					components: [
+						embed,
+						{
+							type: 1,
+							components: comps
+						}
+					]
+				});
+		        return;
 		}
 
-		var type = TYPES[question.type];
-		if(!type.handleReactAdd) return;
-
-		var res2 = await type.handleReactAdd(msg, response, question, reaction);
-		if(!res2) return;
-		response = res2.response;
-
-		if(res2.menu) this.menus.add(msg.channel.id);
-
-		var message;
-		if(res2.send) var message = await this.sendQuestion(response, msg);
-		response.message_id = message?.id ?? msg.id;
-		
-		await response.save();
-
-		if(message) await msg.edit({
-			components: [{
-				type: 1,
-				components: comps.map(b => ({ ...b, disabled: true }))
-			}]
-		});
-	}
-
-	// for deselecting options
-	async handleReactionRemove(reaction, user) {
-		if(this.bot.user.id == user.id) return;
-		if(user.bot) return;
-
-		var msg;
-		if(reaction.message.partial) msg = await reaction.message.fetch();
-		else msg = reaction.message;
-
-		if(this.menus.has(msg.channel.id)) {
-			return;
+		if(res?.msg) {
+			if(interaction) interaction.followUp(res.msg)
+			else await message.channel.send(res.msg);
 		}
-
-		var response = await this.bot.stores.openResponses.get(msg.channel.id);
-		if(!response?.id) return;
-		if(response.message_id != msg.id) return;
-
-		var questions = await response.form.getQuestions();
-		if(!questions?.[0]) {
-			await response.delete();
-			return msg.channel.send("That form is invalid! This response is now closed");
-		}
-
-		var question = questions[response.answers.length]; // current question
-		if(!question) return;
-		var type = TYPES[question.type];
-		if(!type.handleReactRemove) return;
-
-		var res = await type.handleReactRemove(msg, response, question, reaction);
-		if(!res) return;
-		response = res.response;
-
-		await response.save();
 	}
 
 	async handleMessage(message) {
@@ -705,113 +663,21 @@ class ResponseHandler {
 
 		var msg;
 		var prompt = await message.channel.messages.fetch(response.message_id);
-		if(this.menus.has(message.channel.id)) {
-			if(!response.selection?.includes('OTHER')) return;
-			if(!question) return;
 
-			var embed = prompt.embeds[0];
-
-			if(message.content.toLowerCase() == 'cancel') {
-				response.selection = response.selection.filter(x => x != 'OTHER');
-				await response.save();
-				this.menus.delete(message.channel.id);
-				return await message.channel.send('Action cancelled!');
-			}
-
-			response.selection[response.selection.indexOf('OTHER')] = message.content;
-			embed.fields[embed.fields.length - 1].value = message.content;
-			await prompt.edit({embeds: [embed]});
-			this.menus.delete(message.channel.id);
-
-			if(question.type == 'mc') {
-				response.answers.push(message.content);
-				response.selection = [];
-				msg = await this.sendQuestion(response, message);
-			}
-
-			response.message_id = msg?.id ?? response.message_id;
-			await response.save();
-			return;
-		}
-
-		var comps = prompt.components[0].components.map(c => c.data);
-		switch(message.content.toLowerCase()) {
-			case 'submit':
-				this.menus.add(message.channel.id);
-				try {
-					var res = await this.sendResponse(response, message, message.author, config);
-				} catch(e) {
-					console.log(e);
-					await message.channel.send(e.message || e);
-				}
-				this.menus.delete(message.channel.id);
-				if(res.msg) await message.channel.send(res.msg);
-				if(res.success) await prompt.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
-			case 'cancel':
-				this.menus.add(message.channel.id);
-				try {
-					var res = await this.cancelResponse(response, message, message.author, config);
-				} catch(e) {
-					console.log(e);
-					await message.channel.send(e.message || e);
-				}
-				this.menus.delete(message.channel.id);
-				if(res.msg) await message.channel.send(res.msg);
-				if(res.success) await prompt.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
-			case 'skip':
-				this.menus.add(message.channel.id);
-				try {
-					var res = await this.skipQuestion(response, message, message.author, config);
-				} catch(e) {
-					console.log(e);
-					this.menus.delete(message.channel.id);
-					await message.channel.send(e.message || e);
-				}
-				this.menus.delete(message.channel.id);
-				if(res.msg) await message.channel.send(res.msg);
-				if(res.success) await prompt.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
-		}
-
-		if(questions.length < response.answers.length + 1) return;
-		var type = TYPES[question.type];
-
-		if(!type.handleMessage) return;
-
-		var res2 = await type.handleMessage(message, response, question);
-		if(!res2) return;
-		response = res2.response;
-
-		if(res2.menu) this.menus.add(message.channel.id);
-
-		if(res2.send) msg = await this.sendQuestion(response, message);
-
-		response.message_id = msg?.id ?? response.message_id;
-		await response.save();
-
-		if(msg) await prompt.edit({
-			components: [{
-				type: 1,
-				components: comps.map(b => ({ ...b, disabled: true }))
-			}]
-		});
+		var content = message.content?.toLowerCase().trim();
+		var act = Object.keys(ACTIONS).find(k => ACTIONS[k].includes(content));
+		if(!act) act = 'answer';
+		return await this.handleAnswer({
+			user: message.author.user,
+			message,
+			prompt,
+			response,
+			form: response.form,
+			question,
+			config,
+			action: act,
+			data: ['att', 'img', 'text'].includes(question.type) ? message : message.content
+		})
 	}
 
 	async handleInteractions(inter) {
@@ -819,9 +685,8 @@ class ResponseHandler {
 		if(this.bot.user.id == user.id) return;
 		if(user.bot) return;
 
-		if(this.menus.has(inter.channel.id)) {
-			return;
-		}
+		if(this.menus.has(inter.channel.id)) return;
+		if(!inter.message) return;
 
 		var response = await this.bot.stores.openResponses.get(inter.message.channel.id);
 		if(!response?.id) return;
@@ -832,120 +697,33 @@ class ResponseHandler {
 			return inter.reply("That form is invalid! This response is now closed");
 		}
 
+		await inter.deferUpdate();
+
 		var question = questions[response.answers.length]; // current question
-		console.log('answers: ', response.answers);
 
 		var config = await this.bot.stores.configs.get(response.server_id);
+		var prompt = inter.message;
 
-		await inter.deferUpdate();
-		var embed = inter.message.components[0];
-		var comps = inter.message.components[1].components.map(c => c.data);
-		switch(inter.customId) {
-			case 'submit':
-				this.menus.add(inter.message.channel.id);
-				try {
-					var res = await this.sendResponse(response, inter.message, user, config);
-				} catch(e) {
-					console.log(e);
-					await inter.followUp(e.message || e);
-				}
-				this.menus.delete(inter.message.channel.id);
-				if(res.msg) await inter.followUp(res.msg);
-				if(res.success) await inter.message.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true })).filter(x => x)
-					}]
-				});
-				return;
-			case 'cancel':
-				this.menus.add(inter.message.channel.id);
-				try {
-					var res = await this.cancelResponse(response, inter.message, user, config);
-				} catch(e) {
-					console.log(e);
-					await inter.followUp(e.message || e);
-				}
-				this.menus.delete(inter.message.channel.id);
-				if(res.msg) await inter.followUp(res.msg);
-				return;
-			case 'skip':
-				this.menus.add(inter.message.channel.id);
-				try {
-					var res = await this.skipQuestion(response, inter.message, user, config);
-				} catch(e) {
-					console.log(e);
-					await inter.followUp(e.message || e);
-				}
-				this.menus.delete(inter.message.channel.id);
-				if(res.msg) await inter.followUp(res.msg);
-				if(res.success) await inter.message.edit({
-					components: [{
-						type: 1,
-						components: comps.map(b => ({ ...b, disabled: true }))
-					}]
-				});
-				return;
+		var action = Object.keys(ACTIONS).find(k => ACTIONS[k].includes(inter.customId));
+		var data;
+		if(!action) {
+			action = 'answer';
+
+			if(inter.isStringSelectMenu()) data = inter.values;
+			else data = inter.customId;
 		}
 
-		if(PGBTNS(1, 1).find(pg => pg.custom_id == inter.customId)) {
-			await inter.deferUpdate();
-			var template = {
-				components: [{
-					type: 10,
-					content: `# ${response.form.name}\n${response.form.description}`
-				}],
-				color: parseInt('ccaa55', 16)
-			}
-
-			var embeds = await this.bot.handlers.response.buildResponseEmbeds(response, template);
-			switch(inter.customId) {
-				case 'first':
-					response.page = 1;
-					break;
-				case 'prev':
-					if(response.page == 1) response.page = embeds.length;
-					else response.page -= 1;
-					break;
-				case 'next':
-					if(response.page == embeds.length) response.page = 1;
-					else response.page += 1;
-					break;
-				case 'last':
-					response.page = embeds.length;
-					break;
-			}
-
-			await inter.message.edit({components: [embeds[response.page - 1]]});
-	        await response.save()
-	        return;
-		}
-
-		var type = TYPES[question?.type];
-		if(!type.handleInteraction) return;
-
-		var res2 = await type.handleInteraction(inter.message, response, question, inter);
-		if(!res2) return;
-		response = res2.response;
-
-		if(res2.menu) this.menus.add(inter.message.channel.id);
-		if(res2.embed) embed = res2.embed;
-
-		var message;
-		if(res2.send) var message = await this.sendQuestion(response, inter.message);
-
-		response.message_id = message?.id ?? inter.message.id;
-		await response.save();
-
-		if(message) await inter.message.edit({
-			components: [
-				embed,
-				{
-					type: 1,
-					components: comps.map(b => ({ ...b, disabled: true }))
-				}
-			]
-		});
+		return await this.handleAnswer({
+			user,
+			interaction: inter,
+			prompt,
+			response,
+			form: response.form,
+			question,
+			config,
+			action,
+			data
+		})
 	}
 }
 

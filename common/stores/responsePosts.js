@@ -331,7 +331,7 @@ class ResponsePostStore extends DataStore {
 
 				return await ctx.followUp({content: 'Response denied!', ephemeral: true});
 			case 'accept':
-				var embed = msg.components[0];
+				var embed = msg.components[0].toJSON();
 		        embed.accent_color = parseInt('55aa55', 16);
 		        embed.components = embed.components.concat([
 		            {

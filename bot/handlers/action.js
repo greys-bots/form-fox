@@ -80,7 +80,7 @@ class ActionHandler {
 		if(!actions?.length) return;
 
 		for(var action of actions) {
-			if(action.data.event !== event) continue;
+			if(action.data?.event !== event) continue;
 			var item = this.Types.find(x => x.type == action.data.type);
 			if(!item) continue;
 

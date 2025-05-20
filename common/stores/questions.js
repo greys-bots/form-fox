@@ -33,7 +33,7 @@ class Question extends DataObject {
 	async getEmbed() {
 		if(!this.resolved?.form) await this.getForm();
 		var type = TYPES[this.type];
-		var tcomps = type.embed(this);
+		var tcomps = type.embed ? type.embed(this) : [];
 
 		var qcomps = [
 			{

@@ -42,51 +42,32 @@ module.exports = {
 
 	setup: true,
 
-	async handleMessage(message, response, question) {
-		var index = parseInt(message.content);
-		if(question.options.choices[index - 1]) {
-			response.answers.push(question.options.choices[index - 1]);
-			return {response, send: true};
-		} else if(['other', 'o', '🅾'].includes(message.content.toLowerCase()) && question.options.other) {
-			var msg = await message.channel.messages.fetch(response.message_id);
-			var embed = msg.embeds[0];
-
-			embed.fields[embed.fields.length - 1].value = "Awaiting response...";
-    		await msg.edit({embeds: [embed]});
-
-    		await message.channel.send('Please enter a value below! (or type `cancel` to cancel)')
-    		if(!response.selection) response.selection = [];
-            response.selection.push('OTHER')
-            return {response, menu: true};
-		} else {
-			await message.channel.send('Invalid choice! Please select something else');
-			return undefined;
-		}
-	},
-
-	async handleInteraction(msg, response, question, inter) {
-		let val = inter.values;
-		let choice = question.options.choices[parseInt(val[0])];
+	async handle({ prompt, response, question, data }) {
+		if(!Array.isArray(data)) data = [data];
+		let choice = question.options.choices[parseInt(data[0])];
 		if(choice) {
 			response.answers.push(choice)
-			var embed = msg.components[0].toJSON();
-			var ind = embed.components.findIndex(x => x.type == 1);
-			embed.components[ind] = {
+			var embed = prompt.components[0].toJSON();
+			embed.components = embed.components.slice(0, embed.components.length - 2);
+			embed.components.push({
 				type: 10,
-				content: `**Selected:**\n` + choice 
-			}
+				content: `**Selected:**\n` + choice
+			})
 			console.log(embed);
 			return {
 				response,
 				send: true,
 				embed
 			};
-		} else {
-			await msg.channel.send('Please enter a value below! (or type `cancel` to cancel)')
+		} else if(['other', 'OTHER'].includes(data[0]) && question.options.other) {
+			await prompt.channel.send('Please enter a value below! (or type `cancel` to cancel)')
 			if(!response.selection) response.selection = [];
             response.selection.push('OTHER')
 
             return {response, menu: true, send: false}
+		} else {
+			await prompt.channel.send("Invalid choice! Please select something else")
+			return;
 		}
 	},
 
