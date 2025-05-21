@@ -58,7 +58,8 @@ class ResponseHandler {
 		await form.getQuestions();
 
 		try {
-			var existing = await this.bot.stores.openResponses.get(user.dmChannel?.id);
+			var dm = await user.createDM();
+			var existing = await this.bot.stores.openResponses.get(dm.id);
 			if(existing?.id) return 'Please finish your current form before starting a new one!';
 
 			if(form.cooldown && form.cooldown > 0) {
@@ -254,7 +255,6 @@ class ResponseHandler {
 			}
 		})
 
-		console.log(embeds[0].components[0].components)
 		return embeds;
 	}
 
@@ -427,7 +427,6 @@ class ResponseHandler {
 		try {
 			await response.delete();
 			if(!prompt) return;
-			console.log('leaving prompt', response.message_id, prompt)
 			await prompt.edit({
 				components: [{
 					type: 17,

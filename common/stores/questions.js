@@ -146,7 +146,6 @@ class QuestionStore extends DataStore {
 			return Promise.reject(e.message);
 		}
 		
-		console.log(data.rows);
 		if(data.rows?.[0]) {
 			return data.rows.map(x => new Question(this, KEYS, x));
 		} else return [];

@@ -30,7 +30,6 @@ module.exports = {
 	},
 
 	transform(data, ctx) {
-		var { channel } = ctx;
 		data = data.data;
 
 		var fields = [];
