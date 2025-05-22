@@ -53,7 +53,6 @@ class ActionHandler {
 			}
 		}
 
-		console.log(actions);
 		this.Types = actions;
 	}
 
