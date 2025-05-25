@@ -1,15 +1,9 @@
 const { Models: { DataStore, DataObject } } = require('frame');
 const {
 	pageBtns: PGBTNS,
-	denyBtns: DENY
+	denyBtns: DENY,
+	textVars: VARIABLES
 } = require('../extras');
-
-const VARIABLES = {
-	'$USER': (user, guild) => user,
-	'$GUILD': (user, guild) => guild.name,
-	'$FORM': (user, guild, form) => form.name,
-	'$FORMID': (user, guild, form) => form.hid,
-}
 
 const MODALS = {
 	DENY: (value) => ({
@@ -35,7 +29,7 @@ const MODALS = {
 const KEYS = {
 	id: { },
 	server_id: { },
-	channel: { },
+	channel_id: { },
 	message_id: { },
 	response: { },
 	page: { patch: true }
@@ -222,11 +216,19 @@ class ResponsePostStore extends DataStore {
 				await ctx.deferUpdate();
 				var reason;
 				var m = await msg.channel.send({
-					embeds: [{
-						title: 'Would you like to give a denial reason?'
-					}],
-					components: DENY(false)
-				});
+		            flags: ['IsComponentsV2'],
+		            components: [
+		                {
+		                    type: 17,
+		                    components: [{
+		                        type: 10,
+		                        content: 'Would you like to give a denial reason?'
+		                    }]
+		                },
+		                ...DENY(false)
+		            ],
+		            fetchReply: true
+		        });
 
 				var resp = await this.bot.utils.getChoice(this.bot, m, user, 2 * 60 * 1000, false);
 				if(!resp.choice) return await ctx.followUp({content: 'Err! Nothing selected!', ephemeral: true});
@@ -236,36 +238,49 @@ class ResponsePostStore extends DataStore {
 						return resp.interaction.reply({content: 'Action cancelled!', ephemeral: true});
 					case 'reason':
 						var mod = await this.bot.utils.awaitModal(resp.interaction, MODALS.DENY(reason), user, true, 5 * 60_000);
-						if(mod) reason = mod.fields.getTextInputValue('reason')?.trim();
-						await mod.followUp("Modal received!");
-						await m.edit({
-							embeds: [{
-								title: 'Denial reason',
-								description: reason
-							}]
-						})
+		                if(mod) reason = mod.fields.getTextInputValue('reason')?.trim();
+		                await mod.followUp("Modal received!");
+		                await m.edit({
+		                    components: [{
+		                        type: 17,
+		                        components: [{
+		                            type: 10,
+		                            content: `## Denial Reason\n${reason}`
+		                        }]
+		                    }]
+		                })
 						break;
 					case 'skip':
 						await m.edit({
-							embeds: [{
-								title: 'Denial reason',
-								description: reason
-							}]
-						})
+		                    components: [{
+		                        type: 17,
+		                        components: [{
+		                            type: 10,
+		                            content: `## Denial Reason\n${reason}`
+		                        }]
+		                    }]
+		                })
 						break;
 				}
 
 				await m.delete()
 
-				var embed = msg.embeds[0].toJSON();
-				embed.color = parseInt('aa5555', 16);
-				embed.footer = {text: 'Response denied!'};
-				embed.timestamp = new Date().toISOString();
-				embed.author = {
-					name: `${user.username}#${user.discriminator}`,
-					iconURL: user.avatarURL()
-				}
-				embed.description += `\n\nReason: ${reason ?? "*(no reason given)*"}`;
+				var embed = msg.components[0].toJSON();
+		        embed.accent_color = parseInt('aa5555', 16);
+
+		        embed.components = embed.components.concat([
+		            {
+		                type: 14
+		            },
+		            {
+		                type: 10,
+		                content: `Response denied <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+		            },
+		            {
+		                type: 10,
+		                content: `Denied by ${user} (${user.tag} | ${user.id})`
+		            }
+		        ])
 
 				try {
 					this.bot.emit('DENY', post.response);
@@ -279,25 +294,36 @@ class ResponsePostStore extends DataStore {
 					post.response.status = 'denied';
 					post.response = await post.response.save();
 					await msg.edit({
-						embeds: [embed],
-						components: []
+						components: [embed]
 					});
 					await msg.reactions.removeAll();
 
 					await post.delete();
 
-					await u2.send({embeds: [{
-						title: 'Response denied!',
-						description: [
-							`Server: ${msg.channel.guild.name} (${msg.channel.guild.id})`,
-							`Form name: ${post.response.form.name}`,
-							`Form ID: ${post.response.form.hid}`,
-							`Response ID: ${post.response.hid}`
-						].join("\n"),
-						fields: [{name: 'Reason', value: reason ?? "*(no reason given)*"}],
-						color: parseInt('aa5555', 16),
-						timestamp: new Date().toISOString()
-					}]})
+					await u2.send({
+		                flags: ['IsComponentsV2'],
+		                components: [{
+		                    type: 17,
+		                    accent_color: parseInt('aa5555', 16),
+		                    components: [
+		                        {
+		                            type: 10,
+		                            content: `## Response denied!\n${reason ?? '*(no reason given)*'}`
+		                        },
+		                        {
+		                            type: 10,
+		                            content:
+		                                `**Server:** ${ctx.guild.name} (${ctx.guild.id})\n` +
+		                                `**Form:** ${post.response.form.name} (${post.response.form.hid})\n` +
+		                                `**Response ID:** ${post.response.hid}` 
+		                        },
+		                        {
+		                            type: 10,
+		                            content: `-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+		                        }
+		                    ]
+		                }]
+		            })
 				} catch(e) {
 					console.log(e);
 					return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');
@@ -305,14 +331,23 @@ class ResponsePostStore extends DataStore {
 
 				return await ctx.followUp({content: 'Response denied!', ephemeral: true});
 			case 'accept':
-				var embed = msg.embeds[0].toJSON();
-				embed.color = parseInt('55aa55', 16);
-				embed.footer = {text: 'Response accepted!'};
-				embed.timestamp = new Date().toISOString();
-				embed.author = {
-					name: `${user.username}#${user.discriminator}`,
-					iconURL: user.avatarURL()
-				}
+				var embed = msg.components[0].toJSON();
+		        embed.accent_color = parseInt('55aa55', 16);
+		        let footer = embed.components[embed.components.length - 1]
+		        footer.content = footer.content.replace('pending', 'accepted')
+		        embed.components = embed.components.concat([
+		            {
+		                type: 14
+		            },
+		            {
+		                type: 10,
+		                content: `-# Response accepted <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+		            },
+		            {
+		                type: 10,
+		                content: `-# Accepted by ${user} (${user.tag} | ${user.id})`
+		            }
+		        ])
 
 				try {
 					this.bot.emit('ACCEPT', post.response);
@@ -326,8 +361,7 @@ class ResponsePostStore extends DataStore {
 					post.response.status = 'accepted';
 					post.response = await post.response.save();
 					await msg.edit({
-						embeds: [embed],
-						components: []
+						components: [embed]
 					});
 					await msg.reactions.removeAll();
 
@@ -336,22 +370,34 @@ class ResponsePostStore extends DataStore {
 					var welc = post.response.form.message;
 					if(welc) {
 						for(var key of Object.keys(VARIABLES)) {
-							welc = welc.replace(key, VARIABLES[key](u2, msg.guild, post.response.form));
+							welc = welc.replace(key, VARIABLES[key](u2, msg.guild, post.response.form, post.response));
 						}
 					}
 
-					await u2.send({embeds: [{
-						title: 'Response accepted!',
-						description: welc,
-						fields: [
-							{name: 'Server', value: `${msg.channel.guild.name} (${msg.channel.guild.id})`},
-							{name: 'Form name', value: `${post.response.form.name}`},
-							{name: 'Form ID', value: `${post.response.form.hid}`},
-							{name: 'Response ID', value: `${post.response.hid}`}
-						],
-						color: parseInt('55aa55', 16),
-						timestamp: new Date().toISOString()
-					}]});
+					await u2.send({
+		                flags: ['IsComponentsV2'],
+		                components: [{
+		                    type: 17,
+		                    accent_color: parseInt('55aa55', 16),
+		                    components: [
+		                        {
+		                            type: 10,
+		                            content: `## Response accepted!\n${welc ?? ''}`
+		                        },
+		                        {
+		                            type: 10,
+		                            content:
+		                                `**Server:** ${msg.channel.guild.name} (${msg.channel.guild.id})\n` +
+		                                `**Form:** ${post.response.form.name} (${post.response.form.hid})\n` +
+		                                `**Response ID:** ${post.response.hid}` 
+		                        },
+		                        {
+		                            type: 10,
+		                            content: `-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+		                        }
+		                    ]
+		                }]
+		            });
 				} catch(e) {
 					console.log(e);
 					return await msg.channel.send(`ERR! ${e.message || e}\n(Response still accepted!)`);
@@ -367,8 +413,17 @@ class ResponsePostStore extends DataStore {
 
 					if(ticket?.id) return await ctx.followUp(`Channel already opened! Link: <#${ticket.channel_id}>`)
 
+					var tname = `ticket-${post.response.hid}`;
+					if(post.response.form.ticket_format) {
+						tname = post.response.form.ticket_format;
+						for(var key of Object.keys(VARIABLES)) {
+							if(['$FORM', '$GUILD'].includes(key)) continue;
+							tname = tname.replace(key, VARIABLES[key](u2, msg.guild, post.response.form, post.response));
+						}
+					}
+
 					var ch2 = await msg.guild.channels.create({
-						name: `ticket-${post.response.hid}`,
+						name: tname,
 						parent: ch.id,
 						reason: 'Mod opened ticket for response '+post.response.hid
 					})
@@ -390,13 +445,16 @@ class ResponsePostStore extends DataStore {
 						await ch2.send(tmsg);
 					}
 
-					cmp = cmp[0].components.map(x => x.toJSON());
+					cmp = cmp[1].components.map(x => x.toJSON());
 					cmp[2].disabled = true;
 					await msg.edit({
-						components: [{
-							type: 1,
-							components: cmp
-						}]
+						components: [
+							msg.components[0].toJSON(),
+							{
+								type: 1,
+								components: cmp
+							}
+						]
 					})
 					await this.bot.stores.tickets.create({
 						server_id: msg.guild.id,
@@ -412,17 +470,23 @@ class ResponsePostStore extends DataStore {
 
 		if(PGBTNS(1,1).find(pg => pg.custom_id == ctx.customId)) {
 			var template = {
-				title: "Response",
-				description: [
-					`Form name: ${post.response.form.name}`,
-					`Form ID: ${post.response.form.hid}`,
-					`User: ${u2.username}#${u2.discriminator} (${u2})`,
-					`Response ID: ${post.response.hid}`
-				].join('\n'),
+				components: [
+					{
+						type: 10,
+						content:
+							`# Response\n` +
+							`Form name: ${response.form.name}\n` +
+							`Form ID: ${response.form.hid}\n` +
+							`User: ${user.username}#${user.discriminator} (${user})\n` +
+							`Response ID: ${created.hid}`		
+					}
+				],
 				color: parseInt('ccaa55', 16),
-				fields: [],
-				timestamp: post.response.received,
-				footer: {text: 'Awaiting acceptance/denial...'}
+				footer: [{
+					type: 10,
+					content:
+						`-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F> | Status: pending`
+				}]
 			}
 
 			var embeds = this.bot.handlers.response.buildResponseEmbeds(post.response, template);
@@ -443,7 +507,9 @@ class ResponsePostStore extends DataStore {
 					break;
 			}
 
-			await msg.edit({embeds: [embeds[post.page - 1]]});
+			await msg.edit({
+				components: [embeds[post.page - 1]]
+			});
 			await post.save();
 			return;
 		}

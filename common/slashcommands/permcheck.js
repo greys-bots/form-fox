@@ -20,7 +20,8 @@ class Command extends SlashCommand {
 				"[channel] - Check a specific channel for proper permissions"
 			],
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -31,9 +32,16 @@ class Command extends SlashCommand {
 
 		if(chan) {
 			return [{
-				title: "Check Results",
-				description: `Channel: <#${chan.id}>`,
-				fields: this.readout(this.#bot, chan)
+				components: [{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `## Check Results\n**Channel:** <#${chan.id}>`
+						},
+						...this.readout(this.#bot, chan)
+					]
+				}]
 			}]
 		}
 		
@@ -53,47 +61,64 @@ class Command extends SlashCommand {
 			var ch = ctx.guild.channels.resolve(c);
 			if(!ch) {
 				res.push({
-					title: "Check Results",
-					description: `Channel: <#${c}>\n` +
-						`**Can't view channel or channel doesn't exist**`
+					components: [{
+						type: 17,
+						components: [{
+							type: 10,
+							content:
+								`## Check Results\n` +
+								`Channel: <#${c}>\n` +
+								`**Can't view channel or channel doesn't exist**`
+						}]
+					}] 
 				})
 				continue;
 			}
 
 			res.push({
-				title: "Check Results",
-				description: `Channel: <#${c}>`,
-				fields: this.readout(this.#bot, ch)
+				components: [{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `## Check Results\n**Channel:** <#${ch.id}>`
+						},
+						...this.readout(this.#bot, ch)
+					]
+				}]
 			})
 		}
 
-		if(res.length > 1) for(var i = 0; i < res.length; i++)
-			res[i].title += ` (page ${i+1}/${res.length})`;
 		return res;
 	}
 
 	readout(bot, chan) {
 		var perms = chan.permissionsFor(bot.user.id).serialize();
+		let added = [0, 0]
 		var fields = [
 			{
-				name: "Given permissions",
-				value: ""
+				type: 10,
+				content: "### Given permissions\n",
 			},
 			{
-				name: "Missing permissions",
-				value: ""
+				type: 10,
+				content: "### Missing permissions\n"
 			}
 		]
 		
 		for(var k of REQUIRED) {
-			if(perms[k]) fields[0].value += `${k}\n`;
-			else fields[1].value += `${k}\n`;
+			if(perms[k]) {
+				added[0] += 1;
+				fields[0].content += `${k}\n`;
+			} else {
+				added[1] += 1;
+				fields[1].content += `${k}\n`;
+			}
 		}
 
-		fields = fields.map(f => {
-			f.value = f.value || "(none)";
-			return f;
-		})
+		if(added[0] == 0) fields[0].content += `(none)`;
+		if(added[1] == 0) fields[1].content += `(none)`;
+
 		return fields;
 	}
 }

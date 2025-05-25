@@ -74,9 +74,10 @@ class Command extends SlashCommand {
 			pos = form.questions.length + 1;
 		if(pos <= 0) pos = 1;
 		var question = {
-			value: q,
+			name: q,
+			type,
 			required,
-			type
+			options: { }
 		}
 
 		if(TYPES[type].setup) {
@@ -107,7 +108,7 @@ class Command extends SlashCommand {
 			}
 			var m = await this.#bot.utils.awaitModal(ctx, mdata, ctx.user, false, 300000)
 			if(!m) return "No choices given!";
-			question.choices = m.fields.getField('answers').value.trim().split("\n").slice(0, 10);
+			question.options.choices = m.fields.getField('answers').value.trim().split("\n").slice(0, 10);
 
 			var rep = await m.followUp({
 				content: "Do you want to include an `other` option?",
@@ -133,10 +134,16 @@ class Command extends SlashCommand {
 				fetchReply: true
 			});
 			var c = await this.#bot.utils.getConfirmation(this.#bot, rep, ctx.user);
-			if(c.confirmed) question.other = true;
+			if(c.confirmed) question.options.other = true;
 		}
 
-		form.questions.splice(pos - 1, 0, question);
+		var qc = await this.#stores.questions.create({
+			server_id: ctx.guild.id,
+			form: form.hid,
+			...question
+		})
+
+		form.questions.splice(pos - 1, 0, qc.id);
 		await form.save()
 
 		return "Question added!";

@@ -29,8 +29,19 @@ class Command extends SlashCommand {
 				"[form_id] - View and optionally reset a form's note",
 				"[form_id] [note] - Set a form's note"
 			],
+			extra: 
+				"Variables available:\n" +
+				"$USER - ping the user who opened the response\n" +
+				"$USERTAG - insert the user's tag\n" +
+				"$USERID - insert the user's ID\n" +
+				"$GUILD - the guild's name\n" +
+				"$COUNT - the guild's member count\n" +
+				"$FORM - the form's name\n" +
+				"$FORMID - the form's ID\n" +
+				"$RESPONSE - the response's ID",
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -44,16 +55,18 @@ class Command extends SlashCommand {
 		if(!form) return 'Form not found!';
 
 		if(!n) {
-			if(!form.note) return 'Form has no note set';
+			if(!form.note) return 'That form has no note set!';
 
 			var rdata = {
-				embeds: [
-					{
-						title: "Current note",
-						description: form.note,
-					}
-				],
+				flags: ['IsComponentsV2'],
 				components: [
+					{
+						type: 17,
+						components: [{
+							type: 10,
+							content: `### Current note\n${form.note}`
+						}]
+					},
 					{
 						type: 1,
 						components: clearBtns

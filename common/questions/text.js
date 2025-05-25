@@ -1,12 +1,31 @@
+const {
+	TACTIONS
+} = require('../extras');
+
 module.exports = {
 	description: 'allows the user to freely type an answer',
 	alias: ['text', 'free'],
 
-	async handleMessage(message, response) {
-		response.answers.push(message.content);
-		if(message.attachments.size > 0)
-			response.answers[response.answers.length - 1] += "\n\n**Attachments:**\n" + message.attachments.map(a => a.url).join("\n");
-		return {response, send: true};
+	embed(data) {
+		return [{
+			type: 10,
+			content: '-# Requires a text response'
+		}];
+	},
+
+	async handle({ prompt, response, data }) {
+		var answer = data.content;
+		if(data.attachments.size > 0)
+			answer += "\n\n**Attachments:**\n" + data.attachments.map(a => a.url).join("\n");
+
+		var embed = prompt.components[0].toJSON();
+		embed.components[embed.components.length - 1] = {
+			type: 10,
+			content: answer
+		}
+
+		response.answers.push(answer);
+		return {response, send: true, embed};
 	},
 
 	async roleSetup({ctx, question, role}) {
@@ -62,8 +81,10 @@ module.exports = {
 	showRoles(q) {
 		return q.roles.map(r => {
 			return {
-				name: `${r.action} | ${r.value.slice(0, 50)}`,
-				value: `<@&${r.id}>`
+				type: 10,
+				content:
+					`### ${r.action} | ${r.value}\n` +
+					`<@&${r.id}>`
 			}
 		})
 	}

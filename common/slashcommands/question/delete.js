@@ -27,6 +27,7 @@ class Command extends SlashCommand {
 			usage: [
 				"[form_id] [question] - Delete a question on a form"
 			],
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -43,17 +44,36 @@ class Command extends SlashCommand {
 		if(!q) return "No question with that number!";
 
 		var reply = await ctx.reply({
-			content: 'Are you sure you want to delete this question?',
-			embeds: [{
-				title: "Question " + p,
-				description: q.value,
-				fields: [
-					{name: "Type", value: q.type},
-					{name: "Required", value: `${q.required ?? "false"}`},
-					{name: "Choices", value: q.choices ? q.choices.join("\n") : "(none)"}
-				]
-			}],
-			components: [{type: 1, components: confBtns}],
+			flags: ['IsComponentsV2'],
+			components: [
+				{
+					type: 10,
+					content: 'Are you sure you want to delete this question?'
+				},
+				{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `## Question ${p}\n${q.value}`
+						},
+						{
+							type: 10,
+							content: `**Type:** ${q.type}`
+						},
+						{
+							type: 10,
+							content: `**Required:** ${q.required ?? "false"}`
+						},
+						{
+							type: 10,
+							content: `**Choices:**\n${q.choices ? q.choices.join("\n") : "(none)"}`
+						}
+					]
+				},
+				{type: 1, components: confBtns}
+				
+			],
 			fetchReply: true
 		});
 

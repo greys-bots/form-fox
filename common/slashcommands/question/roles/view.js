@@ -41,12 +41,13 @@ class Command extends SlashCommand {
 
 		var form = await this.#stores.forms.get(ctx.guild.id, f);
 		if(!form.id) return 'Form not found!';
-		
+		await form.getQuestions();
+
 		if(q === 0) q = 1;
-		if(q > form.questions.length) q = form.questions.length;
+		if(q > form.resolved.questions.length) q = form.resolved.questions.length;
 		
-		var questions = form.questions;
-		if(q !== null) questions = [form.questions[q - 1]];
+		var questions = form.resolved.questions;
+		if(q !== null) questions = [questions[q - 1]];
 		questions = questions.filter(qu => qu?.roles?.length);
 		if(!questions.length) return "No valid questions supplied!";
 
@@ -54,25 +55,36 @@ class Command extends SlashCommand {
 		for(var qu of questions) {
 			if(!qu.roles) {
 				embeds.push({
-					title: "Roles on form "+form.hid,
-					description: "Question: "+qu.value,
-					fields: {
-						name: 'No roles',
-						value: "Question has no roles attached"
-					}
+					components: [{
+						type: 17,
+						components: [
+							{
+								type: 10,
+								content: `Roles on form ${form.hid}\nQuestion: ${qu.value}`
+							},
+							{
+								type: 10,
+								content: `### No roles\n*Question has no roles attached*`
+							}
+						]
+					}]
 				});
 				continue;
 			}
 
 			embeds.push({
-				title: "Roles on form "+form.hid,
-				description: "Question: "+qu.value,
-				fields: TYPES[qu.type].showRoles(qu)
+				components: [{
+					type: 17,
+					components: [
+						{
+							type: 10,
+							content: `Roles on form ${form.hid}\nQuestion: ${qu.value}`
+						},
+						...TYPES[qu.type].showRoles(qu)
+					]
+				}]
 			})
 		}
-
-		if(embeds.length > 1) for(var i = 0; i < embeds.length; i++)
-			embeds[i].title += ` ${i+1}/${embeds.length}`;
 
 		return embeds;
 	}

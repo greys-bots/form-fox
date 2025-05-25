@@ -23,6 +23,7 @@ class Command extends SlashCommand {
 			ephemeral: true,
 			guildOnly: true,
 			permissions: ['ManageMessages'],
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -32,20 +33,21 @@ class Command extends SlashCommand {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
+		await form.getQuestions();
 
 		var color = parseInt(form.color, 16);
 		if(isNaN(color)) color = 0x55aa55;
 
-		var embeds = await this.#bot.utils.genEmbeds(this.#bot, form.questions, (data, i) => {
+		var comps = this.#bot.utils.genComps(form.resolved.questions, (data, i) => {
 			var text;
 			if(!['mc', 'cb'].includes(data.type)) {
-				text = "Type: " + TYPES[data.type].alias[0];
+				text = "**Type:** " + TYPES[data.type].alias[0];
 			} else {
-				text = (data.choices ? `**Choices:**\n${data.choices.join("\n")}\n\n` : '') +
+				text = (data.options?.choices ? `**Choices:**\n${data.options.choices.join("\n")}\n\n` : '') +
 					   (data.other ? 'This question has an "other" option!' : '')
 			}
 
-			var name = `${NUMS[i + 1]} **${data.value}**`;
+			var name = `${NUMS[i + 1]} **${data.name}**`;
 			if(data.required) name += " :exclamation:";
 
 			switch(data.type) {
@@ -73,17 +75,26 @@ class Command extends SlashCommand {
 			}
 
 			return {
-				name,
-				value: text
+				type: 10,
+				content: `### ${name}\n${text}`
 			}
-		},
-		{
-			title: form.name,
-			description: form.description,
-			color
 		})
 
-		return embeds.map(e => e.embed);
+		console.log(comps)
+
+		return comps.map(c => ({
+			components: [{
+				type: 17,
+				accent_color: color,
+				components: [
+					{
+						type: 10,
+						content: `## ${form.name} (${form.hid})\n${form.description}`
+					},
+					...c
+				]
+			}]
+		}));
 	}
 
 	async auto(ctx) {

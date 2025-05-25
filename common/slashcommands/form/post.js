@@ -28,7 +28,8 @@ class Command extends SlashCommand {
 				"[form_id] [channel] - Post a form embed in a channel"
 			],
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -40,33 +41,23 @@ class Command extends SlashCommand {
 		var form = await this.#stores.forms.get(ctx.guildId, id);
 		if(!form.id) return 'Form not found!';
 
-		var responses = await this.#stores.responses.getByForm(ctx.guildId, form.hid);
 		try {
+			var embed = await form.getEmbed();
 			var message = await chan.send({
-				embeds: [{
-					title: form.name,
-					description: form.description,
-					color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-					thumbnail: { url: form.post_icon ?? null },
-					image: { url: form.post_banner ?? null },
-					fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
-					footer: {
-						text: `Form ID: ${form.hid} | ` +
-							  (!form.open ?
-							  'this form is not accepting responses right now!' :
-							  'click below to apply to this form!')
+				flags: ['IsComponentsV2'],
+				components: [
+					embed,
+					{
+						type: 1,
+						components: [{
+							type: 2,
+							label: form.button_text ?? 'Apply',
+							emoji: form.emoji || { name: "📝" },
+							style: form.button_style != undefined ? form.button_style : 1,
+							custom_id: `${form.hid}-apply`
+						}]
 					}
-				}],
-				components: [{
-					type: 1,
-					components: [{
-						type: 2,
-						label: form.button_text ?? 'Apply',
-						emoji: form.emoji || "📝",
-						style: form.button_style != undefined ? form.button_style : 1,
-						custom_id: `${form.hid}-apply`
-					}]
-				}]
+				]
 			});
 			var p = await this.#stores.formPosts.create({
 				server_id: ctx.guildId,

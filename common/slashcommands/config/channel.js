@@ -14,7 +14,7 @@ class Command extends SlashCommand {
 					description: 'The channel to set',
 					type: 7,
 					required: true,
-					channel_types: [0, 5, 10, 11, 12]
+					channel_types: [0, 5, 10, 11, 12, 15]
 				},
 				{
 					name: 'form_id',

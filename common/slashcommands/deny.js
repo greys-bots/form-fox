@@ -54,10 +54,17 @@ class Command extends SlashCommand {
 
         var reason;
         var m = await ctx.reply({
-            embeds: [{
-                title: 'Would you like to give a denial reason?'
-            }],
-            components: DENY(false),
+            flags: ['IsComponentsV2'],
+            components: [
+                {
+                    type: 17,
+                    components: [{
+                        type: 10,
+                        content: 'Would you like to give a denial reason?'
+                    }]
+                },
+                ...DENY(false)
+            ],
             fetchReply: true
         });
 
@@ -73,17 +80,23 @@ class Command extends SlashCommand {
                 if(mod) reason = mod.fields.getTextInputValue('reason')?.trim();
                 await mod.followUp("Modal received!");
                 await m.edit({
-                    embeds: [{
-                        title: 'Denial reason',
-                        description: reason
+                    components: [{
+                        type: 17,
+                        components: [{
+                            type: 10,
+                            content: `## Denial Reason\n${reason}`
+                        }]
                     }]
                 })
                 break;
             case 'skip':
                 await m.edit({
-                    embeds: [{
-                        title: 'Denial reason',
-                        description: reason
+                    components: [{
+                        type: 17,
+                        components: [{
+                            type: 10,
+                            content: `## Denial Reason\n${reason}`
+                        }]
                     }]
                 })
                 break;
@@ -91,15 +104,22 @@ class Command extends SlashCommand {
 
         await m.delete()
 
-        var embed = msg.embeds[0].toJSON();
-        embed.color = parseInt('aa5555', 16);
-        embed.footer = {text: 'Response denied!'};
-        embed.timestamp = new Date().toISOString();
-        embed.author = {
-            name: `${ctx.user.username}`,
-            iconURL: ctx.user.avatarURL()
-        }
-        embed.description += `\n\nReason: ${reason ?? "*(no reason given)*"}`;
+        var embed = msg.components[0];
+        embed.accent_color = parseInt('aa5555', 16);
+
+        embed.components = embed.components.concat([
+            {
+                type: 14
+            },
+            {
+                type: 10,
+                content: `Response denied <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+            },
+            {
+                type: 10,
+                content: `Denied by ${ctx.user} (${ctx.user.tag} | ${ctx.user.id})`
+            }
+        ])
 
         try {
             this.#bot.emit('DENY', post.response);
@@ -113,25 +133,36 @@ class Command extends SlashCommand {
             post.response.status = 'denied';
             post.response = await post.response.save();
             await msg.edit({
-                embeds: [embed],
-                components: []
+                components: [embed]
             });
             await msg.reactions.removeAll();
 
             await post.delete();
 
-            await u2.send({embeds: [{
-                title: 'Response denied!',
-                description: [
-                    `Server: ${msg.channel.guild.name} (${msg.channel.guild.id})`,
-                    `Form name: ${post.response.form.name}`,
-                    `Form ID: ${post.response.form.hid}`,
-                    `Response ID: ${post.response.hid}`
-                ].join("\n"),
-                fields: [{name: 'Reason', value: reason ?? "*(no reason given)*"}],
-                color: parseInt('aa5555', 16),
-                timestamp: new Date().toISOString()
-            }]})
+            await u2.send({
+                flags: ['IsComponentsV2'],
+                components: [{
+                    type: 17,
+                    accent_color: parseInt('aa5555', 16),
+                    components: [
+                        {
+                            type: 10,
+                            content: `## Response denied!\n${reason ?? '*(no reason given)*'}`
+                        },
+                        {
+                            type: 10,
+                            content:
+                                `**Server:** ${msg.channel.guild.name} (${msg.channel.guild.id})\n` +
+                                `**Form:** ${post.response.form.name} (${post.response.form.hid})\n` +
+                                `**Response ID:** ${post.response.hid}` 
+                        },
+                        {
+                            type: 10,
+                            content: `-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F>`
+                        }
+                    ]
+                }]
+            });
         } catch(e) {
             console.log(e);
             return await msg.channel.send('ERR! Response denied, but couldn\'t message the user!');

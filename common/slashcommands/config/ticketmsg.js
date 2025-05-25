@@ -25,14 +25,18 @@ class Command extends SlashCommand {
 			],
 			usage: [
 				"[message] - Set the default ticket message for all forms",
-				"[channel] [form_id] - Set the ticket message for a form"
+				"[message] [form_id] - Set the ticket message for a form"
 			],
 			extra: 
 				"Variables available:\n" +
 				"$USER - ping the user who opened the response\n" +
+				"$USERTAG - insert the user's tag\n" +
+				"$USERID - insert the user's ID\n" +
 				"$GUILD - the guild's name\n" +
+				"$COUNT - the guild's member count\n" +
 				"$FORM - the form's name\n" +
 				"$FORMID - the form's ID\n" +
+				"$RESPONSE - the response's ID\n" +
 				"Example message: `Hello $USER! This ticket " +
 				"has been opened to discuss your response to " +
 				"form $FORMID ($FORM)`",

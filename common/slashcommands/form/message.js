@@ -31,11 +31,16 @@ class Command extends SlashCommand {
 			extra: 
 				"Variables available:\n" +
 				"$USER - ping the user who opened the response\n" +
+				"$USERTAG - insert the user's tag\n" +
+				"$USERID - insert the user's ID\n" +
 				"$GUILD - the guild's name\n" +
+				"$COUNT - the guild's member count\n" +
 				"$FORM - the form's name\n" +
-				"$FORMID - the form's ID",
+				"$FORMID - the form's ID\n" +
+				"$RESPONSE - the response's ID\n",
 			permissions: ['ManageMessages'],
-			guildOnly: true
+			guildOnly: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -51,13 +56,15 @@ class Command extends SlashCommand {
 			if(!form.message) return 'Form has no message set!';
 
 			var rdata = {
-				embeds: [
-					{
-						title: 'Message',
-						description: form.message
-					}
-				],
+				flags: ['IsComponentsV2'],
 				components: [
+					{
+						type: 17,
+						components: [{
+							type: 10,
+							content: `### Current message\n${form.message}`
+						}]
+					},
 					{
 						type: 1,
 						components: clearBtns

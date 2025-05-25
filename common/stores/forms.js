@@ -27,7 +27,9 @@ const KEYS = {
 	post_banner: { patch: true },
 	button_text: { patch: true },
 	button_style: { patch: true },
-	note: { patch: true }
+	note: { patch: true },
+	ticket_format: { patch: true },
+	forum_title: { patch: true }
 }
 
 class Form extends DataObject {
@@ -57,6 +59,172 @@ class Form extends DataObject {
 
 		this.roles = tmp;
 		await this.save();
+	}
+
+	async getQuestions() {
+		var questions = await this.store.bot.stores.questions.getByForm(this.server_id, this.hid);
+		var qs = [];
+		for(var q of this.questions) {
+			var question = questions.find(x => x.id == q);
+			if(!question) continue;
+			qs.push(question);
+		}
+		if(!this.resolved) this.resolved = {};
+		this.resolved.questions = qs;
+
+		return qs;
+	}
+
+	async getEmbed() {
+		var comps = [];
+		var responses = await this.store.bot.stores.responses.getByForm(this.server_id, this.hid);
+
+		if(this.post_icon) {
+			comps.push({
+				type: 9,
+				components: [{
+					type: 10,
+					content:
+						`## ${this.name}\n` +
+						this.description
+				}],
+				accessory: {
+					type: 11,
+					media: {
+						url: this.post_icon
+					}
+				}
+			})
+		} else {
+			comps.push({
+				type: 10,
+				content:
+					`## ${this.name}\n` +
+					this.description
+			})
+		}
+
+		if(this.post_banner) {
+			comps.push({
+				type: 12,
+				items: [{
+					media: { url: this.post_banner }
+				}]	
+			})
+		}
+
+		comps = comps.concat([
+			{
+				type: 14
+			},
+			{
+				type: 10,
+				content:
+					`-# ID: ${this.hid} | ` + 
+					`${responses?.length.toString() || '0'} responses | ` +
+					(
+						!this.open ?
+						'this form is not accepting responses right now!' :
+						'click below to apply to this form!'
+					)
+			}
+		])
+
+		return {
+			type: 17,
+			accent_color: parseInt(!this.open ? 'aa5555' : this.color || '55aa55', 16),
+			components: comps
+		}
+	}
+
+	async getInfo() {
+		var comps = [];
+		var responses = await this.store.bot.stores.responses.getByForm(this.server_id, this.hid);
+
+		if(this.post_icon) {
+			comps.push({
+				type: 9,
+				components: [{
+					type: 10,
+					content:
+						`## ${this.name} ` +
+						`${this.emoji?.includes(':') ? '<' + this.emoji + '>' : this.emoji || '📝'}\n` +
+						this.description
+				}],
+				accessory: {
+					type: 11,
+					media: {
+						url: this.post_icon
+					}
+				}
+			})
+		} else {
+			comps.push({
+				type: 10,
+				content:
+					`## ${this.name}` +
+					`${this.emoji?.includes(':') ? '<' + this.emoji + '>' : this.emoji || '📝'}\n` +
+					this.description
+			})
+		}
+
+		comps = comps.concat([
+			{
+				type: 10,
+				content: `### Message\n${this.message ?? '*(not set)*'}`
+			},
+			{
+				type: 10,
+				content: `### Channel\n${this.channel_id ? `<#${this.channel_id}>` : '*(not set)*'}`
+			},
+			{
+				type: 10,
+				content: `### Roles\n${this.roles?.[0]? this.roles.map(r => `<@&${r.id}>`).join("\n") : "*(not set)*"}`
+			}
+		])
+
+		if(this.post_banner) {
+			comps.push({
+				type: 12,
+				items: [{
+					media: { url: this.post_banner }
+				}]	
+			})
+		}
+
+		comps = comps.concat([
+			{
+				type: 14
+			},
+			{
+				type: 10,
+				content:
+					`-# ID: ${this.hid} | ` + 
+					`${responses?.length.toString() || '0'} responses | ` +
+					(
+						!this.open ?
+						'this form is not accepting responses right now!' :
+						'click below to apply to this form!'
+					)
+			}
+		])
+
+		return {
+			type: 17,
+			accent_color: parseInt(!this.open ? 'aa5555' : this.color || '55aa55', 16),
+			components: comps
+		}
+	}
+
+	async save(update = true) {
+		var obj = await this.verify((this.id != null));
+
+		var data;
+		if(this.id) data = await this.store.update(this.id, obj, this.old, update);
+		else data = await this.store.create(obj);
+		for(var k in this.KEYS) this[k] = data[k];
+		this.old = Object.assign({}, data);
+		return this;
 	}
 }
 
@@ -90,7 +258,9 @@ class FormStore extends DataStore {
 				post_banner 	TEXT,
 				button_text 	TEXT,
 				button_style 	TEXT,
-				note 			TEXT
+				note 			TEXT,
+				ticket_format	TEXT,
+				forum_title		TEXT
 			);
 
 			CREATE TABLE IF NOT EXISTS form_posts (
@@ -200,22 +370,6 @@ class FormStore extends DataStore {
 		
 		if(data.rows?.[0]) {
 			var form = new Form(this, KEYS, data.rows[0]);
-			var qs = [];
-			var edited = false;
-			if(!form.questions || !Array.isArray(form.questions))
-				form.questions = [];
-			for(var q of form.questions) {
-				if(!q.value) continue; // filter empty qs
-				if(q.choices && q.choices.includes('')) {
-					q.choices = q.choices.filter(x => x.length); // filter empty choices
-					edited = true;
-				}
-
-				qs.push(q);
-			}
-
-			if(edited || qs.length < form.questions.length)
-				form = await form.save();
 			return form;
 		} else return new Form(this, KEYS, { server_id: server });
 	}
@@ -262,6 +416,18 @@ class FormStore extends DataStore {
 		})
 	}
 
+	async getEvery() {
+		try {
+			var data = await this.db.query(`SELECT * FROM forms`);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) return data.rows.map(x => new Form(this, KEYS, x));
+		else return [];
+	}
+
 	async getID(id) {
 		try {
 			var data = await this.db.query(`SELECT * FROM forms WHERE id = $1`,[id]);
@@ -281,7 +447,7 @@ class FormStore extends DataStore {
 		} else return new Form(this, KEYS, {});
 	}
 
-	async update(id, data = {}, old) {
+	async update(id, data = {}, old, update = true) {
 		if(data.questions && typeof data.questions != 'string') data.questions = JSON.stringify(data.questions);
 		if(data.roles && typeof data.roles != 'string') data.roles = JSON.stringify(data.roles);
 		try {
@@ -293,9 +459,9 @@ class FormStore extends DataStore {
 
 		var form = await this.getID(id);
 		if(!form) return undefined; //that's just silly
-		var responses = await this.bot.stores.responses.getByForm(form.server_id, form.hid);
 		var posts = await this.bot.stores.formPosts.getByForm(form.server_id, form.hid);
 
+		if(!update) return form;
 		var errs = [];
 		if(['name', 'description', 'open', 'color', 'emoji'].find(x => Object.keys(data).includes(x))) {
 			var guild = this.bot.guilds.resolve(form.server_id);
@@ -326,30 +492,23 @@ class FormStore extends DataStore {
 						}
 
 						if(post.bound) continue;
+						var emb = await form.getEmbed();
 
-						await msg.edit({embeds: [{
-							title: form.name,
-							description: form.description,
-							color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-							thumbnail: { url: form.post_icon ?? null },
-							image: { url: form.post_banner ?? null },
-							fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
-							footer: {
-								text: `Form ID: ${form.hid} | ` +
-									  (!form.open ?
-									  'this form is not accepting responses right now!' :
-									  'click below to apply to this form!')
-							}
-						}], components: [{
-							type: 1,
-							components: [{
-								type: 2,
-								label: form.button_text ?? 'Apply',
-								emoji: form.emoji || "📝",
-								style: form.button_style != undefined ? form.button_style : 1,
-								custom_id: `${form.hid}-apply`
-							}]
-						}]})
+						await msg.edit({
+							components: [
+								emb,
+								{
+									type: 1,
+									components: [{
+										type: 2,
+										label: form.button_text ?? 'Apply',
+										emoji: form.emoji || {name: "📝"},
+										style: form.button_style != undefined ? form.button_style : 1,
+										custom_id: `${form.hid}-apply`
+									}]
+								}
+							]
+						})
 					} catch(e) {
 						errs.push(`Channel: ${chan.name} (${chan.id})\nMessage: ${post.message_id}\nErr: ${e.message || e}`);
 					}
@@ -381,18 +540,22 @@ class FormStore extends DataStore {
 						return rej('Message missing!');
 					}
 
-					await msg.edit({embeds: [{
-						title: form.name,
-						description: form.description,
-						color: parseInt(!form.open ? 'aa5555' : form.color || '55aa55', 16),
-						fields: [{name: 'Response Count', value: responses?.length.toString() || '0'}],
-						footer: {
-							text: `Form ID: ${form.hid} | ` +
-								  (!form.open ?
-								  'this form is not accepting responses right now!' :
-								  'react below to apply to this form!')
-						}
-					}]})
+					var emb = await form.getEmbed();
+					await msg.edit({
+						components: [
+							emb,
+							{
+								type: 1,
+								components: [{
+									type: 2,
+									label: form.button_text ?? 'Apply',
+									emoji: form.emoji || {name: "📝"},
+									style: form.button_style != undefined ? form.button_style : 1,
+									custom_id: `${form.hid}-apply`
+								}]
+							}
+						]
+					})
 				} catch(e) {
 					errs.push(`Channel: ${chan?.name ?? "(channel not fetched)"} (${chan?.id ?? post.channel_id})\nErr: ${e.message ?? e}`);
 				}

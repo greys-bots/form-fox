@@ -2,14 +2,29 @@ module.exports = {
 	description: 'requires the user to enter only a date',
 	text: "valid date required.",
 	alias: ['date', 'dt'],
-	async handleMessage(message, response) {
-		var date = new Date(message.content);
+
+	embed(data) {
+		return [{
+			type: 10,
+			content: '-# Requires a date'
+		}];
+	},
+
+	async handle({ prompt, response, data }) {
+		var date = new Date(data);
 		if(isNaN(date)) {
-			await message.channel.send("Invalid response! Please send a valid date");
+			await prompt.channel.send("Invalid response! Please send a valid date");
 			return undefined;
 		}
 
-		response.answers.push(`<t:${Math.floor(date.getTime() / 1000)}:D>`);
-		return {response, send: true};
+		var answer = `<t:${Math.floor(date.getTime() / 1000)}:D>`
+		var embed = prompt.components[0].toJSON();
+		embed.components[embed.components.length - 1] = {
+			type: 10,
+			content: answer
+		}
+
+		response.answers.push(answer);
+		return {response, send: true, embed};
 	}
 }

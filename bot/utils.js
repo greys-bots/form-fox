@@ -7,57 +7,6 @@ const {
 const TYPES = require('../common/questions');
 
 module.exports = {
-	genEmbeds: async (bot, arr, genFunc, info = {}, fieldnum, extras = {}) => {
-		return new Promise(async res => {
-			var embeds = [];
-			var current = { embed: {
-				title: typeof info.title == "function" ?
-								info.title(arr[0], 0) : info.title,
-						description: typeof info.description == "function" ?
-								info.description(arr[0], 0) : info.description,
-				color: typeof info.color == "function" ?
-						info.color(arr[0], 0) : info.color,
-				footer: info.footer,
-				thumbnail: info.thumbnail,
-				image: info.image,
-				fields: []
-			}};
-			
-			for(let i=0; i<arr.length; i++) {
-				if(current.embed.fields.length < (fieldnum || 10)) {
-					current.embed.fields.push(await genFunc(arr[i], i, arr));
-				} else {
-					embeds.push(current);
-					current = { embed: {
-						title: typeof info.title == "function" ?
-								info.title(arr[i], i) : info.title,
-						description: typeof info.description == "function" ?
-								info.description(arr[i], i) : info.description,
-						color: typeof info.color == "function" ?
-								info.color(arr[i], i) : info.color,
-						footer: info.footer,
-						thumbnail: info.thumbnail,
-						image: info.image,
-						fields: [await genFunc(arr[i], i, arr)]
-					}};
-				}
-			}
-			embeds.push(current);
-			if(extras.order && extras.order == 1) {
-				if(extras.map) embeds = embeds.map(extras.map);
-				if(extras.filter) embeds = embeds.filter(extras.filter);
-			} else {
-				if(extras.filter) embeds = embeds.filter(extras.filter);
-				if(extras.map) embeds = embeds.map(extras.map);
-			}
-			if(embeds.length > 1) {
-				for(let i = 0; i < embeds.length; i++)
-					embeds[i].embed.title += (extras.addition != null ? eval("`"+extras.addition+"`") : ` (page ${i+1}/${embeds.length}, ${arr.length} total)`);
-			}
-			res(embeds);
-		})
-	},
-
 	paginateEmbeds: async function(bot, m, reaction) {
 		switch(reaction.emoji.name) {
 			case "⬅️":
@@ -85,6 +34,49 @@ module.exports = {
 				delete bot.menus[m.id];
 				break;
 		}
+	},
+
+	paginate: async function(ctx) {
+		var {data} = this;
+		var {customId: id} = ctx;
+
+		switch(id) {
+			case 'first':
+				this.index = 0;
+				break;
+			case 'prev':
+				if(this.index == 0) {
+					this.index = data.length - 1;
+				} else this.index = (this.index - 1) % data.length;
+				break;
+			case 'next':
+				this.index = (this.index + 1) % data.length;
+				break;
+			case 'last':
+				this.index = data.length -1;
+				break;
+		}
+
+		let payload;
+		if(this.v2) {
+			payload = {
+				...data[this.index],
+				components: (data[this.index].components ?? []).concat({
+					type: 1,
+					components: PAGE(this.index + 1, data.length)
+				})
+			};
+		} else {
+			payload = {
+				embeds: [data[this.index]],
+				components: [{
+					type: 1,
+					components: PAGE(this.index + 1, data.length)
+				}]
+			}
+		}
+
+		await ctx.update(payload)
 	},
 
 	getConfirmation: async (bot, msg, user, choices) => {
@@ -283,6 +275,150 @@ module.exports = {
 					...c,
 					disabled: true,
 					options: choices.map(ch => ({...ch, default: resp.values.includes(ch.value)}))
+				}))
+			}]
+		});
+
+		return resp.values;
+	},
+
+	awaitRoleSelection: async (ctx, defaults, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 6,
+			custom_id: 'selector',
+			default_values: defaults,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => ({
+					...c,
+					disabled: true
+				}))
+			}]
+		});
+
+		return resp.values;
+	},
+
+	awaitChannelSelection: async (ctx, defaults, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 8,
+			custom_id: 'selector',
+			default_values: defaults,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => ({
+					...c,
+					disabled: true
+				}))
+			}]
+		});
+
+		return resp.values;
+	},
+
+	awaitMentionableSelection: async (ctx, defaults, msg, options = {min_values: 1, max_values: 1, placeholder: '- - -'}) => {
+		var components = [{
+			type: 7,
+			custom_id: 'selector',
+			default_values: defaults,
+			...options
+		}]
+
+		var reply;
+		if(ctx.replied) {
+			reply = await ctx.followUp({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}]
+			});
+		} else {
+			reply = await ctx.reply({
+				content: msg,
+				components: [{
+					type: 1,
+					components
+				}],
+				fetchReply: true
+			});
+		}
+
+		try {
+			var resp = await reply.awaitMessageComponent({
+				filter: (intr) => intr.user.id == ctx.user.id && intr.customId == 'selector',
+				time: 60000
+			});
+		} catch(e) { }
+		if(!resp) return 'Nothing selected!';
+		await resp.update({
+			components: [{
+				type: 1,
+				components: components.map(c => ({
+					...c,
+					disabled: true
 				}))
 			}]
 		});

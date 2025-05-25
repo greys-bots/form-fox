@@ -22,7 +22,8 @@ class Command extends SlashCommand {
 			usage: [
 				"[form_id] - View roles on a form"
 			],
-			ephemeral: true
+			ephemeral: true,
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -38,18 +39,26 @@ class Command extends SlashCommand {
 		if(!Object.keys(form.roles)?.length) return "No roles for that form!";
 		console.log(form.roles)
 		
-		return {embeds: [{
-			title: `${form.name} - Roles`,
-			fields: EVENTS.map(e => {
-				var val = form.roles[e.toUpperCase()]
-							.map(x => `<@&${x.id}> - ${x.action}`)
-							.join("\n");
-				return {
-					name: e.toUpperCase(),
-					value: val?.length ? val : "*None set*"
-				}
-			})
-		}]}
+		return [{components: [{
+			type: 17,
+			components: [
+				{
+					type: 10,
+					content: `## ${form.name} - Roles`
+				},
+				...EVENTS.map(e => {
+					var val = form.roles[e.toUpperCase()]
+								.map(x => `<@&${x.id}> - ${x.action}`)
+								.join("\n");
+					return {
+						type: 10,
+						content:
+							`### ${e.toUpperCase()}\n` +
+							val?.length ? val : "*None set*"
+					}
+				})
+			] 
+		}]}]
 	}
 
 	async auto(ctx) {

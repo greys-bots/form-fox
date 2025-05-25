@@ -27,7 +27,8 @@ class Command extends SlashCommand {
 				"[response_id] [guild_id] - See the status of a response from a specific guild"
 			],
 			ephemeral: true,
-			permissions: []
+			permissions: [],
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -51,11 +52,18 @@ class Command extends SlashCommand {
 				color = parseInt('ccaa55', 16)
 		}
 
-		return {embeds: [{
-			title: 'Response Status',
-			description: `Response ${resp.hid} ${['accepted', 'denied'].includes(resp.status) ? 'has been' : 'is currently'} **${resp.status}**!`,
-			color
-		}]}
+		return [{
+			components: [{
+				type: 17,
+				accent_color: color,
+				components: [{
+					type: 10,
+					content: 
+					`## Response Status\n` +
+					`Response ${resp.hid} ${['accepted', 'denied'].includes(resp.status) ? 'has been' : 'is currently'} **${resp.status}**!`
+				}]
+			}]
+		}]
 	}
 }
 

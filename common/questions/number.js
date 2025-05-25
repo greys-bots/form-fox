@@ -1,16 +1,32 @@
+const {
+	NACTIONS
+} = require('../extras');
+
 module.exports = {
 	description: 'requires the user to enter only numbers',
 	text: "valid number required.",
 	alias: ['number', 'numbers', 'num'],
 
-	async handleMessage(message, response) {
-		if(isNaN(parseInt(message.content))) {
-			await message.channel.send("Invalid response! Please provide a number value");
+	embed(data) {
+		return [{
+			type: 10,
+			content: '-# Requires an integer/number'
+		}];
+	},
+
+	async handle({ prompt, response, data }) {
+		if(isNaN(parseInt(data))) {
+			await prompt.channel.send("Invalid response! Please provide a number value");
 			return undefined;
 		}
+		var embed = prompt.components[0].toJSON();
+		embed.components[embed.components.length - 1] = {
+			type: 10,
+			content: data
+		}
 
-		response.answers.push(message.content);
-		return {response, send: true};
+		response.answers.push(data);
+		return {response, send: true, embed};
 	},
 
 	async roleSetup({ctx, question, role}) {
@@ -82,8 +98,10 @@ module.exports = {
 	showRoles(q) {
 		return q.roles.map(r => {
 			return {
-				name: `${r.action} | ${r.value}`,
-				value: `<@&${r.id}>`
+				type: 10,
+				content:
+					`### ${r.action} | ${r.value}\n` +
+					`<@&${r.id}>`
 			}
 		})
 	}

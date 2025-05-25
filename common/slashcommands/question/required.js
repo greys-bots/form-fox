@@ -33,6 +33,7 @@ class Command extends SlashCommand {
 				"[form_id] - View all required questions on a form",
 				"[form_id] [question] [value] - Change if a question is required"
 			],
+			v2: true
 		})
 		this.#bot = bot;
 		this.#stores = stores;
@@ -55,22 +56,30 @@ class Command extends SlashCommand {
 			return 'Question updated!';
 		}
 
-		var e = {
-			title: 'Required questions',
-			fields: []
-		};
+		var e = [];
 		for(var i = 0; i < form.questions.length; i++) {
 			if(!form.questions[i].required) continue;
-			e.fields.push({
-				name: `Question ${i + 1}`,
-				value: form.questions[i].value
+			e.push({
+				type: 10,
+				content:
+					`### Question ${i + 1}\n` +
+					form.questions[i].value
 			})
 		}
 
-		return {
-			embeds: [e],
+		return [{
+			components: [{
+				type: 17,
+				components: [
+					{
+						type: 10,
+						content: '## Required questions'
+					},
+					...e
+				]
+			}],
 			ephemeral: true
-		}
+		}]
 	}
 
 	async auto(ctx) {
