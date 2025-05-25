@@ -265,7 +265,7 @@ class ResponsePostStore extends DataStore {
 
 				await m.delete()
 
-				var embed = msg.components[0];
+				var embed = msg.components[0].toJSON();
 		        embed.accent_color = parseInt('aa5555', 16);
 
 		        embed.components = embed.components.concat([
@@ -449,7 +449,7 @@ class ResponsePostStore extends DataStore {
 					cmp[2].disabled = true;
 					await msg.edit({
 						components: [
-							message.components[0],
+							msg.components[0].toJSON(),
 							{
 								type: 1,
 								components: cmp
