@@ -39,7 +39,7 @@ class Command extends SlashCommand {
 		await ctx.deferReply()
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var e = ctx.options.get('emoji')?.value;
-		var form = await this.#stores.forms.get(ctx.guild.id, id);;
+		var form = await this.#stores.forms.get(ctx.guild.id, id);
 		if(!form.id) return 'Form not found!';
 
 		if(!e) {

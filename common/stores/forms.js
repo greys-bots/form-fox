@@ -148,7 +148,7 @@ class Form extends DataObject {
 					type: 10,
 					content:
 						`## ${this.name} ` +
-						`${this.emoji?.includes(':') ? '<' + this.emoji + '>' : this.emoji || '📝'}\n` +
+						`${this.emoji || '📝'}\n` +
 						this.description
 				}],
 				accessory: {
@@ -163,7 +163,7 @@ class Form extends DataObject {
 				type: 10,
 				content:
 					`## ${this.name}` +
-					`${this.emoji?.includes(':') ? '<' + this.emoji + '>' : this.emoji || '📝'}\n` +
+					`${this.emoji || '📝'}\n` +
 					this.description
 			})
 		}
@@ -486,13 +486,19 @@ class FormStore extends DataStore {
 									return [r?.emoji.name, r?.emoji.identifier].includes(old?.emoji ?? '📝');
 								});
 								if(react) react.remove();
+								msg.react(data.emoji ?? '📝');
 							}
-
-							msg.react(data.emoji ?? '📝');
 						}
 
 						if(post.bound) continue;
 						var emb = await form.getEmbed();
+
+						let emoji = {}
+						if(form.emoji) {
+							let match = form.emoji.match(/\d{14,}/g);
+							if(match?.length) emoji.id = match[0];
+							else emoji.name = form.emoji.replace(/:/g, "");
+						} else emoji.name = "📝";
 
 						await msg.edit({
 							components: [
@@ -502,7 +508,7 @@ class FormStore extends DataStore {
 									components: [{
 										type: 2,
 										label: form.button_text ?? 'Apply',
-										emoji: form.emoji || {name: "📝"},
+										emoji,
 										style: form.button_style != undefined ? form.button_style : 1,
 										custom_id: `${form.hid}-apply`
 									}]

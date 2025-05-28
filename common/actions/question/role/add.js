@@ -31,7 +31,8 @@ module.exports = {
 		var data = { };
 		var { inter, client, form } = ctx;
 
-		if(!form.resolved?.questions?.length) return { success: false, message: "Form has no questions to add roles to!" };
+		
+		if(!form.questions?.length) return { success: false, message: "Form has no questions to add roles to!" };
 
 		var eligible = form.resolved.questions.filter(x => {
 			var t = TYPES[x.type];
@@ -56,7 +57,7 @@ module.exports = {
 		})
 		if(!Array.isArray(select)) return { success: false, message: select };
 
-		var option = question.options[select[0]];
+		var option = question.options.choices[select[0]];
 
 		select = await client.utils.awaitRoleSelection(inter, [], "Select the roles you want to add to the user", {
 			min_values: 0,
@@ -68,7 +69,8 @@ module.exports = {
 		data.roles = select;
 		data.condition = {
 			question: question.id,
-			option: option
+			name: question.name,
+			choice: option
 		}
 		console.log(data);
 
@@ -101,6 +103,11 @@ module.exports = {
 			content: 
 				`### Roles added\n` +
 				data.roles.map(x => `<@&${x}>`).join(", ")
+		})
+
+		fields.push({
+			type: 10,
+			content: `### Question\n${data.condition.name}`
 		})
 
 		fields.push({

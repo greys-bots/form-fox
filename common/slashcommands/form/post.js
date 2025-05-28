@@ -41,6 +41,13 @@ class Command extends SlashCommand {
 		var form = await this.#stores.forms.get(ctx.guildId, id);
 		if(!form.id) return 'Form not found!';
 
+		let emoji = {}
+		if(form.emoji) {
+			let match = form.emoji.match(/\d{14,}/g);
+			if(match?.length) emoji.id = match[0];
+			else emoji.name = form.emoji.replace(/:/g, "");
+		} else emoji.name = "📝";
+
 		try {
 			var embed = await form.getEmbed();
 			var message = await chan.send({
@@ -52,7 +59,7 @@ class Command extends SlashCommand {
 						components: [{
 							type: 2,
 							label: form.button_text ?? 'Apply',
-							emoji: form.emoji || { name: "📝" },
+							emoji,
 							style: form.button_style != undefined ? form.button_style : 1,
 							custom_id: `${form.hid}-apply`
 						}]

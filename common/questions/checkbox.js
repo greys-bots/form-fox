@@ -95,7 +95,7 @@ module.exports = {
 	},
 
 	async roleSetup({ctx, question, role}) {
-		var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
+		var choice = await ctx.client.utils.awaitSelection(ctx, question.options.choices.map((e, i) => {
 			return {label: e.slice(0, 100), value: `${i}`}
 		}), "What choice do you want to attach this to?", {
 			min_values: 1, max_values: 1,
@@ -104,7 +104,7 @@ module.exports = {
 		if(typeof choice == 'string') return choice;
 
 		var c = parseInt(choice[0]);
-		choice = question.choices[c];
+		choice = question.options.choices[c];
 
 		if(!question.roles) question.roles = [];
 		if(!question.roles.find(rl => rl.id == role.id))
@@ -114,7 +114,7 @@ module.exports = {
 	},
 
 	async roleRemove({ctx, question, role}) {
-		var choice = await ctx.client.utils.awaitSelection(ctx, question.choices.map((e, i) => {
+		var choice = await ctx.client.utils.awaitSelection(ctx, question.options.choices.map((e, i) => {
 			return {label: e.slice(0, 100), value: `${i}`}
 		}), "What choice do you want to detach this from?", {
 			min_values: 1, max_values: 1,
@@ -123,7 +123,7 @@ module.exports = {
 		if(typeof choice == 'string') return choice;
 
 		c = parseInt(choice[0]);
-		choice = question.choices[c];
+		choice = question.options.choices[c];
 
 		question.roles = question.roles.filter(rl => rl.choice !== choice || rl.id !== role.id);
 		return question;
@@ -140,7 +140,7 @@ module.exports = {
 	},
 	
 	showRoles(q) {
-		return q.choices.map((c) => {
+		return q.options.choices.map((c) => {
 			var roles = q.roles.filter(r => r.choice == c);
 			return {
 				type: 10,

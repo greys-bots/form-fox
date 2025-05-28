@@ -72,6 +72,7 @@ class Command extends SlashCommand {
 		var event = resp[0]
 		actionData = { ...actionData, event };
 
+		await form.getQuestions();
 		var result = await actionInfo.setup({
 			form,
 			config,

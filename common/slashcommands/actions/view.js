@@ -49,6 +49,7 @@ class Command extends SlashCommand {
 			if(forms[action.form]) form = forms[action.form];
 			else {
 				form = await this.#stores.forms.get(ctx.guild.id, action.form);
+				await form.getQuestions();
 				forms[action.form] = form;
 			}
 
