@@ -85,7 +85,7 @@ async function setup() {
 							break;
 					}
 
-					await stores.actions.create(data)
+					await stores.actions.create(adata)
 				}
 			}
 		}

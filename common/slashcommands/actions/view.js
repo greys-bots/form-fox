@@ -87,6 +87,7 @@ class Command extends SlashCommand {
 			})
 		}
 
+		console.log(embeds);
 		return embeds;
 	}
 
