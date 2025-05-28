@@ -43,7 +43,7 @@ module.exports = {
 
 	transform(data, ctx) {
 		var { channel } = ctx;
-		data = data.data;
+		data = {...data, ...data.data };
 
 		var tags = [];
 		if(channel.type == ChannelType.GuildForum) {

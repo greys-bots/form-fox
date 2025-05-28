@@ -31,7 +31,7 @@ module.exports = {
 	},
 
 	transform(data, ctx) {
-		data = data.data;
+		data = {...data, ...data.data };
 
 		var fields = [];
 		fields.push({

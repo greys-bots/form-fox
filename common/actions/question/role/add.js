@@ -4,6 +4,23 @@ const {
 	numbers: NUMS
 } = require('../../../extras');
 
+const CONDMAP = {
+	'gt': 'is greater than',
+	'lt': 'is less than',
+	'gte': 'is greater than or equal to',
+	'lte': 'is less than or equal to',
+	'eq': 'is equal to',
+	'contains': 'contains text',
+}
+
+function genCond(c) {
+	if(c.choice) {
+		return `Selected answer is "${c.choice}"`;
+	} else if(c.value) {
+		return `Answer ${CONDMAP[c.compare]} "${c.value}"`;
+	}
+}
+
 module.exports = {
 	name: 'add',
 	description: "Add roles to a member based on their response's answers",
@@ -66,7 +83,7 @@ module.exports = {
 
 	transform(data, ctx) {
 		var { channel } = ctx;
-		data = data.data;
+		data = {...data, ...data.data };
 
 		var fields = [];
 		fields.push({
@@ -88,7 +105,7 @@ module.exports = {
 
 		fields.push({
 			type: 10,
-			content: `### Condition\n${data.condition}`
+			content: `### Condition\n${genCond(data.condition)}`
 		})
 
 		return fields;
