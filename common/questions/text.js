@@ -10,7 +10,7 @@ const MODALS = {
 			type: 1,
 			components: [{
 				type: 4,
-				custom_id: ' value',
+				custom_id: 'value',
 				style: 2,
 				label: "Enter the value below",
 				min_length: 1,
