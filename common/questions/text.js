@@ -75,7 +75,7 @@ module.exports = {
 		if(!resp.choice) return 'Err! Nothing selected!';
 
 		var value;
-		var mod = await ctx.client.utils.awaitModal(resp.interaction, MODALS.compVal, user, true, 5 * 60_000);
+		var mod = await ctx.client.utils.awaitModal(resp.interaction, MODALS.compVal, ctx.user, true, 5 * 60_000);
         if(mod) value = mod.fields.getTextInputValue('value')?.trim();
 
 		return {compare, value};
