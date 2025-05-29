@@ -71,11 +71,11 @@ module.exports = {
 			fetchReply: true
 		});
 
-		var resp = await this.bot.utils.getChoice(ctx.client, msg, ctx.user, 2 * 60 * 1000, false);
+		var resp = await ctx.client.utils.getChoice(ctx.client, msg, ctx.user, 2 * 60 * 1000, false);
 		if(!resp.choice) return 'Err! Nothing selected!';
 
 		var value;
-		var mod = await this.bot.utils.awaitModal(resp.interaction, MODALS.compVal, user, true, 5 * 60_000);
+		var mod = await ctx.client.utils.awaitModal(resp.interaction, MODALS.compVal, user, true, 5 * 60_000);
         if(mod) value = mod.fields.getTextInputValue('value')?.trim();
 
 		return {compare, value};
