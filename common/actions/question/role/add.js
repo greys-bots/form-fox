@@ -83,7 +83,8 @@ module.exports = {
 		var { member, action, question, response, form } = ctx;
 		var { choice, compare, value, question } = action.data.condition;
 		var index = form.questions.indexOf(question);
-		var answer = response.answers[index];
+		var answer = response.answers?.[index];
+		if(!answer) return;
 
 		if(choice) {
 			if(!CONDS['choice'](answer, choice)) return;
