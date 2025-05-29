@@ -13,6 +13,16 @@ const CONDMAP = {
 	'contains': 'contains text',
 }
 
+const CONDS = {
+	'gt': (a, b) => a > b,
+	'lt': (a, b) => a < b,
+	'gte': (a, b) => a >= b,
+	'lte': (a, b) => a <= b,
+	'eq': (a, b) => (typeof a == 'string' ? a.toLowerCase() == b.toLowerCase() : a == b),
+	'contains': (a, b) => a.toLowerCase().includes(b.toLowerCase()),
+	'choice': (a, b) => a.toLowerCase() == b.toLowerCase()
+}
+
 function genCond(c) {
 	if(c.choice) {
 		return `Selected answer is "${c.choice}"`;
@@ -30,13 +40,12 @@ module.exports = {
 	async setup(ctx) {
 		var data = { };
 		var { inter, client, form } = ctx;
-
 		
 		if(!form.questions?.length) return { success: false, message: "Form has no questions to add roles to!" };
 
 		var eligible = form.resolved.questions.filter(x => {
 			var t = TYPES[x.type];
-			return t.roleSetup;
+			return t.roleSetup ? true : false;
 		})
 		if(!eligible?.length) return { success: false, message: 'Form has no eligible questions to apply roles to!' };
 
@@ -49,15 +58,8 @@ module.exports = {
 		if(!Array.isArray(select)) return { success: false, message: select };
 
 		var question = eligible.find(x => x.id == select[0]);
-
-		select = await client.utils.awaitSelection(inter, question.options.choices.map((x, i) => ({ label: `Option ${i+1}`, description: x, value: i })), "Select the option to attach a role to", {
-			min_values: 1,
-			max_values: 1,
-			placeholder: "Select option..."
-		})
-		if(!Array.isArray(select)) return { success: false, message: select };
-
-		var option = question.options.choices[select[0]];
+		var condition = await TYPES[question.type].roleSetup({ ctx: inter, question });
+		if(typeof condition == 'string') return { success: false, message: condition };
 
 		select = await client.utils.awaitRoleSelection(inter, [], "Select the roles you want to add to the user", {
 			min_values: 0,
@@ -70,7 +72,7 @@ module.exports = {
 		data.condition = {
 			question: question.id,
 			name: question.name,
-			choice: option
+			...condition
 		}
 		console.log(data);
 
@@ -78,9 +80,19 @@ module.exports = {
 	},
 
 	async handler(ctx) {
-		var { member, action } = ctx;
+		var { member, action, question, response, form } = ctx;
+		var { choice, compare, value, question } = action.data.condition;
+		var index = form.questions.indexOf(question);
+		var answer = response.answers[index];
+
+		if(choice) {
+			if(!CONDS['choice'](answer, choice)) return;
+		} else if(compare) {
+			if(!CONDS[compare](answer, value)) return;
+		} else return;
 
 		await member.roles.add(action.data.roles);
+		return;
 	},
 
 	transform(data, ctx) {

@@ -62,6 +62,7 @@ class ActionHandler {
 		var form;
 		if(typeof fid == 'string') form = await this.bot.stores.forms.get(ctx.server_id, fid);
 		else form = fid;
+		await form.getQuestions();
 		var guild = await this.bot.guilds.fetch(ctx.server_id);
 		var channel = await guild.channels.fetch(form.channel_id ?? config?.response_channel);
 		var member = await guild.members.fetch(ctx.user_id);
@@ -81,7 +82,7 @@ class ActionHandler {
 
 		for(var action of actions) {
 			if(action.data?.event !== event) continue;
-			var item = this.Types.find(x => x.type == action.data.type);
+			var item = this.Types.find(x => x.type == action.type);
 			if(!item) continue;
 
 			try {

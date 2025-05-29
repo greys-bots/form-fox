@@ -2,6 +2,26 @@ const {
 	NACTIONS
 } = require('../extras');
 
+const MODALS = {
+	compVal: {
+		title: "Comparison value",
+		custom_id: 'comp-value',
+		components: [{
+			type: 1,
+			components: [{
+				type: 4,
+				custom_id: ' value',
+				style: 2,
+				label: "Enter the value below (this should be a number)",
+				min_length: 1,
+				max_length: 1024,
+				required: true,
+				placeholder: "18"
+			}]
+		}]
+	}
+}
+
 module.exports = {
 	description: 'requires the user to enter only numbers',
 	text: "valid number required.",
@@ -30,79 +50,36 @@ module.exports = {
 	},
 
 	async roleSetup({ctx, question, role}) {
-		if(question.roles?.find(rl => rl.id == role.id))
-			return "Role already attached to question!";
-			
-		var action = await ctx.client.utils.awaitSelection(ctx, NACTIONS.map((e) => {
-			return e;
-		}), "How do you want to compare the answer?", {
+		var compare = await ctx.client.utils.awaitSelection(ctx, NACTIONS,
+			"How do you want to compare the answer?", {
 			min_values: 1, max_values: 1,
 			placeholder: 'Select comparison'
 		})
-		if(typeof choice == 'string') return choice;
+		if(typeof compare == 'string') return compare;
+		compare = compare[0]
 
-		await ctx.followUp("Enter the value you want to compare the answer to");
-		var val = await ctx.client.utils.awaitMessage(ctx.client, ctx, ctx.user, 60000);
-		if(typeof val == 'string') return val;
-		val = parseInt(val.content);
-		if(isNaN(val)) return "Valid number needed!";
+		var msg = await ctx.followUp({
+			content: "Click the button below to enter the value you want to compare the answer to",
+			components: [{
+				type: 1,
+				components: [{
+					type: 2,
+					style: 1,
+					custom_id: 'enter',
+					label: 'Enter value'
+				}]
+			}],
+			fetchReply: true
+		});
 
-		if(!question.roles) question.roles = [];
-		question.roles.push({
-			id: role.id,
-			action: action[0],
-			value: val
-		})
+		var resp = await this.bot.utils.getChoice(ctx.client, msg, ctx.user, 2 * 60 * 1000, false);
+		if(!resp.choice) return 'Err! Nothing selected!';
 
-		return question;
-	},
+		var value;
+		var mod = await this.bot.utils.awaitModal(resp.interaction, MODALS.compVal, user, true, 5 * 60_000);
+        if(mod) value = mod.fields.getTextInputValue('value')?.trim().parseInt();
+		if(isNaN(value)) return "Valid number needed!";
 
-	async roleRemove({question, role}) {
-		question.roles = question.roles.filter(r => r.id !== role.id);
-		return question;
-	},
-
-	handleRoles(question, answers, index) {
-		var roles = [];
-		var int = parseInt(answers[index]);
-		if(isNaN(int)) return roles;
-		
-		for(var r of question.roles) {
-			switch(r.action) {
-				case 'lt':
-					if(int < r.value)
-						roles.push(r.id);
-					break;
-				case 'lte':
-					if(int <= r.value)
-						roles.push(r.id);
-					break;
-				case 'gt':
-					if(int > r.value)
-						roles.push(r.id);
-					break;
-				case 'gte':
-					if(int >= r.value)
-						roles.push(r.id);
-					break;
-				case 'eq':
-					if(int == r.value)
-						roles.push(r.id);
-					break;
-			}
-		}
-
-		return roles;
-	},
-	
-	showRoles(q) {
-		return q.roles.map(r => {
-			return {
-				type: 10,
-				content:
-					`### ${r.action} | ${r.value}\n` +
-					`<@&${r.id}>`
-			}
-		})
+		return {compare, value};
 	}
 }
