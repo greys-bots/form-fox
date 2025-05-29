@@ -86,7 +86,7 @@ class ActionHandler {
 			if(!item) continue;
 
 			try {
-				item.handler({
+				await item.handler({
 					config,
 					form,
 					channel,
