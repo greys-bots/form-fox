@@ -43,16 +43,17 @@ class Command extends SlashCommand {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
+		await form.getQuestions();
 
 		var p = ctx.options.getInteger('question');
 		var value = ctx.options.getBoolean('value');
 		if(p != null) {
-			var q = form.questions[p - 1];
+			var q = form.resolved.questions[p - 1];
 			if(!q) return "No question with that number!";
 
-			form.questions[p - 1].required = value;
+			q.required = value;
 
-			await form.save()
+			await q.save()
 			return 'Question updated!';
 		}
 

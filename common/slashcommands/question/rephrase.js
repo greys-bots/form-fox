@@ -42,16 +42,17 @@ class Command extends SlashCommand {
 		var id = ctx.options.get('form_id').value.toLowerCase().trim();
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
+		await form.getQuestions();
 
 		var p = ctx.options.getInteger('question');
-		var q = form.questions[p - 1];
+		var q = form.resolved.questions[p - 1];
 		if(!q) return "No question with that number!";
 
 		var value = ctx.options.getString('value');
 		if(value.length > 256) return "Question length too long! Must be 256 chars or less";
-		form.questions[p - 1].value = value;
+		q.name = value;
 
-		await form.save()
+		await q.save()
 		return 'Question updated!';
 	}
 

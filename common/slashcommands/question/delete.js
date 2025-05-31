@@ -38,9 +38,10 @@ class Command extends SlashCommand {
 		var form = await this.#stores.forms.get(ctx.guildId, id);;
 		if(!form.id) return 'Form not found!';
 		if(form.questions.length == 1) return "Can't delete the last question on a form!";
+		await form.getQuestions();
 
 		var p = ctx.options.getInteger('question');
-		var q = form.questions[p - 1];
+		var q = form.resolved.questions[p - 1];
 		if(!q) return "No question with that number!";
 
 		var reply = await ctx.reply({
