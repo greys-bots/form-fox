@@ -92,6 +92,7 @@ module.exports = {
 				bot.removeListener('interactionCreate', intListener)
 
 				if(msg.components?.[0]) {
+					var comps = msg.components[msg.components.length - 1]?.toJSON().components;
 					msg.edit({
 						components: [{
 							type: 1,
@@ -117,10 +118,11 @@ module.exports = {
 				bot.removeListener('interactionCreate', intListener)
 
 				if(msg.components?.[0]) {
+					var comps = msg.components[msg.components.length - 1].toJSON().components;
 					msg.edit({
 						components: [{
 							type: 1,
-							components: msg.components[0].components.map(({data: b}) => ({
+							components: comps.map((b) => ({
 								...b,
 								disabled: true
 							}))
@@ -142,10 +144,12 @@ module.exports = {
 				bot.removeListener('messageReactionAdd', reactListener);
 				bot.removeListener('interactionCreate', intListener);
 
+				var comps = intr.message.components[intr.message.components.length - 1].toJSON().components;
+
 				intr.update({
 					components: [{
 						type: 1,
-						components: intr.message.components[0].components.map(({data: b}) => ({
+						components: comps.map((b) => ({
 							...b,
 							disabled: true
 						}))
@@ -179,11 +183,13 @@ module.exports = {
 				clearTimeout(timeout);
 				bot.removeListener('interactionCreate', intListener);
 
+				var comps = intr.message.components[intr.message.components.length - 1].toJSON().components;
+
 				if(update) {
 					intr.update({
 						components: [{
 							type: 1,
-							components: intr.message.components[0].components.map(({data: b}) => ({
+							components: comps.map((b) => ({
 								...b,
 								disabled: true
 							}))
@@ -193,7 +199,7 @@ module.exports = {
 					intr.message.edit({
 						components: [{
 							type: 1,
-							components: intr.message.components[0].components.map(({data: b}) => ({
+							components: comps.map((b) => ({
 								...b,
 								disabled: true
 							}))
