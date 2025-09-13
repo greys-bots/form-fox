@@ -278,7 +278,7 @@ class ResponsePostStore extends DataStore {
 		            },
 		            {
 		                type: 10,
-		                content: `Denied by ${user} (${user.tag} | ${user.id})`
+		                content: `**Denied by**: ${user} (${user.tag} | ${user.id})\n**Reason:** ${reason ?? "*(No reason given.)*"}`
 		            }
 		        ])
 
@@ -333,8 +333,6 @@ class ResponsePostStore extends DataStore {
 			case 'accept':
 				var embed = msg.components[0].toJSON();
 		        embed.accent_color = parseInt('55aa55', 16);
-		        let footer = embed.components[embed.components.length - 1]
-		        footer.content = footer.content.replace('pending', 'accepted')
 		        embed.components = embed.components.concat([
 		            {
 		                type: 14

@@ -302,15 +302,12 @@ class ResponseHandler {
 							`**Form name:** ${response.form.name}\n` +
 							`**Form ID:** ${response.form.hid}\n` +
 							`**User:** ${user.username}#${user.discriminator} (${user})\n` +
-							`**Response ID:** ${created.hid}`		
+							`**Response ID:** ${created.hid}\n` +
+							`**Received:** <t:${Math.floor(new Date().getTime() / 1000)}:F>`
 					}
 				],
 				color: parseInt('ccaa55', 16),
-				footer: [{
-					type: 10,
-					content:
-						`-# Received <t:${Math.floor(new Date().getTime() / 1000)}:F> | Status: pending`
-				}]
+				footer: []
 			}
 			var embeds = await this.buildResponseEmbeds(response, template);
 			await prompt.edit({
