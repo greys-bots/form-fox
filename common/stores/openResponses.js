@@ -99,11 +99,12 @@ class OpenResponseStore extends DataStore {
                 message_id,
                 user_id,
                 form,
-                data
-            ) VALUES ($1,$2,$3,$4,$5,$6)
+                questions,
+                answers
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7)
             RETURNING id`,
             [data.server_id, data.channel_id, data.message_id,
-             data.user_id, data.form, data.data || {}]);
+             data.user_id, data.form, data.questions || [], data.answers || []]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
