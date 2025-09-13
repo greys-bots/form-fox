@@ -129,7 +129,10 @@ class ResponseHandler {
 						flags: ['IsComponentsV2'],
 						components: [
 							...fembeds[0].components,
-							PGBTNS(1, fembeds.length)
+							{
+								type: 1,
+								components: PGBTNS(1, fembeds.length)
+							}
 						]
 					})
 					if(!this.bot.menus) this.bot.menus = {};
