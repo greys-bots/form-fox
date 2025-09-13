@@ -423,7 +423,6 @@ class ResponseHandler {
 		var {channel, response} = ctx;
 
 		var prompt = await channel.messages.fetch(response.message_id);
-		prompt = prompt?.first();
 		try {
 			await response.delete();
 			if(!prompt) return;
@@ -667,7 +666,7 @@ class ResponseHandler {
 		var act = Object.keys(ACTIONS).find(k => ACTIONS[k].includes(content));
 		if(!act) act = 'answer';
 		return await this.handleAnswer({
-			user: message.author.user,
+			user: message.author,
 			message,
 			prompt,
 			response,

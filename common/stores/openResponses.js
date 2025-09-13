@@ -13,12 +13,50 @@ const KEYS = {
     questions: { },
     answers: { patch: true },
     selection: { patch: true },
-    page: { patch: true }
+    page: { patch: true },
+    data: { patch: true } // object combining questions, answers, selections, and page
 }
+
+/*
+
+  data = {
+    order: ['qid1', 'qid2'], // pulled from form
+    questions: [
+        {
+            id: 'qid1',
+            name: 'question 1',
+            // ...
+            answer: 'answer goes here'
+        },
+        // ...
+    ],
+    selection: ['selection data'],
+    page: 1
+  }
+
+  data stores full questions to avoid having to cancel currently open responses when a form is edited
+    eventually structure will be changed to account for sections
+*/
 
 class OpenResponse extends DataObject {
     constructor(store, keys, data) {
         super(store, keys, data);
+    }
+
+    nextQuestion() {
+        var qs = this.data?.questions;
+        if(!qs) return 'No questions to look through.';
+
+        var question;
+        for(var id in this.order) {
+            var q = qs.find(x => x.id == id);
+            if(!q || q?.answer?.length) continue;
+
+            question = q;
+            break;
+        }
+
+        return question;
     }
 }
 
@@ -48,7 +86,8 @@ class OpenResponseStore extends DataStore {
 			questions   JSONB,
 			answers 	TEXT[],
 			selection   TEXT[],
-			page 		INTEGER
+			page 		INTEGER,
+            data        JSONB
 		)`)
     }
     
@@ -60,39 +99,17 @@ class OpenResponseStore extends DataStore {
                 message_id,
                 user_id,
                 form,
-                questions,
-                answers
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7)
+                data
+            ) VALUES ($1,$2,$3,$4,$5,$6)
             RETURNING id`,
             [data.server_id, data.channel_id, data.message_id,
-             data.user_id, data.form, data.questions || [], 
-             data.answers || []]);
+             data.user_id, data.form, data.data || {}]);
         } catch(e) {
             console.log(e);
             return Promise.reject(e.message);
         }
         
         return await this.getID(c.rows[0].id);
-    }
-
-    async index(server, channel, message, data = {}) {
-        try {
-            await this.db.query(`INSERT INTO open_responses (
-                server_id,
-                channel_id,
-                message_id,
-                user_id,
-                form,
-                questions,
-                answers
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-            [server, channel, message, data.user_id, data.form, data.questions || [], data.answers || []]);
-        } catch(e) {
-            console.log(e);
-            return Promise.reject(e.message);
-        }
-        
-        return;
     }
 
     async get(channel) {

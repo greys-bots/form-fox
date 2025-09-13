@@ -8,7 +8,8 @@ const KEYS = {
 	questions: { },
 	answers: { },
 	status: { patch: true },
-	received: { }
+	received: { },
+	data: { }
 }
 
 class Response extends DataObject {
@@ -39,7 +40,8 @@ class ResponseStore extends DataStore {
 				questions 	JSONB,
 				answers 	TEXT[],
 				status 		TEXT,
-				received 	TIMESTAMPTZ
+				received 	TIMESTAMPTZ,
+				data 		JSONB
 			);
 
 			CREATE TABLE IF NOT EXISTS response_posts (
