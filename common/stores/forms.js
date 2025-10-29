@@ -63,6 +63,7 @@ class Form extends DataObject {
 
 	async getQuestions() {
 		var questions = await this.store.bot.stores.questions.getByForm(this.server_id, this.hid);
+		console.log(questions);
 		var qs = [];
 		for(var q of this.questions) {
 			var question = questions.find(x => x.id == q);
@@ -613,14 +614,23 @@ class FormStore extends DataStore {
 		for(var form of forms) {
 			// remove server-specific data
 			delete form.id;
-			delete form.server_id;
 			delete form.channel_id;
 			delete form.roles;
 			
 			if(resp && r) form.responses = r[form.hid] ?? [];
 			else form.responses = [];
+			await form.getQuestions();
+			form.resolved.questions = form.resolved.questions.map(x => {
+				delete x.id;
+				delete x.server_id;
+				delete x.form;
+				return x;
+			});
+
+			delete form.server_id;
 		}
-		
+
+		console.log(forms[0])
 		return forms;
 	}
 
@@ -645,23 +655,35 @@ class FormStore extends DataStore {
 					...form
 				} = f;
 
-				var existing = forms?.find(f => f.hid == form.hid || f.name == form.name);
+				var existing = forms?.find(x => x.hid == hid || x.name == form.name);
 				if(forms && existing) {
 					// so everything gets transformed properly
 					// we need to set each key
 					for(var k in form) {
 						existing[k] = form[k];
 					}
+
+					// also handle questions
+					if(form.resolved.questions) {
+						existing.questions = await this.bot.stores.questions.import(server, existing.hid, form.resolved.questions)
+					}
 					// and then save it
 					await existing.save();
+
 					updated++;
 				} else {
-					if(!prem && forms.length >= 5)
-						continue;
-					await this.create({
+					// if(!prem && forms.length >= 5)
+						// continue;
+					var cform = await this.create({
 						server_id: server,
 						...form
-					});
+					})
+
+					if(form.resolved.questions) {
+						cform.questions = await this.bot.stores.questions.import(server, cform.hid, form.resolved.questions);
+						await cform.save();
+					}
+
 					created++;
 				}
 			}
@@ -673,21 +695,6 @@ class FormStore extends DataStore {
 	}
 
 	verify(form) {
-		if(!form.questions || form.questions.length == 0)
-			return {ok: false, reason: "Questions must be present"};
-
-		if(form.questions > 20)
-			return {ok: false, reason: "Max of 20 questions per form"};
-
-		if(form.questions.find(q => !q.value?.length))
-			return {ok: false, reason: "Questions must have a value"};
-
-		if(form.questions.find(q => q.value.length > 256))
-			return {ok: false, reason: "Questions must be 256 characters or less"};
-
-		if(form.questions.find(q => !TYPES[q.type]))
-			return {ok: false, reason: "Questions must have a valid type"};
-
 		if(!form.name)
 			return {ok: false, reason: "Form must have a name"};
 

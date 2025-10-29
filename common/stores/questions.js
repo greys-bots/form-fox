@@ -23,6 +23,12 @@ class Question extends DataObject {
 		super(store, keys, data);
 	}
 
+	toJSON() {
+		var {store, KEYS, old, ...rest} = this;
+
+		return rest;
+	}
+
 	async getForm() {
 		var form = await this.store.bot.stores.forms.get(this.server_id, this.form);
 		if(!this.resolved) this.resolved = {}
@@ -135,6 +141,22 @@ class QuestionStore extends DataStore {
 		} else return new Question(this, KEYS, {server_id: server, form});
 	}
 
+	async getAll(server) {
+		try {
+			var data = await this.db.query(`
+				SELECT * FROM questions
+				WHERE server_id = $1
+			`,[server]);
+		} catch(e) {
+			console.log(e);
+			return Promise.reject(e.message);
+		}
+		
+		if(data.rows?.[0]) {
+			return data.rows.map(x => new Question(this, KEYS, x));
+		} else return [];
+	}
+
 	async getByForm(server, form) {
 		try {
 			var data = await this.db.query(`
@@ -184,6 +206,41 @@ class QuestionStore extends DataStore {
 		}
 		
 		return;
+	}
+
+	async import(server, form, data = []) {
+		if(!data?.length || !data.find(x => {
+			return typeof x == "object";
+		})) return data;
+
+		let all = await this.getAll(server);
+		let ids = [];
+
+		for(var q of data) {
+			// todo: error handling
+			var existing = all.find(x => x.hid == q.hid && x.form == form);
+			if(existing) {
+				for(var k in q) existing[k] = q[k];
+				await existing.save();
+				ids.push(existing.id);
+			} else {
+				var cq = await this.create({
+					server_id: server,
+					form,
+					...q
+				});
+				ids.push(cq.id);
+			}
+		}
+		
+		return ids;
+	}
+
+	verify(data = {}) {
+		if(!data.name) return { ok: false, reason: "Questions must have a name."};
+		if(data.name.length > 256) return { ok: false, reason: "Questions must be less than 256 characters" };
+
+		return { ok: true };
 	}
 }
 
